@@ -12,35 +12,15 @@
 % if you want all the levels in your table of contents
 % \setcounter{tocdepth}{5} 
 
-% ??????????
-\usepackage[dvips]{graphicx}
-\usepackage{wrapfig}
-\usepackage[usenames,dvipsnames]{color}
-\usepackage{epstopdf}
-
-% figure grid
-\usepackage{subfig}
-
 % Mathematical expressions
-\usepackage{amsfonts}
-\usepackage{amssymb}
-\usepackage{amsmath}
-\usepackage[intlimits]{amsmath}
-\usepackage{amsthm}
-\usepackage{physics}
-\newtheorem{theorem}{Theorem}[section]
-\newtheorem*{remark}{Remark}
-\usepackage{float}
-
+% \usepackage{amsmath}
+ 
 \usepackage{babel,csquotes,xpatch}
 \usepackage[
 	backend=biber,
 	maxbibnames=99]{biblatex}
-\addbibresource{thesis.bib}
+\addbibresource{main.bib}
 
 % Hyperlinks
 % Overleaf: "...usually, it has to be the last package to be imported."
 \usepackage{hyperref}
-
-% Overleaf: Best loaded last in the preamble
-\usepackage{subfiles}
