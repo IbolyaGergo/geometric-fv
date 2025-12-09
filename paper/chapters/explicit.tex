@@ -1,0 +1,64 @@
+%! TeX root: ../main.tex
+\section{Explicit}%
+\label{sec:Explicit}
+The formulation in this chapter primarily follows the wave-propagation algorithms
+established by LeVeque \cite{1985_LeVeque_CONF}, \cite{1992_LeVeque_BOOK}, \cite{2002_LeVeque_BOOK},
+and Van Leer \cite{1977_VanLeer}.
+
+To establish a baseline for the semi-implicit formulation, we first consider the
+classical explicit geometric approach. Following the framework detailed in
+\cite{1992_LeVeque_BOOK}, \cite{2002_LeVeque_BOOK} we interpret the finite volume update as a measure of
+the mass transported across cell interfaces over a time step $\Delta t$ .
+
+The standard explicit finite volume framework relies on the
+Reconstruct-Evolve-Average (REA) algorithm... 
+
+We restrict our discussion to the linear advection equation
+\begin{equation}
+    \label{eq:linadv}
+    u_t + a u_x = 0, \quad x \in \mathbb{R}, \; t > 0,
+\end{equation}
+for a scalar quantity \(u(t,x)\) transported at a constant positive speed \(a > 0\), subject to the initial condition \(u(0,x) = u_0(x)\).
+
+The exact solution to \eqref{eq:linadv} is given by the method of characteristics as
+\begin{equation}
+    \label{eq:linadv-exact-sol}
+    u(t,x) = u_0(x - a t).
+\end{equation}
+
+\subsection{Reconstruct-Evolve-Average Algorithm}
+Explicit finite volume schemes for solving \eqref{eq:linadv} can be derived
+structurally using the Reconstruct-Evolve-Average (REA) algorithm,
+a geometric framework detailed extensively in \cite{1992_LeVeque_BOOK,2002_LeVeque_BOOK}.
+
+\paragraph*{The REA Algorithm}
+\label{par:REA}
+Let \(u_i^n\) denote the cell average over the \(i\)-th cell at time \(t_n\). The update to \(t_{n+1} = t_n + \Delta t\) proceeds in three steps:
+
+\begin{enumerate}
+    \item \textbf{Reconstruct:} Construct a global piecewise polynomial function \(\tilde{u}^{n}(x,t_n)\) defined for all \(x\) from the set of discrete cell averages \(\{u_i^n\}\).
+
+    \item \textbf{Evolve:} Solve \eqref{eq:linadv} exactly with \(\tilde{u}^{n}(x,t_n)\) as the initial data to obtain the evolved solution at the next time level:
+    \[ \check{u}(x, t_{n+1}) = \tilde{u}^n(x - a\Delta t, t_n). \]
+
+    \item \textbf{Average:} Compute the new cell averages by integrating the evolved function over each grid cell:
+    \begin{equation}
+        \label{eq:rea-average}
+        u_{i}^{n+1} = \frac{1}{\Delta x} \int_{x_{i - 1/2}}^{x_{i + 1/2}} \check{u}(x,t_{n+1}) \,\mathrm{d}x.
+    \end{equation}
+\end{enumerate}
+
+The order of accuracy and stability of the resulting scheme depend entirely on the choice of the reconstruction \(\tilde{u}^{n}(x,t_n)\).
+For instance, the first-order Godunov scheme is obtained via a piecewise constant reconstruction:
+\[
+    \tilde{u}^{n}(x,t_{n}) = u_{i}^{n} \quad \text{for } x \in [x_{i-1/2}, x_{i+1/2}).
+\]
+
+In the first-order case, the solution is reconstructed as a piecewise constant function.
+The evolution of the solution is governed by the linear shift of the characteristic curves.
+Geometrically, the flux $F_{i+1/2}$ represents the area of the solution profile swept
+across the interface $x_{i+1/2}$ during the time interval $[t^n, t^{n+1}]$.
+While this explicit formulation yields a stable scheme under the CFL condition $\nu \leq 1$,
+our goal in Chapter X is to relax this restriction...
+
+The limitation of explicit methods is the small time step.

@@ -1,4 +1,14 @@
+% main.tex
 \documentclass[a4paper,12pt]{report}
+\input{preamble}
 \begin{document}
-   Hello! 
+
+\include{abstract}
+\include{chapters/intro}
+\include{chapters/explicit}
+\include{chapters/implicit}
+
+\printbibliography[heading=bibintoc] 
+% 'heading=bibintoc' adds the Bibliography to your Table of Contents automatically.
+
 \end{document}
