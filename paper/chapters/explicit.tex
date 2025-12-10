@@ -58,17 +58,19 @@ This produces a "staircase" profile representing the solution.
 \textbf{2. Evolve:} 
 We evolve this profile exactly over one time step \(\Delta t\). Geometrically, the entire staircase shifts to the right by a distance \(a\Delta t\). Assuming the CFL condition \(a\Delta t \leq \Delta x\), the solution at the interface \(x_{i-1/2}\) is determined by the value of the cell to the left, \(u_{i-1}^n\).
 
-\textbf{3. Average:} 
-Instead of integrating the function over the whole cell, we can interpret the update via fluxes. The mass in cell \(i\) changes only due to the areas of the profile "swept" across the boundaries.
-The total mass swept across the interface \(x_{i-1/2}\) is the width of the shift multiplied by the height of the reconstructed function:
+\textbf{3. Average:}
+Computing the new cell average by directly integrating the evolved profile
+\(\tilde{u}\) is mathematically equivalent to a flux-based update. The change in the total conserved quantity within cell \(i\) corresponds precisely to the geometric area of the solution profile "swept" across the cell boundaries during the time step \(\Delta t\).
+
+The total quantity entering the cell across the left interface \(x_{i-1/2}\) is the width of the shift multiplied by the height of the reconstructed function in the upwind cell:
 \[
-    \text{Mass In} = (a \Delta t) \cdot u_{i-1}^n.
+    \text{Inflow} = (a \Delta t) \cdot u_{i-1}^n.
 \]
-Similarly, the mass leaving the cell at \(x_{i+1/2}\) is:
+Similarly, the quantity leaving the cell across the right interface \(x_{i+1/2}\) is:
 \[
-    \text{Mass Out} = (a \Delta t) \cdot u_{i}^n.
+    \text{Outflow} = (a \Delta t) \cdot u_{i}^n.
 \]
-Dividing these mass fluxes by \(\Delta t\) defines the numerical fluxes \(F_{i-1/2} = a u_{i-1}^n\) and \(F_{i+1/2} = a u_{i}^n\). Substituting these into the conservation form yields the standard explicit upwind scheme:
+Dividing these values by \(\Delta t\) yields the numerical fluxes \(F_{i-1/2} = a u_{i-1}^n\) and \(F_{i+1/2} = a u_{i}^n\). Substituting these into the standard conservation form \eqref{eq:fvm_general} recovers the classical explicit upwind scheme:
 \[
     u_i^{n+1} = u_i^n - \frac{a \Delta t}{\Delta x} (u_i^n - u_{i-1}^n).
 \]
@@ -80,17 +82,6 @@ For instance, the first-order Godunov scheme is obtained via a piecewise constan
     x_{i+1/2}),
 \]
 where the constant value is the cell average.
-
-In the first-order case, the solution is reconstructed as a piecewise constant function.
-The evolution of the solution is governed by the linear shift of the initial
-data. Geometrically, the flux $F_{i+1/2}$ represents the area of the initial profile swept
-across the interface $x_{i+1/2}$ during the time interval $[t^n, t^{n+1}]$.
-In case of the linear advection equation \eqref{eq:linadv} this yields the
-numerical flux
-\[
-    F_{i-1/2} = u_{i-1}^{n},
-\]
-and the update of the cell average
 
 While this explicit formulation yields a stable scheme under the CFL condition $\nu \leq 1$,
 our goal in Chapter X is to relax this restriction...
