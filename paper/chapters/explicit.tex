@@ -93,3 +93,50 @@ Generally, to obtain an \(n\)-th order scheme we need an \((n-1)\)-th
 order polynomial reconstruction.
 
 The limitation of explicit methods is the small time step.
+
+\begin{figure}[ht]
+    \centering
+    \input{fig/rea_godunov}
+    \caption{Geometric interpretation of the flux across $x_{i+1/2}$.}
+    \label{fig:rea}
+\end{figure}
+
+\subsection{Second-Order Extension: Piecewise Linear Reconstruction}
+\label{sub:second_order}
+To achieve higher spatial accuracy, we exploit the generality of Step 1 in the REA algorithm. Instead of limiting the reconstruction to a constant value (degree 0), we specify a piecewise linear function (degree 1).
+
+\textbf{1. Reconstruct:}
+In each cell \(\mathcal{C}_i\), we define a linear profile with slope \(\sigma_i\):
+\[
+    \tilde{u}^n(x, t_n) = u_i^n + \sigma_i (x - x_i), \quad \text{for } x \in [x_{i-1/2}, x_{i+1/2}),
+\]
+where \(x_i\) is the cell center. The resulting scheme is determined entirely by the choice of the slope \(\sigma_i\).
+
+\textbf{2. Evolve:}
+As in the first-order case, the linear advection equation dictates that this profile shifts rigidly by \(a \Delta t\).
+
+\textbf{3. Average (Geometric Flux Calculation):}
+The flux calculation remains the determination of the quantity swept across the interface. However, due to the non-zero slope, the geometric shape swept across the boundary is no longer a rectangle, but a \textbf{trapezoid}.
+
+Consider the interface \(x_{i+1/2}\). The quantity leaving cell \(i\) is the area under the linear reconstruction over the interval \([x_{i+1/2} - a\Delta t, x_{i+1/2}]\).
+The base of this trapezoid is the distance traveled, \(a \Delta t\). The average height of the trapezoid is the value of the reconstructed function at the midpoint of this interval:
+\[
+    x_{mid} = x_{i+1/2} - \frac{1}{2} a \Delta t.
+\]
+Evaluating the reconstruction \(\tilde{u}^n\) at this midpoint yields the time-averaged value at the interface:
+\[
+    u_{i+1/2}^* = u_i^n + \sigma_i \left( \frac{\Delta x}{2} - \frac{a \Delta t}{2} \right).
+\]
+The resulting numerical flux is simply the transport speed multiplied by this value:
+\begin{equation}
+    \label{eq:flux_linear}
+    F_{i+1/2} = a u_i^n + \frac{1}{2} a (1 - \nu) \Delta x \sigma_i,
+\end{equation}
+where \(\nu = \frac{a \Delta t}{\Delta x}\) is the Courant number.
+
+Different standard schemes correspond to specific choices of the slope \(\sigma_i\):
+\begin{itemize}
+    \item \textbf{Beam-Warming:} Choosing the upwind (backward) slope \(\sigma_i = (u_i^n - u_{i-1}^n)/\Delta x\).
+    \item \textbf{Lax-Wendroff:} Choosing the downwind (forward) slope \(\sigma_i = (u_{i+1}^n - u_i^n)/\Delta x\).
+    \item \textbf{Fromm:} Choosing the centered slope \(\sigma_i = (u_{i+1}^n - u_{i-1}^n)/ 2\Delta x\).
+\end{itemize}
