@@ -2,8 +2,8 @@
 \section{Explicit}%
 \label{sec:Explicit}
 The formulation in this chapter primarily follows the algorithms
-established by LeVeque \cite{1985_LeVeque_CONF}, \cite{1992_LeVeque_BOOK}, \cite{2002_LeVeque_BOOK},
-and Van Leer \cite{1977_VanLeer}.
+established by Godunov \cite{godunov1959finite}, Van Leer \cite{van1977towards},
+LeVeque \cite{1985_LeVeque_CONF, 1992_LeVeque_BOOK, 2002_LeVeque_BOOK}.
 
 We restrict our discussion to the linear advection equation
 \begin{equation}
@@ -23,8 +23,13 @@ The exact solution to \eqref{eq:linadv} is
 Explicit finite volume schemes for solving \eqref{eq:linadv} can be derived
 using the Reconstruct-Evolve-Average (REA) algorithm, a geometric framework
 detailed extensively in \cite{1992_LeVeque_BOOK,2002_LeVeque_BOOK}. The method
-was originally proposed by Godunov \cite{1959_Godunov} for solving the nonlinear
+was originally proposed by Godunov \cite{godunov1959finite} who introduced the concept
+of evolving a piecewise constant reconstruction for solving the nonlinear
 Euler equations of gas dynamics.
+
+Van Leer \cite{van1977towards} demonstrated that the REA algorithm can be
+extended to higher-order accuracy by replacing Godunov's constant reconstruction
+with higher-degree polynomials.
 
 \paragraph*{The REA Algorithm}
 \label{par:REA}
