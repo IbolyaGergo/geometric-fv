@@ -1,6 +1,6 @@
 %! TeX root: ../main.tex
-\section{Explicit}%
-\label{sec:Explicit}
+\chapter{The Explicit Geometric Framework}%
+\label{sec:The Explicit Geometric Framework}
 The formulation in this chapter primarily follows the algorithms
 established by Godunov \cite{godunov1959finite}, Van Leer \cite{van1977towards},
 LeVeque \cite{1985_LeVeque_CONF, 1992_LeVeque_BOOK, 2002_LeVeque_BOOK}.
@@ -18,7 +18,7 @@ The exact solution to \eqref{eq:linadv} is
     u(t,x) = u_0(x - a t).
 \end{equation}
 
-\subsection{Reconstruct-Evolve-Average Algorithm}
+\section{Reconstruct-Evolve-Average Algorithm}
 \label{sub:Reconstruct-Evolve-Average Algorithm}
 Explicit finite volume schemes for solving \eqref{eq:linadv} can be derived
 using the Reconstruct-Evolve-Average (REA) algorithm, a geometric framework
@@ -48,8 +48,8 @@ Let \(u_i^n\) denote the cell average over the \(i\)-th cell at time \(t_n\). Th
     \end{equation}
 \end{enumerate}
 
-\subsection{Example: The First-Order Godunov Scheme}%
-\label{sub:Example: The First-Order Godunov Scheme}
+\section{First-Order Godunov Scheme}%
+\label{sub:First-Order Godunov Scheme}
 
 To illustrate this procedure, we apply the REA algorithm to the simplest case: a piecewise constant reconstruction.
 
@@ -106,7 +106,7 @@ The limitation of explicit methods is the small time step.
     \label{fig:rea}
 \end{figure}
 
-\subsection{Second-Order Extension: Piecewise Linear Reconstruction}
+\section{Second-Order Schemes}
 \label{sub:second_order}
 To achieve higher spatial accuracy, we exploit the generality of Step 1 in the REA algorithm. Instead of limiting the reconstruction to a constant value (degree 0), we specify a piecewise linear function (degree 1).
 
