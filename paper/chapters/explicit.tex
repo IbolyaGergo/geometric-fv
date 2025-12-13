@@ -76,9 +76,11 @@ Similarly, the quantity leaving the cell across the right interface \(x_{i+1/2}\
     \text{Outflow} = (a \Delta t) \cdot u_{i}^n.
 \]
 Dividing these values by \(\Delta t\) yields the numerical fluxes \(F_{i-1/2} = a u_{i-1}^n\) and \(F_{i+1/2} = a u_{i}^n\). Substituting these into the standard conservation form \eqref{eq:fvm_general} recovers the classical explicit upwind scheme:
-\[
-    u_i^{n+1} = u_i^n - \frac{a \Delta t}{\Delta x} (u_i^n - u_{i-1}^n).
-\]
+\begin{equation}
+    \label{eq:godunov_scheme}
+    u_i^{n+1} = u_i^n - \nu (u_i^n - u_{i-1}^n).
+\end{equation}
+where \(\nu = \frac{a \Delta t}{\Delta x}\) is the Courant number.
 
 The order of accuracy and stability of the resulting scheme depend entirely on the choice of the reconstruction \(\tilde{u}^{n}(x,t_n)\).
 For instance, the first-order Godunov scheme is obtained via a piecewise constant reconstruction:
@@ -135,9 +137,8 @@ Evaluating the reconstruction \(\tilde{u}^n\) at this midpoint yields the time-a
 The resulting numerical flux is simply the transport speed multiplied by this value:
 \begin{equation}
     \label{eq:flux_linear}
-    F_{i+1/2} = a u_i^n + \frac{1}{2} a (1 - \nu) \Delta x \sigma_i,
+    F_{i+1/2} = a u_i^n + \frac{1}{2} a (1 - \nu) \Delta x \sigma_i.
 \end{equation}
-where \(\nu = \frac{a \Delta t}{\Delta x}\) is the Courant number.
 
 Different standard schemes correspond to specific choices of the slope \(\sigma_i\):
 \begin{itemize}
@@ -145,3 +146,132 @@ Different standard schemes correspond to specific choices of the slope \(\sigma_
     \item \textbf{Lax-Wendroff:} Choosing the downwind (forward) slope \(\sigma_i = (u_{i+1}^n - u_i^n)/\Delta x\).
     \item \textbf{Fromm:} Choosing the centered slope \(\sigma_i = (u_{i+1}^n - u_{i-1}^n)/ 2\Delta x\).
 \end{itemize}
+
+However, all these choices produce unphysical oscillations in the vicinity of
+large gradients. All high-order, linear (constant coefficient) schemes share
+this major limitation. As established by Godunov's theorem: no linear scheme
+of order higher than one can be free of oscillations \cite{godunov1959finite}.
+
+To resolve this conflict between accuracy and stability, we must abandon
+linear reconstructions. But before constructing such a mechanism, we must
+define the stability property we wish to enforce.
+
+\section{Monotonicity and the Upwind Range Condition}
+\label{sec:monotonicity_toro}
+This section follows the reasoning of Toro \cite{toro2013riemann}.
+
+The solution obtained by a monotone method has the property that the new
+extrema are bounded by the previous extrema:
+\begin{equation}
+    \label{eq:dmp_def}
+    \max_{i}\{u_{i}^{n+1}\} \leq \max_{i}\{u_{i}^{n}\} \text{; }
+    \min_{i}\{u_{i}^{n+1}\} \geq \min_{i}\{u_{i}^{n}\}.
+\end{equation}
+This property is known as the \textbf{Discrete Maximum Principle}.
+
+The oscillations observed in high-order linear schemes represent a violation of
+these physical bounds. To construct a robust method, we must impose a strict
+stability criterion.
+
+\subsection{Monotonicity Preserving Schemes}
+A numerical scheme is said to be \textbf{Monotonicity Preserving (MP)} if it
+maintains the monotonic nature of the initial data. Formally, if the data at
+time \(t_n\) is monotonic (i.e., \(u_i^n \geq u_{i+1}^n\) for all \(i\), or
+\(u_i^n \leq u_{i+1}^n\) for all \(i\)), then the updated solution at
+\(t_{n+1}\) must satisfy the same monotonicity property.
+
+While this global definition is fundamental, it is difficult to enforce
+directly during the construction of a scheme. Furthermore, monotonicity is a
+global condition. Since we know that the exact solution of the advection
+equation \eqref{eq:linadv} is influenced only by the values in its domain of
+dependence, we seek a local sufficient condition that guarantees this global
+property.
+
+\subsection{The Upwind Range Condition}
+For the linear advection equation with constant speed \(a > 0\), the physical
+solution propagates along the characteristics from the upwind direction (from
+\(i-1\) to \(i\)). Since the physical solution preserves monotonicity, the
+updated average \(u_i^{n+1}\) in the \(i\)-th cell should logically be
+bounded by the current value \(u_i^n\) and the upwind neighbor \(u_{i-1}^n\).
+This physical intuition holds strictly under the CFL condition:
+\[
+    a \Delta t \leq \Delta x \implies \nu \leq 1.
+\]
+
+This requirement is formulated as the \textbf{Upwind Range Condition}. For
+the scheme to be monotonic and physically bounded, the updated value must lie
+between the old cell average and the upwind neighbor:
+\begin{equation}
+    \min(u_{i-1}^n, u_i^n) \leq u_i^{n+1} \leq \max(u_{i-1}^n, u_i^n).
+\end{equation}
+This condition can be expressed more precisely as a constraint on the ratio
+of the solution change. Rearranging terms, we require that the normalized
+update satisfies:
+\begin{equation}
+    \label{eq:upwind_range_condition_explicit}
+    0 \leq \frac{u_i^{n+1} - u_i^n}{u_{i-1}^n - u_i^n} \leq 1.
+\end{equation}
+The denominator \(u_{i-1}^n - u_i^n\) represents the maximum possible
+physical inflow from the upwind cell, while the numerator \(u_i^{n+1} -
+u_i^n\) represents the actual numerical update.
+
+\paragraph*{Example: Godunov Scheme}
+Substituting the Godunov scheme \eqref{eq:godunov_scheme} into
+\eqref{eq:upwind_range_condition_explicit}, we obtain:
+\[
+    0 \leq
+    \frac{-\nu (u_i^n - u_{i-1}^n)}{u_{i-1}^n - u_i^n} 
+    = \frac{\nu (u_{i-1}^n - u_i^n)}{u_{i-1}^n - u_i^n} 
+    = \nu
+    \leq 1
+\]
+Thus, the condition becomes \(0 \leq \nu \leq 1\), which is exactly the CFL
+stability condition. The Godunov scheme satisfies the Upwind Range Condition
+whenever it is stable.
+
+\paragraph*{Example: Lax-Wendroff Scheme}
+The Lax-Wendroff scheme can be written as the Godunov update plus a
+second-order correction term:
+\[
+    u_i^{n+1} = u_i^n - \nu (u_i^n - u_{i-1}^n) - \frac{1}{2}\nu(1-\nu) \left[ (u_{i+1}^n - u_i^n) - (u_i^n - u_{i-1}^n) \right].
+\]
+To verify the condition, we define the local gradient ratio \(r_i\), which
+measures the smoothness of the data:
+\begin{equation}
+    \label{eq:smoothness_ratio_explicit}
+    r_i = \frac{u_i^n - u_{i-1}^n}{u_{i+1}^n - u_i^n}.
+\end{equation}
+Substituting the update formula into the Upwind Range Condition
+\eqref{eq:upwind_range_condition_explicit}, the ratio becomes:
+\[
+    0 \leq
+    \frac{u_i^{n+1} - u_i^n}{u_{i-1}^n - u_i^n} 
+    = \nu + \frac{1}{2}\nu(1-\nu) \left(\frac{1}{r_i}- 1\right)
+    \leq 1.
+\]
+Rearranging we get
+\[
+    -\frac{1+\nu}{1-\nu} \leq \frac{1}{r_i} \leq \frac{\nu+2}{\nu}.
+\]
+Unlike the Godunov case, for a fixed \(\nu\) the data not always satisfies the
+condition.
+Near a strong discontinuity, \(r_i\) can be very large (steepening
+gradient) or negative (local extremum). If \(r_i\) is sufficiently large, the
+total ratio will exceed 1, violating the upper bound of the Upwind Range
+Condition. This mathematically confirms why the linear Lax-Wendroff scheme
+produces oscillations.
+
+\subsection{Connecting Limiters to the Range Condition}
+By limiting the slope such that the resulting geometric fluxes satisfy the
+Upwind Range Condition, we derive the class of \textbf{TVD Limiters} (e.g.,
+minmod, superbee, Van Leer).
+
+\paragraph{Implications for Semi-Implicit Schemes:}
+In Chapter X we will derive an analogous ratio for the semi-implicit
+formulation and enforce strict monotonicity without the time-step
+restrictions of explicit methods.
+\section{Construction of High-Resolution Schemes}
+\label{sec:construction_limiters}
+To satisfy the Upwind Range Condition derived above, we must ensure that the scheme adapts to the local smoothness of the solution. In the geometric framework, this means we cannot use a fixed high-order slope \(\sigma_i\) everywhere.
+
+Instead, we seek a method that acts as a \textit{hybrid}: it should behave like the high-order (trapezoidal) reconstruction in smooth regions to maintain accuracy, but switch to the constant (rectangular) reconstruction near discontinuities to preserve monotonicity.
