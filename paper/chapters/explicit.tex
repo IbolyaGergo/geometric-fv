@@ -1,9 +1,7 @@
 %! TeX root: ../main.tex
 \chapter{The Explicit Geometric Framework}%
 \label{sec:The Explicit Geometric Framework}
-The formulation in this chapter primarily follows the algorithms
-established by Godunov \cite{godunov1959finite}, Van Leer \cite{van1977towards},
-LeVeque \cite{1985_LeVeque_CONF, 1992_LeVeque_BOOK, 2002_LeVeque_BOOK}.
+The formulation in this chapter primarily follows the algorithms established by Godunov \cite{godunov1959finite}, Van Leer \cite{van1977towards}, LeVeque \cite{goodman1988geometric, leveque1992numerical, leveque2002finite}.
 
 We restrict our discussion to the linear advection equation
 \begin{equation}
@@ -20,20 +18,15 @@ The exact solution to \eqref{eq:linadv} is
 
 \section{Reconstruct-Evolve-Average Algorithm}
 \label{sub:Reconstruct-Evolve-Average Algorithm}
-Explicit finite volume schemes for solving \eqref{eq:linadv} can be derived
-using the Reconstruct-Evolve-Average (REA) algorithm, a geometric framework
-detailed extensively in \cite{1992_LeVeque_BOOK,2002_LeVeque_BOOK}. The method
-was originally proposed by Godunov \cite{godunov1959finite} who introduced the concept
-of evolving a piecewise constant reconstruction for solving the nonlinear
-Euler equations of gas dynamics.
+Explicit finite volume schemes for solving \eqref{eq:linadv} can be derived using the Reconstruct-Evolve-Average (REA) algorithm, a geometric framework detailed extensively in \cite{leveque1992numerical,leveque2002finite}.
+The method was originally proposed by Godunov \cite{godunov1959finite} who introduced the concept of evolving a piecewise constant reconstruction for solving the nonlinear Euler equations of gas dynamics.
 
-Van Leer \cite{van1977towards} demonstrated that the REA algorithm can be
-extended to higher-order accuracy by replacing Godunov's constant reconstruction
-with higher-degree polynomials.
+Van Leer \cite{van1977towards} demonstrated that the REA algorithm can be extended to higher-order accuracy by replacing Godunov's constant reconstruction with higher-degree polynomials.
 
 \paragraph*{The REA Algorithm}
 \label{par:REA}
-Let \(u_i^n\) denote the cell average over the \(i\)-th cell at time \(t_n\). The update to \(t_{n+1} = t_n + \Delta t\) proceeds in three steps:
+Let \(u_i^n\) denote the cell average over the \(i\)-th cell at time \(t_n\).
+The update to \(t_{n+1} = t_n + \Delta t\) proceeds in three steps:
 
 \begin{enumerate}
     \item \textbf{Reconstruct:} Construct a global piecewise polynomial function \(\tilde{u}^{n}(x,t_n)\) defined for all \(x\) from the set of discrete cell averages \(\{u_i^n\}\).
@@ -61,11 +54,13 @@ We define the function \(\tilde{u}^n(x, t_n)\) to be constant within each cell, 
 This produces a "staircase" profile representing the solution.
 
 \textbf{2. Evolve:} 
-We evolve this profile exactly over one time step \(\Delta t\). Geometrically, the entire staircase shifts to the right by a distance \(a\Delta t\). Assuming the CFL condition \(a\Delta t \leq \Delta x\), the solution at the interface \(x_{i-1/2}\) is determined by the value of the cell to the left, \(u_{i-1}^n\).
+We evolve this profile exactly over one time step \(\Delta t\).
+Geometrically, the entire staircase shifts to the right by a distance \(a\Delta t\).
+Assuming the CFL condition \(a\Delta t \leq \Delta x\), the solution at the interface \(x_{i-1/2}\) is determined by the value of the cell to the left, \(u_{i-1}^n\).
 
 \textbf{3. Average:}
-Computing the new cell average by directly integrating the evolved profile
-\(\tilde{u}\) is mathematically equivalent to a flux-based update. The change in the total conserved quantity within cell \(i\) corresponds precisely to the geometric area of the solution profile "swept" across the cell boundaries during the time step \(\Delta t\).
+Computing the new cell average by directly integrating the evolved profile \(\tilde{u}\) is mathematically equivalent to a flux-based update.
+The change in the total conserved quantity within cell \(i\) corresponds precisely to the geometric area of the solution profile "swept" across the cell boundaries during the time step \(\Delta t\).
 
 The total quantity entering the cell across the left interface \(x_{i-1/2}\) is the width of the shift multiplied by the height of the reconstructed function in the upwind cell:
 \[
@@ -75,7 +70,8 @@ Similarly, the quantity leaving the cell across the right interface \(x_{i+1/2}\
 \[
     \text{Outflow} = (a \Delta t) \cdot u_{i}^n.
 \]
-Dividing these values by \(\Delta t\) yields the numerical fluxes \(F_{i-1/2} = a u_{i-1}^n\) and \(F_{i+1/2} = a u_{i}^n\). Substituting these into the standard conservation form \eqref{eq:fvm_general} recovers the classical explicit upwind scheme:
+Dividing these values by \(\Delta t\) yields the numerical fluxes \(F_{i-1/2} = a u_{i-1}^n\) and \(F_{i+1/2} = a u_{i}^n\).
+Substituting these into the standard conservation form \eqref{eq:fvm_general} recovers the classical explicit upwind scheme:
 \begin{equation}
     \label{eq:godunov_scheme}
     u_i^{n+1} = u_i^n - \nu (u_i^n - u_{i-1}^n).
@@ -93,11 +89,9 @@ where the constant value is the cell average.
 While this explicit formulation yields a stable scheme under the CFL condition $\nu \leq 1$,
 our goal in Chapter X is to relax this restriction...
 
-To obtain a second-order scheme, one might consider a piecewise linear
-reconstruction with slopes \(\sigma_{i}\) in each cell. For a third-order
-scheme, we choose a piecewise-parabolic reconstruction and so on.
-Generally, to obtain an \(n\)-th order scheme we need an \((n-1)\)-th
-order polynomial reconstruction.
+To obtain a second-order scheme, one might consider a piecewise linear reconstruction with slopes \(\sigma_{i}\) in each cell.
+For a third-order scheme, we choose a piecewise-parabolic reconstruction and so on.
+Generally, to obtain an \(n\)-th order scheme we need an \((n-1)\)-th order polynomial reconstruction.
 
 The limitation of explicit methods is the small time step.
 
@@ -110,23 +104,28 @@ The limitation of explicit methods is the small time step.
 
 \section{Second-Order Schemes}
 \label{sub:second_order}
-To achieve higher spatial accuracy, we exploit the generality of Step 1 in the REA algorithm. Instead of limiting the reconstruction to a constant value (degree 0), we specify a piecewise linear function (degree 1).
+To achieve higher spatial accuracy, we exploit the generality of Step 1 in the REA algorithm.
+Instead of limiting the reconstruction to a constant value (degree 0), we specify a piecewise linear function (degree 1).
 
 \textbf{1. Reconstruct:}
 In each cell \(\mathcal{C}_i\), we define a linear profile with slope \(\sigma_i\):
 \[
     \tilde{u}^n(x, t_n) = u_i^n + \sigma_i (x - x_i), \quad \text{for } x \in [x_{i-1/2}, x_{i+1/2}),
 \]
-where \(x_i\) is the cell center. The resulting scheme is determined entirely by the choice of the slope \(\sigma_i\).
+where \(x_i\) is the cell center.
+The resulting scheme is determined entirely by the choice of the slope \(\sigma_i\).
 
 \textbf{2. Evolve:}
 As in the first-order case, the linear advection equation dictates that this profile shifts rigidly by \(a \Delta t\).
 
 \textbf{3. Average (Geometric Flux Calculation):}
-The flux calculation remains the determination of the quantity swept across the interface. However, due to the non-zero slope, the geometric shape swept across the boundary is no longer a rectangle, but a \textbf{trapezoid}.
+The flux calculation remains the determination of the quantity swept across the interface.
+However, due to the non-zero slope, the geometric shape swept across the boundary is no longer a rectangle, but a \textbf{trapezoid}.
 
-Consider the interface \(x_{i+1/2}\). The quantity leaving cell \(i\) is the area under the linear reconstruction over the interval \([x_{i+1/2} - a\Delta t, x_{i+1/2}]\).
-The base of this trapezoid is the distance traveled, \(a \Delta t\). The average height of the trapezoid is the value of the reconstructed function at the midpoint of this interval:
+Consider the interface \(x_{i+1/2}\).
+The quantity leaving cell \(i\) is the area under the linear reconstruction over the interval \([x_{i+1/2} - a\Delta t, x_{i+1/2}]\).
+The base of this trapezoid is the distance traveled, \(a \Delta t\).
+The average height of the trapezoid is the value of the reconstructed function at the midpoint of this interval:
 \[
     x_{mid} = x_{i+1/2} - \frac{1}{2} a \Delta t.
 \]
@@ -147,21 +146,18 @@ Different standard schemes correspond to specific choices of the slope \(\sigma_
     \item \textbf{Fromm:} Choosing the centered slope \(\sigma_i = (u_{i+1}^n - u_{i-1}^n)/ 2\Delta x\).
 \end{itemize}
 
-However, all these choices produce unphysical oscillations in the vicinity of
-large gradients. All high-order, linear (constant coefficient) schemes share
-this major limitation. As established by Godunov's theorem: no linear scheme
-of order higher than one can be free of oscillations \cite{godunov1959finite}.
+However, all these choices produce unphysical oscillations in the vicinity of large gradients.
+All high-order, linear (constant coefficient) schemes share this major limitation.
+As established by Godunov's theorem: no linear scheme of order higher than one can be free of oscillations \cite{godunov1959finite}.
 
-To resolve this conflict between accuracy and stability, we must abandon
-linear reconstructions. But before constructing such a mechanism, we must
-define the stability property we wish to enforce.
+To resolve this conflict between accuracy and stability, we must abandon linear reconstructions.
+But before constructing such a mechanism, we must define the stability property we wish to enforce.
 
 \section{Monotonicity and the Upwind Range Condition}
 \label{sec:monotonicity_toro}
 This section follows the reasoning of Toro \cite{toro2013riemann}.
 
-The solution obtained by a monotone method has the property that the new
-extrema are bounded by the previous extrema:
+The solution obtained by a monotone method has the property that the new extrema are bounded by the previous extrema:
 \begin{equation}
     \label{eq:dmp_def}
     \max_{i}\{u_{i}^{n+1}\} \leq \max_{i}\{u_{i}^{n}\} \text{; }
@@ -169,55 +165,41 @@ extrema are bounded by the previous extrema:
 \end{equation}
 This property is known as the \textbf{Discrete Maximum Principle}.
 
-The oscillations observed in high-order linear schemes represent a violation of
-these physical bounds. To construct a robust method, we must impose a strict
-stability criterion.
+The oscillations observed in high-order linear schemes represent a violation of these physical bounds.
+To construct a robust method, we must impose a strict stability criterion.
 
 \subsection{Monotonicity Preserving Schemes}
-A numerical scheme is said to be \textbf{Monotonicity Preserving (MP)} if it
-maintains the monotonic nature of the initial data. Formally, if the data at
-time \(t_n\) is monotonic (i.e., \(u_i^n \geq u_{i+1}^n\) for all \(i\), or
-\(u_i^n \leq u_{i+1}^n\) for all \(i\)), then the updated solution at
-\(t_{n+1}\) must satisfy the same monotonicity property.
+A numerical scheme is said to be \textbf{Monotonicity Preserving (MP)} if it maintains the monotonic nature of the initial data.
+Formally, if the data at time \(t_n\) is monotonic (i.e., \(u_i^n \geq u_{i+1}^n\) for all \(i\), or \(u_i^n \leq u_{i+1}^n\) for all \(i\)), then the updated solution at \(t_{n+1}\) must satisfy the same monotonicity property.
 
-While this global definition is fundamental, it is difficult to enforce
-directly during the construction of a scheme. Furthermore, monotonicity is a
-global condition. Since we know that the exact solution of the advection
-equation \eqref{eq:linadv} is influenced only by the values in its domain of
-dependence, we seek a local sufficient condition that guarantees this global
-property.
+While this global definition is fundamental, it is difficult to enforce directly during the construction of a scheme.
+Furthermore, monotonicity is a global condition.
+Since we know that the exact solution of the advection equation \eqref{eq:linadv} is influenced only by the values in its domain of dependence, we seek a local sufficient condition that guarantees this global property.
 
 \subsection{The Upwind Range Condition}
-For the linear advection equation with constant speed \(a > 0\), the physical
-solution propagates along the characteristics from the upwind direction (from
-\(i-1\) to \(i\)). Since the physical solution preserves monotonicity, the
-updated average \(u_i^{n+1}\) in the \(i\)-th cell should logically be
-bounded by the current value \(u_i^n\) and the upwind neighbor \(u_{i-1}^n\).
+For the linear advection equation with constant speed \(a > 0\), the physical solution propagates along the characteristics from the upwind direction (from \(i-1\) to \(i\)).
+Since the physical solution preserves monotonicity, the updated average \(u_i^{n+1}\) in the \(i\)-th cell should logically be bounded by the current value \(u_i^n\) and the upwind neighbor \(u_{i-1}^n\).
 This physical intuition holds strictly under the CFL condition:
 \[
     a \Delta t \leq \Delta x \implies \nu \leq 1.
 \]
 
-This requirement is formulated as the \textbf{Upwind Range Condition}. For
-the scheme to be monotonic and physically bounded, the updated value must lie
-between the old cell average and the upwind neighbor:
+This requirement is formulated as the \textbf{Upwind Range Condition}.
+For the scheme to be monotonic and physically bounded, the updated value must lie between the old cell average and the upwind neighbor:
 \begin{equation}
     \min(u_{i-1}^n, u_i^n) \leq u_i^{n+1} \leq \max(u_{i-1}^n, u_i^n).
 \end{equation}
-This condition can be expressed more precisely as a constraint on the ratio
-of the solution change. Rearranging terms, we require that the normalized
-update satisfies:
+This condition can be expressed more precisely as a constraint on the ratio of the solution change.
+Rearranging terms, we require that the normalized update satisfies:
 \begin{equation}
     \label{eq:upwind_range_condition_explicit}
     0 \leq \frac{u_i^{n+1} - u_i^n}{u_{i-1}^n - u_i^n} \leq 1.
 \end{equation}
-The denominator \(u_{i-1}^n - u_i^n\) represents the maximum possible
-physical inflow from the upwind cell, while the numerator \(u_i^{n+1} -
+The denominator \(u_{i-1}^n - u_i^n\) represents the maximum possible physical inflow from the upwind cell, while the numerator \(u_i^{n+1} -
 u_i^n\) represents the actual numerical update.
 
 \paragraph*{Example: Godunov Scheme}
-Substituting the Godunov scheme \eqref{eq:godunov_scheme} into
-\eqref{eq:upwind_range_condition_explicit}, we obtain:
+Substituting the Godunov scheme \eqref{eq:godunov_scheme} into \eqref{eq:upwind_range_condition_explicit}, we obtain:
 \[
     0 \leq
     \frac{-\nu (u_i^n - u_{i-1}^n)}{u_{i-1}^n - u_i^n} 
@@ -225,24 +207,20 @@ Substituting the Godunov scheme \eqref{eq:godunov_scheme} into
     = \nu
     \leq 1
 \]
-Thus, the condition becomes \(0 \leq \nu \leq 1\), which is exactly the CFL
-stability condition. The Godunov scheme satisfies the Upwind Range Condition
-whenever it is stable.
+Thus, the condition becomes \(0 \leq \nu \leq 1\), which is exactly the CFL stability condition.
+The Godunov scheme satisfies the Upwind Range Condition whenever it is stable.
 
 \paragraph*{Example: Lax-Wendroff Scheme}
-The Lax-Wendroff scheme can be written as the Godunov update plus a
-second-order correction term:
+The Lax-Wendroff scheme can be written as the Godunov update plus a second-order correction term:
 \[
     u_i^{n+1} = u_i^n - \nu (u_i^n - u_{i-1}^n) - \frac{1}{2}\nu(1-\nu) \left[ (u_{i+1}^n - u_i^n) - (u_i^n - u_{i-1}^n) \right].
 \]
-To verify the condition, we define the local gradient ratio \(r_i\), which
-measures the smoothness of the data:
+To verify the condition, we define the local gradient ratio \(r_i\), which measures the smoothness of the data:
 \begin{equation}
     \label{eq:smoothness_ratio_explicit}
     r_i = \frac{u_i^n - u_{i-1}^n}{u_{i+1}^n - u_i^n}.
 \end{equation}
-Substituting the update formula into the Upwind Range Condition
-\eqref{eq:upwind_range_condition_explicit}, the ratio becomes:
+Substituting the update formula into the Upwind Range Condition \eqref{eq:upwind_range_condition_explicit}, the ratio becomes:
 \[
     0 \leq
     \frac{u_i^{n+1} - u_i^n}{u_{i-1}^n - u_i^n} 
