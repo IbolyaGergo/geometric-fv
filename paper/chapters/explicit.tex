@@ -231,25 +231,21 @@ Rearranging we get
 \[
     -\frac{1+\nu}{1-\nu} \leq \frac{1}{r_i} \leq \frac{\nu+2}{\nu}.
 \]
-Unlike the Godunov case, for a fixed \(\nu\) the data not always satisfies the
-condition.
-Near a strong discontinuity, \(r_i\) can be very large (steepening
-gradient) or negative (local extremum). If \(r_i\) is sufficiently large, the
-total ratio will exceed 1, violating the upper bound of the Upwind Range
-Condition. This mathematically confirms why the linear Lax-Wendroff scheme
-produces oscillations.
+Unlike the Godunov case, for a fixed \(\nu\) the data in general does not satisfy the Upwind Range Condition.
+Near a strong discontinuity, \(r_i\) can be very large (steepening gradient) or negative (local extremum).
+If \(r_i\) is sufficiently large, the total ratio will exceed 1, violating the upper bound of the Upwind Range Condition.
+This mathematically confirms why the linear Lax-Wendroff scheme produces oscillations.
 
 \subsection{Connecting Limiters to the Range Condition}
-By limiting the slope such that the resulting geometric fluxes satisfy the
-Upwind Range Condition, we derive the class of \textbf{TVD Limiters} (e.g.,
+By limiting the slope such that the resulting geometric fluxes satisfy the Upwind Range Condition, we derive the class of \textbf{TVD Limiters} (e.g.,
 minmod, superbee, Van Leer).
 
 \paragraph{Implications for Semi-Implicit Schemes:}
-In Chapter X we will derive an analogous ratio for the semi-implicit
-formulation and enforce strict monotonicity without the time-step
-restrictions of explicit methods.
+In Chapter X we will derive an analogous ratio for the semi-implicit formulation and enforce strict monotonicity without the time-step restrictions of explicit methods.
+
 \section{Construction of High-Resolution Schemes}
 \label{sec:construction_limiters}
-To satisfy the Upwind Range Condition derived above, we must ensure that the scheme adapts to the local smoothness of the solution. In the geometric framework, this means we cannot use a fixed high-order slope \(\sigma_i\) everywhere.
+To satisfy the Upwind Range Condition derived above, we must ensure that the scheme adapts to the local smoothness of the solution.
+In the geometric framework, this means we cannot use a fixed high-order slope \(\sigma_i\) everywhere.
 
 Instead, we seek a method that acts as a \textit{hybrid}: it should behave like the high-order (trapezoidal) reconstruction in smooth regions to maintain accuracy, but switch to the constant (rectangular) reconstruction near discontinuities to preserve monotonicity.
