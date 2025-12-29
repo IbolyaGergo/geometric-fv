@@ -1,6 +1,11 @@
 \pagestyle{headings}
 \linespread{1.3}
-\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm, bindingoffset=1cm]{geometry}
+\usepackage{standalone}
+\ifstandalone
+    % Do nothing
+\else
+    \usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm, bindingoffset=1cm]{geometry}
+\fi
 \usepackage[slovak,english]{babel}
 
 % Images and sub-figures
@@ -31,11 +36,29 @@
 	maxbibnames=99]{biblatex}
 \addbibresource{bib/references.bib}
 
-\usepackage{standalone}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usetikzlibrary{patterns}
+\tikzset{
+    % Style for the cell averages u_i
+    old values/.style={
+        fill=gray,        % Fill color
+        fill opacity=0.3,  % Only make the fill transparent, not the border
+        draw=black
+    },
+    % Style for the flux
+    flux area/.style={
+        color=red,
+        opacity=.2
+    },
+    explanation godunov/.style={
+        below right,
+        text width=5cm,
+        align=justify,
+        font=\small
+    }
+}
 
 % Hyperlinks
 % Overleaf: "...usually, it has to be the last package to be imported."
@@ -47,7 +70,6 @@
     urlcolor=blue
 }
 
-\usepackage{xurl}
+\usepackage{xurl}%
 % Load this AFTER \usepackage{biblatex} and \usepackage{hyperref}
-
 \newcommand{\diff}{\ensuremath{\operatorname{d}\!}}
