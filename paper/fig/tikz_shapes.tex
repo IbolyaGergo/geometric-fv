@@ -1,0 +1,31 @@
+% File: tikz_shapes.tex
+% Define a command to set up the grid and variables
+\newcommand{\DrawFVGrid}{%
+    % --- CONFIGURATION ---
+    % We use \def so these variables are accessible after this command runs
+    \def\dx{1.5}%
+    %
+    % --- DRAW AXIS ---
+    \draw[->] (-1.5*\dx,0) -- (2.5*\dx,0) node[right] {$x$};%
+    %
+    % --- DRAW TICKS ---
+    \foreach \pos/\label in {
+        -\dx / x_{i-3/2},
+         0   / x_{i-1/2},
+         \dx / x_{i+1/2},
+         2*\dx / x_{i+3/2}
+    } {%
+        \draw (\pos, .1) -- (\pos, -.1) node[below] {$\label$};%
+    }%
+}
+
+\newcommand{\SetupGodunov}{%
+    \DrawFVGrid
+
+    \def\dt{.4*\dx}%
+
+    % Heights of the bars
+    \def\hL{.4*\dx}  % Left cell (i-1)
+    \def\hM{1.1*\dx}  % Middle cell (i)
+    \def\hR{1.5*\dx}  % Right cell (i+1)
+}
