@@ -1,0 +1,34 @@
+% Add border=2pt (or 1mm) to give the drawing breathing room
+\documentclass[tikz,border=2pt]{standalone}
+\input{../preamble.tex}
+\input{tikz_shapes.tex} % Input reusable shapes
+\pagestyle{empty}
+\usetikzlibrary{arrows,intersections}
+\begin{document}%
+\begin{tikzpicture}[x=2cm,y=2cm]
+    \SetupGodunov
+
+    \foreach \pos / \h / \idx in {
+        -\dx / \hL / {i-1},  % Left Cell
+         0   / \hM / {i},    % Middle Cell
+         \dx / \hR / {i+1}   % Right Cell
+    } {
+        \fill[old values] (\pos+\dt,0) rectangle +(\dx,\h);
+        \draw[dashed] (\pos,0) -- (\pos,\h) -- +(\dt,0);
+        \node at (\pos+0.2*\dx+\dt, \h+.1*\dx) {$u_\idx^n$};
+    }
+    \draw[dashed] (2*\dx,\hR) -- +(0,-\hR);
+    \fill[old values] (-\dx,0) rectangle +(\dt,.5*\hL);
+
+    \draw[->,thick] (0, \hM+.1*\dx) -- (\dt, \hM+.1*\dx) node[midway, above] {$a\Delta t$};
+
+    \node[explanation godunov] at (3*\dx, \hM) {
+        \textbf{Step 2: Evolution}\\
+        The solution evolves exactly for time $\Delta t$:
+        \[ 
+            \tilde{u}(x, t^{n+1}) = \tilde{u}^n(x - a\Delta t, t^n).
+        \]
+    };
+
+\end{tikzpicture}%
+\end{document}
