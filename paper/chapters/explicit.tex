@@ -47,20 +47,33 @@ The update to \(t^{n+1} = t^n + \Delta t\) proceeds in three steps:
 
 To illustrate this procedure, we apply the REA algorithm to the simplest case: a piecewise constant reconstruction.
 
-\textit{1. Reconstruct:}
-We define the function \(\tilde{u}^n(x, t^n)\) to be constant within each cell, taking the value of the cell average:
-\[
-    \tilde{u}^{n}(x,t^{n}) = u_{i}^{n} \quad \text{for } x \in [x_{i-1/2}, x_{i+1/2}).
-\]
-This produces a "staircase" profile representing the solution.
-
-\textit{2. Evolve:}
-We evolve this profile exactly over one time step \(\Delta t\).
-Geometrically, the entire staircase shifts to the right by a distance \(a\Delta t\).
-
-\textit{3. Average:}
-Computing the new cell average by directly integrating the evolved profile \(\tilde{u}\) is mathematically equivalent to a flux-based update.
-The change in the total conserved quantity within cell \(i\) corresponds precisely to the geometric area of the solution profile "swept" across the cell boundaries during the time step \(\Delta t\).
+\begin{enumerate}
+    \item \textit{Reconstruct:}
+        We define the function \(\tilde{u}^n(x, t^n)\) to be constant within each cell, taking the value of the cell average (see Figure \ref{fig:godunov_full_page}, top):
+    \[
+        \tilde{u}^{n}(x,t^{n}) = u_{i}^{n} \quad \text{for } x \in [x_{i-1/2}, x_{i+1/2}).
+    \]
+    This produces a "staircase" profile representing the solution.
+    \item \textit{Evolve:}
+    We evolve this profile exactly over one time step \(\Delta t\).
+    Geometrically, the entire staircase shifts to the right by a distance \(a\Delta t\) (see Figure \ref{fig:godunov_full_page}, middle):
+    \[
+        \tilde{u}(x, t^{n+1}) = \tilde{u}^n(x - a\Delta t, t^n).
+    \]
+\item \textit{Average:}
+    We compute the new cell average by directly integrating the evolved profile (see Figure \ref{fig:godunov_full_page}, bottom):
+    \begin{equation}
+        \begin{split}
+            \label{eq:godunov_integral}
+            u_{i}^{n+1} &= \frac{1}{\Delta x} \int\limits_{x_{i - 1/2}}^{x_{i + 1/2}} \tilde{u}(x,t^{n+1}) \,\mathrm{d}x\\
+                        &= \frac{1}{\Delta x} \left( \int_{x_{i-1/2}}^{x_{i-1/2}+a\Delta t} u_{i-1}^n dx + \int_{x_{i-1/2}+a\Delta t}^{x_{i+1/2}} u_i^n dx \right)\\
+                        &= \frac{1}{\Delta x} \left(u_{i-1}^{n} a\Delta t + u_{i}^{n} \left(\Delta x - a\Delta t\right)\right)\\
+                        &= u_{i-1}^{n} \nu + u_{i}^{n} \left(1-\nu\right),
+        \end{split}
+    \end{equation}
+\end{enumerate}
+where \(\nu = a\Delta t / \Delta x\) is the Courant number.
+See Figure~\ref{fig:godunov_full_page}.
 
 \begin{figure}[p] % 'p' forces a dedicated page
     \centering
@@ -94,11 +107,11 @@ The change in the total conserved quantity within cell \(i\) corresponds precise
     \label{fig:godunov_full_page}
 \end{figure}
 
-\begin{figure}
-    \centering
-    \includestandalone[mode=buildnew]{fig/flux-god}
-\end{figure}
+\newpage
+\subsection{Numerical flux}
 
+Obtaining the new cell average by integrating the shifted profile is mathematically equivalent to a flux-based update.
+The change in the total conserved quantity within cell \(i\) corresponds precisely to the geometric area of the solution profile "swept" across the cell boundaries during the time step \(\Delta t\).
 
 The total quantity entering the cell across the left interface \(x_{i-1/2}\) is the width of the shift multiplied by the height of the reconstructed function in the upwind cell:
 \[
@@ -111,10 +124,18 @@ Similarly, the quantity leaving the cell across the right interface \(x_{i+1/2}\
 Dividing these values by \(\Delta t\) yields the numerical fluxes \(F_{i-1/2} = a u_{i-1}^n\) and \(F_{i+1/2} = a u_{i}^n\).
 Substituting these into the standard conservation form \eqref{eq:fvm_general} recovers the classical explicit upwind scheme:
 \begin{equation}
-    \label{eq:godunov_scheme}
+    \label{eq:godunov_flux}
     u_i^{n+1} = u_i^n - \nu (u_i^n - u_{i-1}^n).
 \end{equation}
-where \(\nu = \frac{a \Delta t}{\Delta x}\) is the Courant number.
+Equation \eqref{eq:godunov_flux} is equivalent to \eqref{eq:godunov_integral}.
+
+\begin{figure}
+    \centering
+    \includestandalone[mode=buildnew]{fig/flux-god}
+    \caption{Flux-based interpretation of the Godunov scheme.}
+    \label{fig:godunov_flux}
+\end{figure}
+
 
 The order of accuracy and stability of the resulting scheme depend entirely on the choice of the reconstruction \(\tilde{u}^{n}(x,t^n)\).
 For instance, the first-order Godunov scheme is obtained via a piecewise constant reconstruction:
@@ -248,7 +269,7 @@ This reasoning -- comparing the actual update to the total upwind difference -- 
 Crucially, this interpretation extends naturally to higher dimensions, where the denominator represents the sum of maximum contributions from all upwind neighbors.
 
 \paragraph*{Example: Godunov Scheme}
-Substituting the Godunov scheme \eqref{eq:godunov_scheme} into \eqref{eq:upwind_range_condition_explicit}, we obtain:
+Substituting the Godunov scheme \eqref{eq:godunov_flux} into \eqref{eq:upwind_range_condition_explicit}, we obtain:
 \[
     0 \leq
     \frac{-\nu (u_i^n - u_{i-1}^n)}{u_{i-1}^n - u_i^n}
