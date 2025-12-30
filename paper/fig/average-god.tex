@@ -14,7 +14,7 @@
 \begin{document}
 \begin{tikzpicture}[x=2cm,y=2cm]
     \SetupGodunov
-    
+
     % 2. Calculate New Heights (Using PGF Math, not Text replacement)
     % We group variables in (...) to ensure safety against text expansion order
     \pgfmathsetmacro{\hLn}{0.8 * \hL}
@@ -29,14 +29,15 @@
     } {
         % Draw New Average (Solid Fill)
         \fill[old values] (\pos,0) rectangle +(\dx,\newH);
-        
+
         % Draw Old Average Shifted (Dashed Outline)
         % This shows where the mass came from
-        \draw[dashed] (\pos+\dt, 0) rectangle +(\dx, \oldH);
+        \draw[dashed] (\pos+\dt, 0) -- ++(0,\oldH) -- +(\dx,0);
 
         % Label
         \node at (\pos+0.2*\dx, \newH+.1*\dx) {$u_\idx^{n+1}$};
     }
+    \draw[dashed] (2*\dx+\dt,0) -- +(0,\hR);
 
 \end{tikzpicture}
 \end{document}
