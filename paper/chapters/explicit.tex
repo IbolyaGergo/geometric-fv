@@ -62,6 +62,44 @@ Assuming the CFL condition \(a\Delta t \leq \Delta x\), the solution at the inte
 Computing the new cell average by directly integrating the evolved profile \(\tilde{u}\) is mathematically equivalent to a flux-based update.
 The change in the total conserved quantity within cell \(i\) corresponds precisely to the geometric area of the solution profile "swept" across the cell boundaries during the time step \(\Delta t\).
 
+\begin{figure}[p] % 'p' forces a dedicated page
+    \centering
+
+    % 1. Reconstruction
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includestandalone[mode=buildnew]{fig/reconstruct-god}
+        %\caption{} % Captions might be redundant if text is inside the image
+    \end{subfigure}
+
+    \vspace{1cm} % Nice breathing room
+
+    % 2. Evolution
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includestandalone[mode=buildnew]{fig/evolve-god}
+    \end{subfigure}
+
+    \vspace{1cm}
+
+    % 3. Averaging
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includestandalone[mode=buildnew]{fig/average-god}
+    \end{subfigure}
+
+    \caption{Solving \(u_t + au_x = 0\) by the Godunov Scheme. (Top) Data is reconstructed as piecewise constant.
+    (Middle) The profile shifts by $a\Delta t$.
+    (Bottom) The new cell average is computed.}
+    \label{fig:godunov_full_page}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includestandalone[mode=buildnew]{fig/flux-god}
+\end{figure}
+
+
 The total quantity entering the cell across the left interface \(x_{i-1/2}\) is the width of the shift multiplied by the height of the reconstructed function in the upwind cell:
 \[
     \text{Inflow} = (a \Delta t) \cdot u_{i-1}^n.
