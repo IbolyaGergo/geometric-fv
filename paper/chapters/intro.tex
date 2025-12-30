@@ -19,28 +19,28 @@ change of the quantity within cell \(\Omega_i\) is determined entirely by the
 flux \(f(u)\) across the cell boundaries:
 \begin{equation}
     \label{eq:claw_int}
-    \int_{\Omega_i} u(t_{n+1}, x) \,\mathrm{d}x - \int_{\Omega_i} u(t_{n}, x) \,\mathrm{d}x = 
-    \int_{t_{n}}^{t_{n+1}} f(u(t, x_{i-1/2})) \,\mathrm{d}t - \int_{t_{n}}^{t_{n+1}} f(u(t, x_{i+1/2})) \,\mathrm{d}t.
+    \int\limits_{\Omega_i} u(t_{n+1}, x) \,\mathrm{d}x - \int\limits_{\Omega_i} u(t_{n}, x) \,\mathrm{d}x = 
+    \int\limits_{t_{n}}^{t_{n+1}} f(u(t, x_{i-1/2})) \,\mathrm{d}t - \int\limits_{t_{n}}^{t_{n+1}} f(u(t, x_{i+1/2})) \,\mathrm{d}t.
 \end{equation}
 
 Our numerical goal is to determine the average value of \(u\) at the new time level \(t_{n+1}\), given the state at \(t_n\). We denote the numerical approximation to the cell average by \(u_i^n\):
 \[
-    u_i^n \approx \frac{1}{\Delta x_i} \int_{\Omega_i} u(t_n, x) \,\mathrm{d}x.
+    u_i^n \approx \frac{1}{\Delta x} \int\limits_{\Omega_i} u(t_n, x) \,\mathrm{d}x.
 \]
 
 Similarly, we introduce a numerical flux \(F_{i+1/2}\) to approximate the time-averaged physical flux across the interface:
 \[
-    F_{i+1/2} \approx \frac{1}{\Delta t} \int_{t_{n}}^{t_{n+1}} f(u(t, x_{i+1/2})) \,\mathrm{d}t,
+    F_{i+1/2} \approx \frac{1}{\Delta t} \int\limits_{t_{n}}^{t_{n+1}} f(u(t, x_{i+1/2})) \,\mathrm{d}t,
 \]
 where \(\Delta t = t_{n+1} - t_n\).
 
 Substituting these approximations into the integral conservation law \eqref{eq:claw_int} yields the fundamental discrete update formula:
 \[
-    (u_i^{n+1} - u_i^{n}) \Delta x_i = (F_{i-1/2} - F_{i+1/2}) \Delta t.
+    (u_i^{n+1} - u_i^{n}) \Delta x = (F_{i-1/2} - F_{i+1/2}) \Delta t.
 \]
 
 Rearranging terms, we obtain the explicit form for the cell average at the next time step:
 \begin{equation}
     \label{eq:fvm_general}
-    u_i^{n+1} = u_i^{n} - \frac{\Delta t}{\Delta x_i} \left( F_{i+1/2} - F_{i-1/2} \right).
+    u_i^{n+1} = u_i^{n} - \frac{\Delta t}{\Delta x} \left( F_{i+1/2} - F_{i-1/2} \right).
 \end{equation}
