@@ -1,4 +1,32 @@
 % File: tikz_shapes.tex
+% Style
+\tikzset{
+    % Style for the cell averages u_i
+    old values/.style={
+        fill=gray,        % Fill color
+        fill opacity=0.3,  % Only make the fill transparent, not the border
+        draw=black
+    },
+    % Style for the flux
+    flux area/.style={
+        color=red,
+        opacity=.2
+    },
+    flux text/.style={
+        red,
+        align=center,
+        fill=white,
+        inner sep=1pt,
+        opacity=0.9,
+        text opacity=1
+    },
+    explanation godunov/.style={
+        below right,
+        text width=5cm,
+        align=justify,
+        font=\small
+    }
+}
 % Define a command to set up the grid and variables
 \newcommand{\DrawFVGrid}{%
     % --- CONFIGURATION ---
