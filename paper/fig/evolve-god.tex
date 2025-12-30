@@ -20,15 +20,7 @@
     \draw[dashed] (2*\dx,\hR) -- +(0,-\hR);
     \fill[old values] (-\dx,0) rectangle +(\dt,.5*\hL);
 
-    \draw[->,thick] (0, \hM+.1*\dx) -- (\dt, \hM+.1*\dx) node[midway, above] {$a\Delta t$};
-
-    \node[explanation godunov] at (3*\dx, \hM) {
-        \textbf{Step 2: Evolution}\\
-        The solution evolves exactly for time $\Delta t$:
-        \[ 
-            \tilde{u}(x, t^{n+1}) = \tilde{u}^n(x - a\Delta t, t^n).
-        \]
-    };
+    \draw[->] (0, \hM+.1*\dx) -- (\dt, \hM+.1*\dx) node[midway, above] {$a\Delta t$};
 
 \end{tikzpicture}%
 \end{document}
