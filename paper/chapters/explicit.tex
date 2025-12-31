@@ -21,7 +21,7 @@ The exact solution to \eqref{eq:linadv} is
 Explicit finite volume schemes for solving \eqref{eq:linadv} can be derived using the Reconstruct-Evolve-Average (REA) algorithm, a geometric framework detailed extensively in \cite{leveque1992numerical,leveque2002finite}.
 The method was originally proposed by Godunov \cite{godunov1959finite} who introduced the concept of evolving a piecewise constant reconstruction for solving the nonlinear Euler equations of gas dynamics.
 
-Van Leer \cite{van1977towards} demonstrated that the REA algorithm can be extended to higher-order accuracy by replacing Godunov's constant reconstruction with higher-degree polynomials.
+Van Leer \cite{van1977towards} demonstrated that the algorithm can be extended to higher-order accuracy by replacing Godunov's constant reconstruction with higher-degree polynomials.
 
 \paragraph*{The REA Algorithm}
 \label{par:REA}
@@ -138,29 +138,18 @@ Equation \eqref{eq:godunov_flux} is equivalent to \eqref{eq:godunov_integral}.
 
 
 The order of accuracy and stability of the resulting scheme depend entirely on the choice of the reconstruction \(\tilde{u}^{n}(x,t^n)\).
-For instance, the first-order Godunov scheme is obtained via a piecewise constant reconstruction:
-\[
-    \tilde{u}^{n}(x,t^{n}) = u_{i}^{n} \quad \text{for } x \in [x_{i-1/2},
-    x_{i+1/2}),
-\]
-where the constant value is the cell average.
-
-While this explicit formulation yields a stable scheme under the CFL condition $\nu \leq 1$,
-our goal in Chapter X is to relax this restriction...
-
+For instance, the first-order Godunov scheme is obtained via a piecewise constant reconstruction.
 To obtain a second-order scheme, one might consider a piecewise linear reconstruction with slopes \(\sigma_{i}\) in each cell.
 For a third-order scheme, we choose a piecewise-parabolic reconstruction and so on.
 Generally, to obtain an \(n\)-th order scheme we need an \((n-1)\)-th order polynomial reconstruction.
 
-The limitation of explicit methods is the small time step.
-
 \section{Second-Order Schemes}
 \label{sub:second_order}
-To achieve higher spatial accuracy, we exploit the generality of Step 1 in the REA algorithm.
-Instead of limiting the reconstruction to a constant value (degree 0), we specify a piecewise linear function (degree 1).
+To achieve high-order accuracy, we exploit the generality of Step 1 in the REA algorithm.
+Instead of a piecewise constant reconstruction, we specify a piecewise linear function.
 
 \textit{1. Reconstruct:}
-In each cell \(\mathcal{C}_i\), we define a linear profile with slope \(\sigma_i\):
+In each cell \(\Omega_i\), we define a linear profile with slope \(\sigma_i\):
 \[
     \tilde{u}^n(x, t^n) = u_i^n + \sigma_i (x - x_i), \quad \text{for } x \in [x_{i-1/2}, x_{i+1/2}),
 \]
