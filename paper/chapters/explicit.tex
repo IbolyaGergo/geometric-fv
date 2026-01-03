@@ -180,6 +180,15 @@ The resulting numerical flux is simply the transport speed multiplied by this va
     F_{i+1/2} = a u_i^n + \frac{1}{2} a (1 - \nu) \Delta x \sigma_i.
 \end{equation}
 
+\begin{figure}[ht]
+    \centering
+    \includestandalone[mode=buildnew]{fig/flux-linear}
+    \caption{Geometric interpretation of the second-order flux.
+    The shaded trapezoids represent the total quantity transported across the interfaces during \(\Delta t\).
+    Unlike the Godunov scheme, the varying height of the reconstruction introduces a second-order correction to the swept area.}
+    \label{fig:}
+\end{figure}
+
 Different standard schemes correspond to specific choices of the slope \(\sigma_i\):
 \begin{itemize}
     \item \textit{Beam-Warming:} Choosing the upwind (backward) slope \(\sigma_i = (u_i^n - u_{i-1}^n)/\Delta x\).

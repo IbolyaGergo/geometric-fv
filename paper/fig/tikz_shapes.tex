@@ -37,6 +37,15 @@
         fill opacity=0.8, % <--- Optional: soft mask
         text opacity=1   % <--- Keep text 100% black
     },
+    slope text/.style={
+        fill=white,       % <--- Clears the area behind text
+        inner sep=1pt,    % <--- Tightens the white box
+        fill opacity=0.8, % <--- Optional: soft mask
+        text opacity=1,   % <--- Keep text 100% black
+        pos=.2,
+        sloped,
+        above,
+        yshift=1pt
     }
 }
 % Define a command to set up the grid and variables
@@ -71,4 +80,20 @@
 
     \def\dotSize{1.5pt}
 }
+
+\newcommand{\SetupLinear}{%
+    \SetupAvgs
+
+    % Slopes
+    \pgfmathsetmacro{\sL}{(\hM - \hL)/\dx}
+    \pgfmathsetmacro{\sM}{(\hR - \hM)/\dx}
+    \pgfmathsetmacro{\sR}{.5*(\hR - \hM)/\dx}
+
+    % Edge values
+    \pgfmathsetmacro{\edgeLL}{\hL - .5*\sL*\dx}
+    \pgfmathsetmacro{\edgeLR}{\hL + .5*\sL*\dx}
+    \pgfmathsetmacro{\edgeML}{\hM - .5*\sM*\dx}
+    \pgfmathsetmacro{\edgeMR}{\hM + .5*\sM*\dx}
+    \pgfmathsetmacro{\edgeRL}{\hR - .5*\sR*\dx}
+    \pgfmathsetmacro{\edgeRR}{\hR + .5*\sR*\dx}
 }
