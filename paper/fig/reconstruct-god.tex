@@ -24,7 +24,8 @@
          \dx / \hR / {i+1}   % Right Cell
     } {
         \fill[old values] (\pos,0) rectangle +(\dx,\h);
-        \node at (\pos+0.2*\dx, \h+.1*\dx) {$u_\idx^n$};
+        \filldraw[avg dot] (\pos + 0.5*\dx, \h) circle (\dotSize);
+        \node[avg text] at (\pos+0.5*\dx, \h+.1*\dx) {$u_\idx^n$};
     }
 \end{tikzpicture}%
 \end{document}

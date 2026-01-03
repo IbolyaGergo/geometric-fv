@@ -35,7 +35,8 @@
         \draw[dashed] (\pos+\dt, 0) -- ++(0,\oldH) -- +(\dx,0);
 
         % Label
-        \node at (\pos+0.2*\dx, \newH+.1*\dx) {$u_\idx^{n+1}$};
+        \filldraw[avg dot] (\pos + 0.5*\dx, \newH) circle (\dotSize);
+        \node[avg text] at (\pos+0.5*\dx, \newH+.1*\dx) {$u_\idx^{n+1}$};
     }
     \draw[dashed] (2*\dx+\dt,0) -- +(0,\hR);
 

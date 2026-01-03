@@ -25,6 +25,18 @@
         text width=5cm,
         align=justify,
         font=\small
+    },
+    avg dot/.style={
+        fill=black,
+        draw=white,
+        thick
+    },
+    avg text/.style={
+        fill=white,       % <--- Clears the area behind text
+        inner sep=1pt,    % <--- Tightens the white box
+        fill opacity=0.8, % <--- Optional: soft mask
+        text opacity=1   % <--- Keep text 100% black
+    },
     }
 }
 % Define a command to set up the grid and variables
@@ -56,4 +68,7 @@
     \def\hL{.4*\dx}  % Left cell (i-1)
     \def\hM{1.1*\dx}  % Middle cell (i)
     \def\hR{1.5*\dx}  % Right cell (i+1)
+
+    \def\dotSize{1.5pt}
+}
 }
