@@ -81,7 +81,7 @@ See Figure~\ref{fig:godunov_full_page}.
     % 1. Reconstruction
     \begin{subfigure}[b]{\textwidth}
         \centering
-        \includestandalone[mode=buildnew]{fig/reconstruct-god}
+        \includestandalone[mode=buildnew]{fig/godunov_reconstruct}
         %\caption{} % Captions might be redundant if text is inside the image
     \end{subfigure}
 
@@ -90,7 +90,7 @@ See Figure~\ref{fig:godunov_full_page}.
     % 2. Evolution
     \begin{subfigure}[b]{\textwidth}
         \centering
-        \includestandalone[mode=buildnew]{fig/evolve-god}
+        \includestandalone[mode=buildnew]{fig/godunov_evolve}
     \end{subfigure}
 
     \vspace{1cm}
@@ -98,7 +98,7 @@ See Figure~\ref{fig:godunov_full_page}.
     % 3. Averaging
     \begin{subfigure}[b]{\textwidth}
         \centering
-        \includestandalone[mode=buildnew]{fig/average-god}
+        \includestandalone[mode=buildnew]{fig/godunov_average}
     \end{subfigure}
 
     \caption{Solving \(u_t + au_x = 0\) by the Godunov Scheme. (Top) Data is reconstructed as piecewise constant.
@@ -131,7 +131,7 @@ Equation \eqref{eq:godunov_flux} is equivalent to \eqref{eq:godunov_integral}.
 
 \begin{figure}[ht]
     \centering
-    \includestandalone[mode=buildnew]{fig/flux-god}
+    \includestandalone[mode=buildnew]{fig/godunov_flux}
     \caption{Flux-based interpretation of the Godunov scheme.}
     \label{fig:godunov_flux}
 \end{figure}
