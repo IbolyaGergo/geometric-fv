@@ -196,6 +196,13 @@ Different standard schemes correspond to specific choices of the slope \(\sigma_
     \item \textit{Fromm:} Choosing the centered slope \(\sigma_i = (u_{i+1}^n - u_{i-1}^n)/ 2\Delta x\).
 \end{itemize}
 
+\begin{figure}[h]
+    \centering
+    \includestandalone[mode=buildnew]{fig/linear_slopes}
+    \caption{}
+    \label{fig:linear_slopes}
+\end{figure}
+
 However, all these choices produce unphysical oscillations in the vicinity of large gradients.
 All high-order, linear (constant coefficient) schemes share this major limitation.
 As established by Godunov's theorem: no linear scheme of order higher than one can be free of oscillations \cite{godunov1959finite}.
