@@ -1,0 +1,31 @@
+% Add border=2pt (or 1mm) to give the drawing breathing room
+\documentclass[tikz,border=2pt]{standalone}
+
+% Needed for standalone compilation of fig/*.tex
+\IfFileExists{../preamble.tex}
+{\input{../preamble.tex}}% If compiling *.tex directly
+{\input{preamble.tex}}% If compiling main.tex
+
+\IfFileExists{tikz-shapes.tex}
+{\input{tikz-shapes.tex}}
+{\input{fig/tikz-shapes.tex}}
+
+\pagestyle{empty}
+
+\usetikzlibrary{arrows,intersections}
+
+\begin{document}%
+\begin{tikzpicture}[x=2cm,y=2cm]
+    \SetupAvgs
+
+    \foreach \pos / \h / \idx in {
+        -\dx / \hL / {i-1},  % Left Cell
+         0   / \hM / {i},    % Middle Cell
+         \dx / \hR / {i+1}   % Right Cell
+    } {
+        \fill[old values] (\pos,0) rectangle +(\dx,\h);
+        \filldraw[avg dot] (\pos + 0.5*\dx, \h) circle (\dotSize);
+        \node[avg text] at (\pos+0.5*\dx, \h+.1*\dx) {$u_\idx^n$};
+    }
+\end{tikzpicture}%
+\end{document}

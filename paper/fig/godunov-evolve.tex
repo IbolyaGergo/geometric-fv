@@ -6,9 +6,9 @@
 {\input{../preamble.tex}}% If compiling *.tex directly
 {\input{preamble.tex}}% If compiling main.tex
 
-\IfFileExists{tikz_shapes.tex}
-{\input{tikz_shapes.tex}}
-{\input{fig/tikz_shapes.tex}}
+\IfFileExists{tikz-shapes.tex}
+{\input{tikz-shapes.tex}}
+{\input{fig/tikz-shapes.tex}}
 
 \pagestyle{empty}
 
@@ -23,9 +23,15 @@
          0   / \hM / {i},    % Middle Cell
          \dx / \hR / {i+1}   % Right Cell
     } {
-        \fill[old values] (\pos,0) rectangle +(\dx,\h);
-        \filldraw[avg dot] (\pos + 0.5*\dx, \h) circle (\dotSize);
-        \node[avg text] at (\pos+0.5*\dx, \h+.1*\dx) {$u_\idx^n$};
+        \fill[old values] (\pos+\dt,0) rectangle +(\dx,\h);
+        \draw[dashed] (\pos,0) -- (\pos,\h) -- +(\dt,0);
+        \filldraw[avg dot] (\pos + 0.5*\dx+\dt, \h) circle (\dotSize);
+        \node[avg text] at (\pos+0.5*\dx+\dt, \h+.1*\dx) {$u_\idx^n$};
     }
+    \draw[dashed] (2*\dx,\hR) -- +(0,-\hR);
+    \fill[old values] (-\dx,0) rectangle +(\dt,.5*\hL);
+
+    \draw[->] (0, \hM+.1*\dx) -- (\dt, \hM+.1*\dx) node[midway, above] {$a\Delta t$};
+
 \end{tikzpicture}%
 \end{document}

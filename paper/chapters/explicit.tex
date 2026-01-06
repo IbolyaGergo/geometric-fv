@@ -81,7 +81,7 @@ See Figure~\ref{fig:godunov_full_page}.
     % 1. Reconstruction
     \begin{subfigure}[b]{\textwidth}
         \centering
-        \includestandalone[mode=buildnew]{fig/godunov_reconstruct}
+        \includestandalone[mode=buildnew]{fig/godunov-reconstruct}
         %\caption{} % Captions might be redundant if text is inside the image
     \end{subfigure}
 
@@ -90,7 +90,7 @@ See Figure~\ref{fig:godunov_full_page}.
     % 2. Evolution
     \begin{subfigure}[b]{\textwidth}
         \centering
-        \includestandalone[mode=buildnew]{fig/godunov_evolve}
+        \includestandalone[mode=buildnew]{fig/godunov-evolve}
     \end{subfigure}
 
     \vspace{1cm}
@@ -98,7 +98,7 @@ See Figure~\ref{fig:godunov_full_page}.
     % 3. Averaging
     \begin{subfigure}[b]{\textwidth}
         \centering
-        \includestandalone[mode=buildnew]{fig/godunov_average}
+        \includestandalone[mode=buildnew]{fig/godunov-average}
     \end{subfigure}
 
     \caption{Solving \(u_t + au_x = 0\) by the Godunov Scheme. (Top) Data is reconstructed as piecewise constant.
@@ -131,7 +131,7 @@ Equation \eqref{eq:godunov_flux} is equivalent to \eqref{eq:godunov_integral}.
 
 \begin{figure}[ht]
     \centering
-    \includestandalone[mode=buildnew]{fig/godunov_flux}
+    \includestandalone[mode=buildnew]{fig/godunov-flux}
     \caption{Flux-based interpretation of the Godunov scheme.}
     \label{fig:godunov_flux}
 \end{figure}
@@ -182,7 +182,7 @@ The resulting numerical flux is simply the transport speed multiplied by this va
 
 \begin{figure}[ht]
     \centering
-    \includestandalone[mode=buildnew]{fig/linear_flux}
+    \includestandalone[mode=buildnew]{fig/linear-flux}
     \caption{Geometric interpretation of the second-order flux.
     The shaded trapezoids represent the total quantity transported across the interfaces during \(\Delta t\).
     Unlike the Godunov scheme, the varying height of the reconstruction introduces a second-order correction to the swept area.}
@@ -198,7 +198,7 @@ Different standard schemes correspond to specific choices of the slope \(\sigma_
 
 \begin{figure}[h]
     \centering
-    \includestandalone[mode=buildnew]{fig/linear_slopes}
+    \includestandalone[mode=buildnew]{fig/linear-slopes}
     \caption{}
     \label{fig:linear_slopes}
 \end{figure}
