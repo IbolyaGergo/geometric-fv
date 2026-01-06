@@ -193,7 +193,7 @@ Different standard schemes correspond to specific choices of the slope \(\sigma_
 \begin{itemize}
     \item \textit{Beam-Warming:} Choosing the upwind (backward) slope \(\sigma_i = (u_i^n - u_{i-1}^n)/\Delta x\).
     \item \textit{Lax-Wendroff:} Choosing the downwind (forward) slope \(\sigma_i = (u_{i+1}^n - u_i^n)/\Delta x\).
-    \item \textit{Fromm:} Choosing the centered slope \(\sigma_i = (u_{i+1}^n - u_{i-1}^n)/ 2\Delta x\).
+    \item \textit{Fromm:} Choosing the centered slope \(\sigma_i = (u_{i+1}^n - u_{i-1}^n)/ \left( 2\Delta x \right)\).
 \end{itemize}
 
 \begin{figure}[h]
@@ -241,7 +241,7 @@ Under the CFL condition \( \nu \leq 1 \), this implies:
     \min(u_{i-1}^n, u_i^n) \leq u_i^{n+1} \leq \max(u_{i-1}^n, u_i^n).
 \end{equation}
 
-This physical requirement is rigorously formalized by Laney \cite{laney1998computational} as the \textit{Upwind Range Condition}.
+This physical requirement is formalized by Laney \cite{laney1998computational} as the \textit{Upwind Range Condition}.
 This condition can be expressed as:
 \begin{equation}
     \label{eq:upwind_range_condition_explicit}
@@ -249,28 +249,18 @@ This condition can be expressed as:
 \end{equation}
 For a proof see \cite{toro2013riemann}.
 
-\paragraph*{Physical Interpretation}
 We can interpret \eqref{eq:upwind_range_condition_explicit} by considering the maximum permissible change in the solution.
-
-Assume, for example, that the data is decreasing locally (\(u_{i-1}^{n} > u_{i}^{n}\)).
-Physics dictates that under the CFL condition \(\nu \leq 1\), the new value \(u_{i}^{n+1}\) is at most the old value from the upwind cell \(u_{i-1}^{n}\):
+Assume, for example, that the data is increasing locally (\(u_{i-1}^{n} < u_{i}^{n}\)).
+Physics dictates that under the CFL condition \(\nu \leq 1\), the new value \(u_{i}^{n+1}\) cannot drop below the old value from the upwind cell \(u_{i-1}^{n}\).
+Conversely, the update is bounded from above by \(u_{i}^{n}\), as the solution cannot physically be larger than its current state if the upwind value is larger. Thus, we can write
 \[
-    u_{i}^{n+1} \leq u_{i-1}^{n}
+    u_{i}^{n} \leq u_{i}^{n+1} \leq u_{i-1}^{n}
     \implies
     u_{i}^{n+1} - u_{i}^{n} \leq u_{i-1}^{n} - u_{i}^{n}
     \implies
     \frac{u_{i}^{n+1} - u_{i}^{n}}{u_{i-1}^{n} - u_{i}^{n}} \leq 1.
 \]
-Conversely, the update is bounded from below by \(u_{i}^{n}\), as the solution cannot physically drop below its current state if the upwind value is larger
-\[
-    u_{i}^{n} \leq u_{i}^{n+1}
-    \implies
-    0 \leq u_{i}^{n+1} - u_{i}^{n}
-    \implies
-    0 \leq \frac{u_{i}^{n+1} - u_{i}^{n}}{u_{i-1}^{n} - u_{i}^{n}}.
-\]
 
-This reasoning -- comparing the actual update to the total upwind difference -- provides a robust geometric intuition.
 Crucially, this interpretation extends naturally to higher dimensions, where the denominator represents the sum of maximum contributions from all upwind neighbors.
 
 \paragraph*{Example: Godunov Scheme}
