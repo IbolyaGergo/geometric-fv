@@ -31,9 +31,9 @@
 
         \draw (\pos,\edgeL) -- (\pos+\dx,\edgeR);
 
-        \filldraw[fill=black, draw=white, thick] (\pos + 0.5*\dx, \avg) circle (\dotSize);
+        \filldraw[avg dot] (\pos + 0.5*\dx, \avg) circle (\dotSize);
 
-        \node at (\pos+0.5*\dx, \avg + 0.2) {$u_\idx^n$};
+        \node[avg text] at (\pos+0.5*\dx, \avg + 0.2) {$u_\idx^n$};
     }
 
 \end{tikzpicture}
