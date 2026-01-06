@@ -176,17 +176,17 @@ Evaluating the reconstruction \(\tilde{u}^n\) at this midpoint yields the time-a
 \]
 The resulting numerical flux is simply the transport speed multiplied by this value:
 \begin{equation}
-    \label{eq:flux_linear}
+    \label{eq:linear_flux}
     F_{i+1/2} = a u_i^n + \frac{1}{2} a (1 - \nu) \Delta x \sigma_i.
 \end{equation}
 
 \begin{figure}[ht]
     \centering
-    \includestandalone[mode=buildnew]{fig/flux-linear}
+    \includestandalone[mode=buildnew]{fig/linear_flux}
     \caption{Geometric interpretation of the second-order flux.
     The shaded trapezoids represent the total quantity transported across the interfaces during \(\Delta t\).
     Unlike the Godunov scheme, the varying height of the reconstruction introduces a second-order correction to the swept area.}
-    \label{fig:}
+    \label{fig:linear_flux}
 \end{figure}
 
 Different standard schemes correspond to specific choices of the slope \(\sigma_i\):
