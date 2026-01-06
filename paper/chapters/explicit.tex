@@ -212,22 +212,12 @@ But before constructing such a mechanism, we must define the stability property 
 
 \section{Monotonicity and the Upwind Range Condition}
 \label{sec:monotonicity_toro}
-This section follows the reasoning of Toro \cite{toro2013riemann}.
-
-The solution obtained by a monotone method has the property that the new extrema are bounded by the previous extrema:
-\begin{equation}
-    \label{eq:dmp_def}
-    \max_{i}\{u_{i}^{n+1}\} \leq \max_{i}\{u_{i}^{n}\} \text{; }
-    \min_{i}\{u_{i}^{n+1}\} \geq \min_{i}\{u_{i}^{n}\}.
-\end{equation}
-This property is known as the \textit{Discrete Maximum Principle}.
-
-The oscillations observed in high-order linear schemes represent a violation of these physical bounds.
-To construct a robust method, we must impose a strict stability criterion.
+The oscillations observed in high-order linear schemes represent a violation of the physics.
+To construct a robust method, we must impose a stability criterion.
 
 \subsection{Monotonicity Preserving Schemes}
 A numerical scheme is said to be \textit{Monotonicity Preserving (MP)} if it maintains the monotonic nature of the initial data.
-Formally, if the data at time \(t^n\) is monotonic (i.e., \(u_i^n \geq u_{i+1}^n\) for all \(i\), or \(u_i^n \leq u_{i+1}^n\) for all \(i\)), then the updated solution at \(t^{n+1}\) must satisfy the same monotonicity property.
+Formally, if the data at time \(t^n\) is monotonic (i.e., \(u_i^n \geq u_{i+1}^n\) for all \(i\), or \(u_i^n \leq u_{i+1}^n\) for all \(i\)), then the updated solution at \(t^{n+1}\) must also be monotonic.
 
 While this global definition is fundamental, it is difficult to enforce directly during the construction of a scheme.
 Furthermore, monotonicity is a global condition.
