@@ -78,6 +78,12 @@
     \def\hM{1.1*\dx}  % Middle cell (i)
     \def\hR{1.5*\dx}  % Right cell (i+1)
 
+    % 2. Calculate New Heights (Using PGF Math, not Text replacement)
+    % We group variables in (...) to ensure safety against text expansion order
+    \pgfmathsetmacro{\hLn}{0.8 * \hL}
+    \pgfmathsetmacro{\hMn}{(\dt * \hL) + (\hM - \dt * \hM)}
+    \pgfmathsetmacro{\hRn}{(\dt * \hM) + (\hR - \dt * \hR)}
+
     % Coordinates
     \coordinate (cL) at (-\dx+.5*\dx,\hL);
     \coordinate (cM) at (.5*\dx,\hM);
