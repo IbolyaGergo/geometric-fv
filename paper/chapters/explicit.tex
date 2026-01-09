@@ -244,12 +244,11 @@ Assume, for example, that the data is increasing locally (\(u_{i-1}^{n} < u_{i}^
 Physics dictates that under the CFL condition \(\nu \leq 1\), the new value \(u_{i}^{n+1}\) cannot drop below the old value from the upwind cell \(u_{i-1}^{n}\).
 Conversely, the update is bounded from above by \(u_{i}^{n}\), as the solution cannot physically be larger than its current state if the upwind value is larger. Thus, we can write
 \[
-    u_{i}^{n} \leq u_{i}^{n+1} \leq u_{i-1}^{n}
+    u_{i-1}^{n} \leq u_{i}^{n+1} \leq u_{i}^{n}
     \implies
-    u_{i}^{n+1} - u_{i}^{n} \leq u_{i-1}^{n} - u_{i}^{n}
-    \implies
-    \frac{u_{i}^{n+1} - u_{i}^{n}}{u_{i-1}^{n} - u_{i}^{n}} \leq 1.
+    u_{i-1}^{n}-u_{i}^{n} \leq u_{i}^{n+1} - u_{i}^{n} \leq 0.
 \]
+Dividing by \(u_{i-1}^{n}-u_{i}^{n} < 0\) yields \eqref{eq:upwind_range_condition_explicit}.
 
 Crucially, this interpretation extends naturally to higher dimensions, where the denominator represents the sum of maximum contributions from all upwind neighbors.
 
@@ -275,7 +274,7 @@ To verify the condition, we define the local gradient ratio \(r_i\), which measu
     \label{eq:smoothness_ratio_explicit}
     r_i = \frac{u_i^n - u_{i-1}^n}{u_{i+1}^n - u_i^n}.
 \end{equation}
-Substituting the update formula into the Upwind Range Condition \eqref{eq:upwind_range_condition_explicit}, the ratio becomes:
+Substituting the update formula into the Upwind Range Condition \eqref{eq:upwind_range_condition_explicit}, and assuming \(u_{i}^{n}-u_{i-1}^{n} \neq 0\), the ratio becomes:
 \[
     0 \leq
     \frac{u_i^{n+1} - u_i^n}{u_{i-1}^n - u_i^n}
