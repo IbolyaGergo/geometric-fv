@@ -1,4 +1,65 @@
 %! TeX root: ../main.tex
-\chapter{Implicit}%
-\label{sec:Implicit}
+\chapter{The Implicit Geometric Framework}%
+\label{sec:The Implicit Geometric Framework}
 
+In this chapter, we extend the geometric arguments established for explicit methods to construct high-resolution semi-implicit schemes.
+We demonstrate that the monotonicity constraints derived in the explicit framework have direct analogues in the implicit setting.
+
+\section{The Implicit Upwind Range Condition}%
+\label{sec:implicit-upwind-range}
+
+In the context of explicit schemes, the Upwind Range Condition (URC) provides a robust geometric constraint for constructing high-resolution methods.
+However, in the implicit literature, stability is typically analyzed through algebraic properties of the system matrix, specifically the \textit{M-Matrix property} or \textit{positivity preservation} (see, e.g., Kuzmin \cite{kuzmin2014hierarchical}).
+
+To our knowledge, an extension of the Upwind Range Condition to implicit schemes has not yet been formulated.
+In this section, we derive such a condition.
+We demonstrate that the algebraic M-Matrix constraints can be reinterpreted geometrically as an \textit{Implicit Upwind Range Condition}.
+This unified perspective allows us to construct high-resolution semi-implicit schemes completely analogously to the explicit case.
+
+We begin by analyzing the stability properties of the classical implicit upwind scheme:
+
+\begin{equation}
+    \label{eq:implicit-upwind}
+    u_{i}^{n+1} = u_{i}^{n} - \nu\left(u_{i}^{n+1} - u_{i-1}^{n+1}\right),
+\end{equation}
+
+It is well known that this scheme is unconditionally stable for any non-negative Courant number \(\nu \geq 0\).
+This stability can be understood by rearranging \eqref{eq:implicit-upwind} to solve for the new average \(u_{i}^{n+1}\):
+
+\begin{equation}
+    \label{eq:implicit-upwind-solution}
+    u_{i}^{n+1} = \frac{1}{1+\nu}u_{i}^{n} + \frac{\nu}{1+\nu}u_{i-1}^{n+1}.
+\end{equation}
+
+Observing the coefficients, we note that \(\frac{1}{1+\nu} + \frac{\nu}{1+\nu} = 1\).
+Furthermore, for any \(\nu \geq 0\), both coefficients are non-negative.
+Consequently, \(u_{i}^{n+1}\) is a \textit{convex combination} of the previous local value \(u_{i}^{n}\) and the new upstream value \(u_{i-1}^{n+1}\).
+
+This implies that the solution satisfies a local maximum principle
+
+\[
+    \min(u_{i}^{n},u_{i-1}^{n+1}) \leq u_{i}^{n+1} \leq \max(u_{i}^{n},u_{i-1}^{n+1})
+\]
+
+By analogy with the explicit case derived in Section \ref{sec:monotonicity_toro}, we can reformulate this boundedness as a constraint:
+
+\begin{equation}
+    \label{eq:implicit-upwind-range-condition}
+    0 \leq \frac{u_{i}^{n+1}-u_{i}^{n}}{u_{i-1}^{n+1}-u_{i}^{n}} \leq 1.
+\end{equation}
+
+Substituting \eqref{eq:implicit-upwind-solution} into \eqref{eq:implicit-upwind-range-condition}, we find that for the first-order implicit upwind scheme, this ratio is exactly:
+
+\[
+    \frac{u_{i}^{n+1}-u_{i}^{n}}{u_{i-1}^{n+1}-u_{i}^{n}} = \frac{\nu}{1+\nu}.
+\]
+
+Since \(\nu \geq 0\), this ratio is always contained in the interval \([0, 1)\), regardless of the time step size.
+This result establishes a direct structural analogy with the Explicit Upwind Range Condition.
+In the explicit case, the update is limited by the inflow from the \textit{old} time level (\(u_{i-1}^n - u_i^n\)).
+In the implicit case, the update is limited by the inflow from the \textit{new} time level (\(u_{i-1}^{n+1} - u_i^n\)).
+We define \eqref{eq:implicit-upwind-range-condition} as the \textit{Implicit Upwind Range Condition} and will utilize it to construct oscillation-free high-resolution semi-implicit schemes.
+
+\paragraph{Connection to Algebraic Constraints}
+It is important to note that this geometric condition is the 1D scalar equivalent of the \textit{M-Matrix property} required for monotonicity in general implicit systems, as analyzed by Kuzmin \cite{kuzmin2014hierarchical}.
+In the matrix formulation \(A u^{n+1} = u^n\), monotonicity is guaranteed if \(A\) is an M-matrix (i.e., \(A^{-1} \geq 0\)).
