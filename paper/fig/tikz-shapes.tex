@@ -64,12 +64,26 @@
         yshift=1pt
     }
 }
+
+\def\dx{1.5}%
+\def\dt{.4*\dx}%
+\def\dotSize{1.5pt}
+
+\colorlet{newcolor}{green}
+
+% Arguments: Coordinate (x,y)
+\newcommand{\DrawTick}[2][]{%
+    % Note: NO SEMICOLON at the end!
+    % This leaves the path "open" so we can attach nodes later.
+    \draw[shift={(#2)}, #1] (0, 0.1) -- (0, -0.1)%
+}
+
+\newcommand{\DrawAvg}[2][]{
+    \filldraw[shift={(#2)}, #1] (0,0) circle (\dotSize);
+}
+
 % Define a command to set up the grid and variables
 \newcommand{\DrawFVGrid}{%
-    % --- CONFIGURATION ---
-    % We use \def so these variables are accessible after this command runs
-    \def\dx{1.5}%
-    %
     % --- DRAW AXIS ---
     \draw[->] (-1.5*\dx,0) -- (2.5*\dx,0) node[right] {$x$};%
     %
@@ -80,14 +94,12 @@
          \dx / x_{i+1/2},
          2*\dx / x_{i+3/2}
     } {%
-        \draw (\pos, .1) -- (\pos, -.1) node[below] {$\label$};%
+        \DrawTick{\pos,0} node[below] {$\label$};%
     }%
 }
 
 \newcommand{\SetupAvgs}{%
     \DrawFVGrid
-
-    \def\dt{.4*\dx}%
 
     % Heights of the bars
     \def\hL{.4*\dx}  % Left cell (i-1)
@@ -109,8 +121,6 @@
     \coordinate (cLn) at (-\dx+.5*\dx-\dt,\hLn);
     \coordinate (cMn) at (.5*\dx-\dt,\hMn);
     \coordinate (cRn) at (\dx+.5*\dx-\dt,\hRn);
-
-    \def\dotSize{1.5pt}
 }
 
 \newcommand{\SetupLinear}{%
