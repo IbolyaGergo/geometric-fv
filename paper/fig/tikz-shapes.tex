@@ -4,10 +4,14 @@
     % Style for the cell averages u_i
     old values/.style={
         fill=gray,        % Fill color
-        fill opacity=0.3,  % Only make the fill transparent, not the border
+        fill opacity=0.15,  % Only make the fill transparent, not the border
         draw=black
     },
-    % Style for the flux
+    new values/.style={
+        fill=green,        % Fill color
+        fill opacity=0.3,  % Only make the fill transparent, not the border
+        draw=green
+    },   % Style for the flux
     flux area/.style={
         color=red,
         opacity=.2
@@ -31,11 +35,23 @@
         draw=white,
         thick
     },
+    new avg dot/.style={
+        fill=green,
+        draw=white,
+        thick
+    },
     avg text/.style={
         fill=white,       % <--- Clears the area behind text
         inner sep=1pt,    % <--- Tightens the white box
         fill opacity=0.8, % <--- Optional: soft mask
         text opacity=1   % <--- Keep text 100% black
+    },
+    new avg text/.style={
+        fill=white,       % <--- Clears the area behind text
+        inner sep=1pt,    % <--- Tightens the white box
+        fill opacity=0.8, % <--- Optional: soft mask
+        text opacity=1,   % <--- Keep text 100% black
+        text=green
     },
     slope text/.style={
         fill=white,       % <--- Clears the area behind text
@@ -88,6 +104,11 @@
     \coordinate (cL) at (-\dx+.5*\dx,\hL);
     \coordinate (cM) at (.5*\dx,\hM);
     \coordinate (cR) at (\dx+.5*\dx,\hR);
+
+    % Coordinates new
+    \coordinate (cLn) at (-\dx+.5*\dx-\dt,\hLn);
+    \coordinate (cMn) at (.5*\dx-\dt,\hMn);
+    \coordinate (cRn) at (\dx+.5*\dx-\dt,\hRn);
 
     \def\dotSize{1.5pt}
 }
