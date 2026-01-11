@@ -25,17 +25,17 @@
     } {
 
         \draw (\pos,0) -- ++(0,\newH) -- +(\dx,0);
-        \filldraw[avg dot] (\pos + 0.5*\dx, \oldH) circle (\dotSize);
+        \DrawAvg[avg dot]{\pos+.5*\dx,\oldH}
         \node[avg text] at (\pos+0.5*\dx, \oldH+.1*\dx) {$u_\idx^{n}$};
         \fill[old values] (\pos,0) rectangle +(\dx,\newH);
 
-        \draw[green,dashed] (\pos-\dt,0) -- ++(0, \newH) -- +(\dt,0);%
-        \filldraw[new avg dot] (\pos + 0.5*\dx-\dt, \newH) circle (\dotSize);
+        \draw[newcolor,dashed] (\pos-\dt,0) -- ++(0, \newH) -- +(\dt,0);%
+        \DrawAvg[new avg dot]{\pos+.5*\dx-\dt,\newH}
         \node[new avg text] at (\pos+0.5*\dx-\dt, \newH+.1*\dx) {$u_\idx^{n+1}$};
     }
     \draw (2*\dx,0) -- +(0,\hRn);
     \draw[green,dashed] (2*\dx-\dt,\hRn) -- +(0, -\hRn);%
 
-    \draw[<-] (-\dt, \hM+.1*\dx) -- (0, \hM+.1*\dx) node[midway, above] {$a\Delta t$};
+    \draw[<->] (-\dt, \hM+.1*\dx) -- (0, \hM+.1*\dx) node[midway, above] {$a\Delta t$};
 \end{tikzpicture}
 \end{document}

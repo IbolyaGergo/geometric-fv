@@ -23,8 +23,8 @@
     % Draw ticks
     \foreach \pos in {-\dx,0,\dx,2*\dx} {%
         \DrawTick{\pos,0};
-        \DrawTick[green]{\pos,\dt};
-        \DrawTick[green]{\pos-\dt,0};
+        \DrawTick[newcolor]{\pos,\dt};
+        \DrawTick[newcolor]{\pos-\dt,0};
 
         % Backtrace
         \draw[dashed,-{Stealth}] (\pos,\dt) -- (\pos-\dt,0);
