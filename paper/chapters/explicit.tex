@@ -29,11 +29,11 @@ Let \(u_i^n\) denote the cell average over the \(i\)-th cell at time \(t^n\).
 The update to \(t^{n+1} = t^n + \Delta t\) proceeds in three steps:
 
 \begin{enumerate}
-    \item \textit{Reconstruct:} Construct a global piecewise polynomial function \(\tilde{u}^{n}(x,t^n)\) defined for all \(x\) from the set of discrete cell averages \(\{u_i^n\}\).
+    \item \textit{Reconstruct:} Construct a global piecewise polynomial function \(\tilde{u}(x,t^n)\) defined for all \(x\) from the set of discrete cell averages \(\{u_i^n\}\).
 
-    \item \textit{Evolve:} Solve \eqref{eq:linadv} exactly with \(\tilde{u}^{n}(x,t^n)\) as the initial data to obtain the evolved solution at the next time level:
+    \item \textit{Evolve:} Solve \eqref{eq:linadv} exactly with \(\tilde{u}(x,t^n)\) as the initial data to obtain the evolved solution at the next time level:
     \[
-        \tilde{u}(x, t^{n+1}) = \tilde{u}^n(x - a\Delta t, t^n).
+        \tilde{u}(x, t^{n+1}) = \tilde{u}(x - a\Delta t, t^n).
     \]
 
     \item \textit{Average:} Compute the new cell averages by integrating the evolved function over each grid cell:
@@ -49,16 +49,16 @@ To illustrate this procedure, we apply the REA algorithm to the simplest case: a
 
 \begin{enumerate}
     \item \textit{Reconstruct:}
-        We define the function \(\tilde{u}^n(x, t^n)\) to be constant within each cell, taking the value of the cell average (see Figure \ref{fig:godunov_full_page}, top):
+        We define the function \(\tilde{u}(x, t^n)\) to be constant within each cell, taking the value of the cell average (see Figure \ref{fig:godunov_full_page}, top):
     \[
-        \tilde{u}^{n}(x,t^{n}) = u_{i}^{n} \quad \text{for } x \in [x_{i-1/2}, x_{i+1/2}).
+        \tilde{u}(x,t^{n}) = u_{i}^{n} \quad \text{for } x \in [x_{i-1/2}, x_{i+1/2}).
     \]
     This produces a "staircase" profile representing the solution.
     \item \textit{Evolve:}
     We evolve this profile exactly over one time step \(\Delta t\).
     Geometrically, the entire staircase shifts to the right by a distance \(a\Delta t\) (see Figure \ref{fig:godunov_full_page}, middle):
     \[
-        \tilde{u}(x, t^{n+1}) = \tilde{u}^n(x - a\Delta t, t^n).
+        \tilde{u}(x, t^{n+1}) = \tilde{u}(x - a\Delta t, t^n).
     \]
 \item \textit{Average:}
     We compute the new cell average by directly integrating the evolved profile (see Figure \ref{fig:godunov_full_page}, bottom):
@@ -137,7 +137,7 @@ Equation \eqref{eq:godunov_flux} is equivalent to \eqref{eq:godunov_integral}.
 \end{figure}
 
 
-The order of accuracy and stability of the resulting scheme depend entirely on the choice of the reconstruction \(\tilde{u}^{n}(x,t^n)\).
+The order of accuracy and stability of the resulting scheme depend entirely on the choice of the reconstruction \(\tilde{u}(x,t^n)\).
 For instance, the first-order Godunov scheme is obtained via a piecewise constant reconstruction.
 To obtain a second-order scheme, one might consider a piecewise linear reconstruction with slopes \(\sigma_{i}\) in each cell.
 For a third-order scheme, we choose a piecewise-parabolic reconstruction and so on.
@@ -151,7 +151,7 @@ Instead of a piecewise constant reconstruction, we specify a piecewise linear fu
 \textit{1. Reconstruct:}
 In each cell \(\Omega_i\), we define a linear profile with slope \(\sigma_i\):
 \[
-    \tilde{u}^n(x, t^n) = u_i^n + \sigma_i (x - x_i), \quad \text{for } x \in [x_{i-1/2}, x_{i+1/2}),
+    \tilde{u}(x, t^n) = u_i^n + \sigma_i (x - x_i), \quad \text{for } x \in [x_{i-1/2}, x_{i+1/2}),
 \]
 where \(x_i\) is the cell center.
 The resulting scheme is determined entirely by the choice of the slope \(\sigma_i\).
@@ -170,7 +170,7 @@ The average height of the trapezoid is the value of the reconstructed function a
 \[
     x_{mid} = x_{i+1/2} - \frac{1}{2} a \Delta t.
 \]
-Evaluating the reconstruction \(\tilde{u}^n\) at this midpoint yields the time-averaged value at the interface:
+Evaluating the reconstruction \(\tilde{u}\) at this midpoint yields the time-averaged value at the interface:
 \[
     u_{i+1/2}^* = u_i^n + \sigma_i \left( \frac{\Delta x}{2} - \frac{a \Delta t}{2} \right).
 \]
