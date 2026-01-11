@@ -40,8 +40,31 @@ To gain more insight, we visualize the old values along with the new values at t
 Since the solution travels along characteristics, we can trace back from the new time level to the old one.
 The boundaries from which the new average \(u_{i}^{n+1}\) is computed correspond to the boundaries of the grid cell \(i\) shifted backwards by \(a\Delta t\).
 
-%TODO:fig
-As illustrated in Figure , this geometric view explains the opposing accuracy behavior.
+\begin{figure}[h]
+    \centering
+
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includestandalone[mode=buildnew]{fig/backtrace}
+        %\caption{}
+    \end{subfigure}
+
+    \vspace{1cm}
+    
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includestandalone[mode=buildnew]{fig/backtrace-front}
+        %\caption{}
+    \end{subfigure}
+
+    \caption{Visualization of the backward characteristic tracing.
+        (Top) Characteristics are traced backward from \(t^{n+1}\) to \(t^n\).
+        (Bottom) The implicit reconstruction using values from the new time level.
+        Note that the value \(u_i^{n+1}\) originates from the upstream location shifted by \(a\Delta t\).}
+    \label{fig:backtrace}
+\end{figure}
+
+As illustrated in Figure \ref{fig:backtrace}, this geometric view explains the opposing accuracy behavior.
 In the implicit case, as the time step (and thus \(\nu\)) increases, the value \(u_{i-1}^{n+1}\) gets further away from \(u_{i-1}^{n}\).
 In contrast, for the explicit upwind scheme, as \(\nu \to 1\), the computed new average is better approximated by the upwind neighbor \(u_{i-1}^{n}\).
 
