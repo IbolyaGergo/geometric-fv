@@ -15,7 +15,7 @@
 
 \begin{document}%
 \begin{tikzpicture}[x=2cm,y=2cm]%
-    \useasboundingbox (-1.5*\dx, -.2*\dx) rectangle (3*\dx, 1.7*\dx);%
+    \useasboundingbox (-1.8*\dx, -.2*\dx) rectangle (3*\dx, 1.7*\dx);%
     \SetupAvgs
 
     % Draw
@@ -25,19 +25,19 @@
          \dx / \hR / \hRn / {i+1}
     } {
 
-        \draw[dashed] (\pos,0) -- ++(0, \oldH) -- +(\dx,0);%
+        \draw (\pos,0) -- ++(0, \oldH) -- +(\dx,0);%
         \DrawAvg[avg dot]{\pos+.5*\dx,\oldH}
         \node[avg text] at (\pos+0.5*\dx, \oldH+.1*\dx) {$u_\idx^{n}$};
 
         \DrawTick[newcolor]{\pos-\dt,0};
-        \draw[newcolor,dashed] (\pos-\dt,0) -- ++(0, \newH) -- +(\dx,0);%
+        \draw[newcolor] (\pos-\dt,0) -- ++(0, \newH) -- +(\dx,0);%
         \DrawAvg[new avg dot]{\pos+.5*\dx-\dt,\newH}
         \node[new avg text] at (\pos+0.5*\dx-\dt, \newH+.1*\dx) {$u_\idx^{n+1}$};
     }
 
-    \draw[dashed] (2*\dx,0) -- +(0,\hR);
+    \draw (2*\dx,0) -- +(0,\hR);
     \DrawTick[newcolor]{2*\dx-\dt,0};
-    \draw[newcolor,dashed] (2*\dx-\dt,\hRn) -- +(0, -\hRn);%
+    \draw[newcolor] (2*\dx-\dt,\hRn) -- +(0, -\hRn);%
 
     \draw[<-] (-\dt, \hM+.3*\dx) -- (0, \hM+.3*\dx) node[midway, above] {$a\Delta t$};
 \end{tikzpicture}

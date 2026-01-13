@@ -2,7 +2,7 @@
 \chapter{The Implicit Geometric Framework}%
 \label{sec:The Implicit Geometric Framework}
 
-The explicit finite volume schemes discussed in the previous chapter are limited by the Courant-Friedrichs-Lewy (CFL) condition, requiring \(\nu \leq 0\).
+The explicit finite volume schemes discussed in the previous chapter are limited by the Courant-Friedrichs-Lewy (CFL) condition, requiring \(0 \leq \nu \leq 1\).
 For many practical applications~--~such as flows with varying velocities or grids with variable sizes~--~this restriction forces the use of impractically small time steps.
 To overcome this barrier, we turn to \textit{semi-implicit} methods.
 
@@ -12,16 +12,16 @@ We begin by analyzing the classical first-order implicit upwind scheme to establ
 
 \section{The First-Order Implicit Upwind Scheme}
 \label{sec:implicit_upwind}
-Let us consider the scheme:
+Let us consider the scheme
 \begin{equation}
     \label{eq:implicit-upwind-cons}
     u_{i}^{n+1} = u_{i}^{n} - \nu\left(u_{i}^{n+1} - u_{i-1}^{n+1}\right).
 \end{equation}
 This is often referred to as the \textit{implicit upwind} or \textit{backward-time backward-space (BTBS)} scheme.
 Unlike explicit methods, the values from the new time step \(t^{n+1}\) appear on both sides of the equation, coupling the grid points into a linear system.
-It is stable for \(\nu \geq 0\).
+It has the remarkable property, that it is stable for \(\nu \geq 0\).
 
-The cost of this remarkable stability property is considerable numerical diffusion. Compared to the explicit upwind scheme, the implicit formulation exhibits significantly higher damping.
+The cost of the stability is considerable numerical diffusion. Compared to the explicit upwind scheme, the implicit formulation exhibits significantly higher damping.
 Another notable difference is the relationship between accuracy and the time step: while the explicit upwind scheme becomes exact as the Courant number approaches 1, the implicit scheme becomes less accurate as the Courant number increases.
 We analyze this behavior using geometric arguments.
 
