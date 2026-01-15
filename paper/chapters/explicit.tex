@@ -19,6 +19,7 @@ The exact solution to \eqref{eq:linadv} is
 \section{Reconstruct-Evolve-Average Algorithm}
 \label{sub:Reconstruct-Evolve-Average Algorithm}
 Explicit finite volume schemes for solving \eqref{eq:linadv} can be derived using the Reconstruct-Evolve-Average (REA) algorithm, a geometric framework detailed extensively in \cite{leveque1992numerical,leveque2002finite}.
+% TODO: Actually, Van Leer interpreted it as an REA
 The method was originally proposed by Godunov \cite{godunov1959finite} who introduced the concept of evolving a piecewise constant reconstruction for solving the nonlinear Euler equations of gas dynamics.
 
 Van Leer \cite{van1977towards} demonstrated that the algorithm can be extended to higher-order accuracy by replacing Godunov's constant reconstruction with higher-degree polynomials.
@@ -38,7 +39,7 @@ The update to \(t^{n+1} = t^n + \Delta t\) proceeds in three steps:
 
     \item \textit{Average:} Compute the new cell averages by integrating the evolved function over each grid cell:
     \[
-        u_{i}^{n+1} = \frac{1}{\Delta x} \int\limits_{x_{i - 1/2}}^{x_{i + 1/2}} \tilde{u}(x,t^{n+1}) \,\mathrm{d}x.
+        u_{i}^{n+1} = \frac{1}{\Delta x} \int\limits_{x_{i - 1/2}}^{x_{i + 1/2}} \tilde{u}(x,t^{n+1}) \,\diff x.
     \]
 \end{enumerate}
 
@@ -65,8 +66,8 @@ To illustrate this procedure, we apply the REA algorithm to the simplest case: a
     \begin{equation}
         \begin{split}
             \label{eq:godunov_integral}
-            u_{i}^{n+1} &= \frac{1}{\Delta x} \int\limits_{x_{i - 1/2}}^{x_{i + 1/2}} \tilde{u}(x,t^{n+1}) \,\mathrm{d}x\\
-                        &= \frac{1}{\Delta x} \left( \int_{x_{i-1/2}}^{x_{i-1/2}+a\Delta t} u_{i-1}^n dx + \int_{x_{i-1/2}+a\Delta t}^{x_{i+1/2}} u_i^n dx \right)\\
+            u_{i}^{n+1} &= \frac{1}{\Delta x} \int\limits_{x_{i - 1/2}}^{x_{i + 1/2}} \tilde{u}(x,t^{n+1}) \,\diff x\\
+                        &= \frac{1}{\Delta x} \left( \int_{x_{i-1/2}}^{x_{i-1/2}+a\Delta t} u_{i-1}^n \,\diff x + \int_{x_{i-1/2}+a\Delta t}^{x_{i+1/2}} u_i^n \,\diff x \right)\\
                         &= \frac{1}{\Delta x} \left(u_{i-1}^{n} a\Delta t + u_{i}^{n} \left(\Delta x - a\Delta t\right)\right)\\
                         &= u_{i-1}^{n} \nu + u_{i}^{n} \left(1-\nu\right),
         \end{split}
@@ -205,7 +206,7 @@ Different standard schemes correspond to specific choices of the slope \(\sigma_
 
 However, all these choices produce unphysical oscillations in the vicinity of large gradients.
 All high-order, linear (constant coefficient) schemes share this major limitation.
-As established by Godunov's theorem: no linear scheme of order higher than one can be free of oscillations \cite{godunov1959finite}.
+As established by Godunov's theorem, a linear, monotonicity-preserving scheme can be at most first-order accurate \cite{godunov1959finite}.
 
 To resolve this conflict between accuracy and stability, we must abandon linear reconstructions.
 But before constructing such a mechanism, we must define the stability property we wish to enforce.
@@ -294,8 +295,8 @@ This mathematically confirms why the linear Lax-Wendroff scheme produces oscilla
 By limiting the slope such that the resulting geometric fluxes satisfy the Upwind Range Condition, we derive the class of \textit{TVD Limiters} (e.g.,
 minmod, superbee, Van Leer).
 
-\paragraph{Implications for Semi-Implicit Schemes:}
-In Chapter X we will derive an analogous ratio for the semi-implicit formulation and enforce strict monotonicity without the time-step restrictions of explicit methods.
+\paragraph{Implications for Implicit Schemes:}
+In Chapter \ref{sec:The Implicit Geometric Framework} we will derive an analogous ratio for the implicit formulation and enforce strict monotonicity without the time-step restrictions of explicit methods.
 
 \section{Construction of High-Resolution Schemes}
 \label{sec:construction_limiters}
@@ -303,3 +304,58 @@ To satisfy the Upwind Range Condition derived above, we must ensure that the sch
 In the geometric framework, this means we cannot use a fixed high-order slope \(\sigma_i\) everywhere.
 
 Instead, we seek a method that acts as a \textit{hybrid}: it should behave like the high-order (trapezoidal) reconstruction in smooth regions to maintain accuracy, but switch to the constant (rectangular) reconstruction near discontinuities to preserve monotonicity.
+
+\subsection{The Limited Slope and Flux}
+We achieve this by introducing a slope limiter function \(\Psi(r_i)\), which depends on the local smoothness monitor \(r_i\).
+We define the effective slope \(\sigma_i\) as a modification of a standard high-order reference slope \(\sigma_i^{HO}\):
+\begin{equation}
+    \label{eq:limited_slope}
+    \sigma_i = \Psi(r_i) \, \sigma_i^{HO}.
+\end{equation}
+A standard choice for the reference slope is the downwind difference (corresponding to the Lax-Wendroff scheme):
+\[
+    \sigma_i^{HO} = \frac{u_{i+1}^n - u_i^n}{\Delta x}.
+\]
+Substituting this limited slope into the general linear flux equation derived in Section \ref{sub:second_order} (Eq. \ref{eq:linear_flux}), we obtain the general \textit{High-Resolution Flux}:
+\begin{equation}
+    \label{eq:flux_limited}
+    F_{i+1/2} = a u_i^n + \frac{1}{2} a (1 - \nu) \Delta x \left( \Psi(r_i) \frac{u_{i+1}^n - u_i^n}{\Delta x} \right).
+\end{equation}
+Simplifying the terms, this can be viewed as the first-order Godunov flux plus a limited anti-diffusive correction:
+\[
+    F_{i+1/2} = \underbrace{a u_i^n}_{F_{Godunov}} + \underbrace{\frac{1}{2} a (1 - \nu) (u_{i+1}^n - u_i^n) \Psi(r_i)}_{Correction}.
+\]
+
+\subsection{Deriving the Limiter Constraints}
+We now determine the necessary constraints on the function \(\Psi(r_i)\) such that the resulting scheme satisfies the Upwind Range Condition \eqref{eq:upwind_range_condition_explicit}.
+
+Substituting the limited flux into the conservation law, the normalized update ratio becomes:
+\[
+    \text{Ratio} = \frac{u_i^{n+1} - u_i^n}{u_{i-1}^n - u_i^n} = \nu + \frac{1}{2}\nu(1-\nu) \left[ \Psi(r_{i-1}) - \Psi(r_i) r_i \right].
+\]
+For the scheme to be monotonic, this ratio must lie within the interval \([0, 1]\).
+This inequality must hold for any Courant number \(0 \leq \nu \leq 1\).
+This leads to the following sufficient conditions on the limiter \(\Psi(r)\):
+
+\begin{enumerate}
+    \item \textit{Positive Damping:} For \(r \leq 0\) (which indicates a local extremum), we must set \(\Psi(r) = 0\).
+        This forces the slope to zero, reverting the scheme to the first-order Godunov method to prevent the creation of false extrema.
+
+    \item \textit{TVD Region:} For \(r > 0\) (smooth monotonic data), the function \(\Psi(r)\) must be bounded.
+        A sufficient algebraic condition for satisfying the Upwind Range Condition is:
+    \begin{equation}
+        \label{eq:tvd_region}
+        0 \leq \Psi(r) \leq \min(2, 2r).
+    \end{equation}
+\end{enumerate}
+
+Any limiter function \(\Psi(r)\) that stays within the region defined by \eqref{eq:tvd_region} is guaranteed to produce a scheme that is second-order accurate in smooth regions (where \(\Psi \approx 1\)) and oscillation-free near discontinuities.
+This region is famously known as the \textit{TVD Region} or the \textit{Sweby Diagram} \cite{sweby1984high}.
+
+Common examples of limiters satisfying these conditions include:
+\begin{itemize}
+    \item \textit{MinMod:} \(\Psi(r) = \max(0, \min(1, r))\)
+    \item \textit{Superbee:} \(\Psi(r) = \max(0, \min(1, 2r), \min(2, r))\)
+    \item \textit{Van Leer:} \(\Psi(r) = \frac{r + |r|}{1 + |r|}\)
+\end{itemize}
+

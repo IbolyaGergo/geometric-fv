@@ -4,28 +4,29 @@
 
 The explicit finite volume schemes discussed in the previous chapter are limited by the Courant-Friedrichs-Lewy (CFL) condition, requiring \(0 \leq \nu \leq 1\).
 For many practical applications~--~such as flows with varying velocities or grids with variable sizes~--~this restriction forces the use of impractically small time steps.
-To overcome this barrier, we turn to \textit{semi-implicit} methods.
+To overcome this barrier, we turn to \textit{implicit} methods.
 
-In this chapter, we extend the geometric arguments established for explicit methods to construct high-order semi-implicit schemes.
+In this chapter, we extend the geometric arguments established for explicit methods to construct high-order implicit schemes.
 We demonstrate that the monotonicity constraints derived in the explicit framework have direct analogues in the implicit setting.
-We begin by analyzing the classical first-order implicit upwind scheme to establish the baseline for stability and accuracy, before deriving our high-resolution semi-implicit extensions.
+We begin by analyzing the classical first-order implicit upwind scheme to establish the baseline for stability and accuracy, before deriving our high-resolution implicit extensions.
 
 \section{The First-Order Implicit Upwind Scheme}
 \label{sec:implicit_upwind}
 Let us consider the scheme
 \begin{equation}
-    \label{eq:implicit-upwind-cons}
+    \label{eq:implicit_upwind_cons}
     u_{i}^{n+1} = u_{i}^{n} - \nu\left(u_{i}^{n+1} - u_{i-1}^{n+1}\right).
 \end{equation}
 This is often referred to as the \textit{implicit upwind} or \textit{backward-time backward-space (BTBS)} scheme.
 Unlike explicit methods, the values from the new time step \(t^{n+1}\) appear on both sides of the equation, coupling the grid points into a linear system.
 It has the remarkable property, that it is stable for \(\nu \geq 0\).
 
+% TODO: Plot explicit upwind vs implicit upwind to show the difference
 The cost of the stability is considerable numerical diffusion. Compared to the explicit upwind scheme, the implicit formulation exhibits significantly higher damping.
 Another notable difference is the relationship between accuracy and the time step: while the explicit upwind scheme becomes exact as the Courant number approaches 1, the implicit scheme becomes less accurate as the Courant number increases.
 We analyze this behavior using geometric arguments.
 
-By rearranging \eqref{eq:implicit-upwind-cons} we solve for the new average \(u_{i}^{n+1}\):
+By rearranging \eqref{eq:implicit_upwind_cons} we solve for the new average \(u_{i}^{n+1}\):
 \begin{equation}
     \label{eq:implicit_upwind_solution}
     u_{i}^{n+1} = \frac{1}{1+\nu}u_{i}^{n} + \frac{\nu}{1+\nu}u_{i-1}^{n+1}.
@@ -65,45 +66,135 @@ The boundaries from which the new average \(u_{i}^{n+1}\) is computed correspond
 \end{figure}
 
 As illustrated in Figure \ref{fig:backtrace}, this geometric view explains the opposing accuracy behavior.
-In the implicit case, as the time step (and thus \(\nu\)) increases, the value \(u_{i-1}^{n+1}\) gets further away from \(u_{i-1}^{n}\).
-In contrast, for the explicit upwind scheme, as \(\nu \to 1\), the computed new average is better approximated by the upwind neighbor \(u_{i-1}^{n}\).
+In the implicit case, as the time step (and thus \(\nu\)) increases, the value \(u_{i-1}^{n+1}\) becomes a less accurate approximation of the inflow than \(u_{i-1}^{n}\).
+In contrast, for the explicit upwind scheme, as \(\nu \to 1\), the inflow is better approximated by the upwind neighbor \(u_{i-1}^{n}\).
 
-\subsection{Geometric Interpretation: Flux Formulation}%
+\subsection{Numerical Flux}%
 \label{sub:implicit_upwind_geometric_flux}
 
-Unlike the explicit Godunov scheme, the implicit upwind scheme cannot be strictly interpreted as evolving a reconstruction of the known data \(u^n\).
+Unlike the explicit scheme, the implicit upwind scheme cannot be strictly interpreted as evolving a reconstruction of the data at \(t^n\).
 Instead, it is best understood through the geometric definition of the \textit{numerical flux}.
 
 Recall that the finite volume update requires the time-averaged flux across the interface:
 \[
-    F_{i-1/2} \approx \frac{1}{\Delta t} \int_{t_n}^{t_{n+1}} f(u(x_{i-1/2}, t)) \, \mathrm{d}t.
+    F_{i+1/2} \approx \frac{1}{\Delta t} \int_{t_n}^{t_{n+1}} f(u(x_{i+1/2}, t)) \, \diff t.
 \]
-The implicit case differs in the flux approximation.
-Specifically, we assume a piecewise constant profile determined by the new averages:
+The implicit case differs in the approximation of this integral.
+Specifically, to estimate the fluxes, we assume a piecewise constant profile determined by the \textit{new} averages:
 \[
     \tilde{u}(x,t^n) = u_{i}^{n+1}.
 \]
-This reveals a critical property of the implicit formulation: it employs a reconstruction that is inconsistent with the data at time \(t^n\).
-Specifically, it does not satisfy the integral average constraint:
-\[
-    \frac{1}{\Delta x}\int\limits_{{x_{i-1/2}}}^{{x_{i+1/2}}} {\tilde{u}(x,t^n)} \: \mathrm{d}{x} = u_{i}^{n+1} \neq u_{i}^{n}.
-\]
-
-The numerical flux \(F_{i-1/2}\) is defined as the geometric area of this \textit{future} profile swept across the interface during the time step \(\Delta t\).
-For the upwind case (\(a>0\)), the flow comes from the left, so the flux is determined by the reconstruction in cell \(i-1\):
+For positive velocity \(a > 0\), the flow across the interface \(x_{i+1/2}\) is determined by the upwind cell \(i\). Hence, the numerical flux is:
 \begin{equation}
-    \label{eq:implicit_upwind_flux}
-    F_{i-1/2} = a \cdot \tilde{u}(x_{i-1/2}^-) = a u_{i-1}^{n+1}.
+    \label{eq:implicit-upwind-flux}
+    F_{i+1/2} = a u_{i}^{n+1}.
 \end{equation}
 
 \begin{figure}[ht]
     \centering
-    \includestandalone{fig/implicit-upwind-reconstruct}
-    \caption{Reconstruction step of the implicit upwind scheme \eqref{eq:implicit-upwind-cons}.}
-    \label{fig:implicit_upwind_reconstruct}
+
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includestandalone[mode=buildnew]{fig/implicit-upwind-reconstruct}
+    \end{subfigure}
+
+    \vspace{1cm}
+    
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includestandalone[mode=buildnew]{fig/implicit-upwind-flux}
+    \end{subfigure}
+
+    \caption{(Top) Assumed reconstruction at time \(t^{n}\) used for estimating the fluxes in the implicit upwind scheme \eqref{eq:implicit_upwind_cons}.
+    (Bottom) Numerical flux is the area swept across the interfaces (red) during the evolution.}
+    \label{fig:implicit_upwind_flux}
 \end{figure}
 
+This reveals a critical property of the implicit upwind scheme: it employs a reconstruction that is inconsistent with the data at time \(t^n\).
+Specifically, it does not satisfy the integral average constraint:
+\[
+    \frac{1}{\Delta x}\int\limits_{{x_{i-1/2}}}^{{x_{i+1/2}}} {\tilde{u}(x,t^n)} \,\diff x = u_{i}^{n+1} \neq u_{i}^{n}.
+\]
+
+
 This highlights that in case of the implicit upwind scheme, the reconstruction serves solely to define the \textit{fluxes}, not to represent the evolution of the specific fluid elements currently in the cell.
+
+To overcome the low accuracy and high numerical diffusion of this approach, we must develop a higher-order scheme.
+Following the logic from the explicit framework, this requires a more sophisticated, piecewise-linear reconstruction of the data.
+In the next section, we construct a second-order accurate implicit scheme by defining a linear reconstruction that is consistent with the cell average data at time \(t^n\).
+
+\section{Second-Order implicit schemes}%
+\label{sec:second_order_implicit}
+
+% TODO: Add reconstruction and flux fig
+% Caption: (Top) The consistent, piecewise-linear reconstruction at time \(t^n\).
+% The slope \(\sigma_i\) is chosen such that the line passes through the back-traced new average \(u_i^{n+1}\).
+% (Bottom) The corresponding numerical flux.
+% TODO: Plot result second order vs implicit upwind.
+%"Caption: "Comparison of numerical solutions for the advection of a Gaussian pulse.
+% The first-order scheme exhibits significant numerical diffusion, while the second-order scheme remains much closer to the exact solution.
+To construct a second-order scheme, we replace the piecewise-constant profile with a piecewise-linear one.
+A key challenge is defining an appropriate slope, \(\sigma_i\), for each cell.
+To construct an implicit scheme, we can use the yet-unknown value \(u_i^{n+1}\) to define the slope.
+We define the slope such that the linear profile at time \(t^n\), when evaluated at \(x_i\), is equal to the old value \(u_{i}^{n}\), and when it is evaluated at the back-traced position \(x_i - a\Delta t\), is equal to the new cell average \(u_i^{n+1}\).
+This yields a reconstruction:
+\[
+    \tilde{u}(x, t^n) = u_i^n + \sigma_i (x - x_i).
+\]
+For this to hold, we require \(\tilde{u}(x_i - a\Delta t, t^n) = u_i^{n+1}\), which gives:
+\[
+    u_i^n + \sigma_i (x_i - a\Delta t - x_i) = u_i^{n+1} \implies \sigma_i = \frac{ u_{i}^{n}-u_{i}^{n+1} }{a\Delta t}.
+\]
+This choice of slope provides a direct physical link between the spatial variation within the cell and the temporal change of its average value.
+Crucially, since the reconstruction has a value of \(u_i^n\) at the cell's midpoint, it satisfies the integral average constraint, resolving the inconsistency of the first-order scheme.
+
+The linear reconstruction (see Section \ref{sub:second_order}) yields a flux
+\begin{equation}
+    \begin{split}
+        F_{i+1/2} &= a u_i^n + \frac{1}{2} a (1 - \nu) \Delta x \sigma_i \\
+                  &= a u_{i}^{n} + \frac{1}{2} a (1-\nu) \Delta x \frac{ u_{i}^{n}-u_{i}^{n+1} }{a\Delta t} \\
+                  &= a u_{i}^{n} + \frac{1}{2} a \frac{1-\nu}{\nu}  \left( u_{i}^{n}-u_{i}^{n+1} \right)
+    \end{split}
+\end{equation}
+A corresponding expression can be written for the flux \(F_{i-1/2}\) at the left-hand interface by shifting the index from \(i\) to \(i-1\).
+
+
+Substituting these fluxes into the general finite volume update formula, Equation \eqref{eq:fvm_general}, gives the update formula for the new scheme:
+\begin{equation*}
+    \begin{split}
+        u_{i}^{n+1} &= u_{i}^{n} - \frac{\Delta t}{\Delta x} \left( F_{i+1/2} - F_{i-1/2} \right) \\
+                    &= u_{i}^{n} - \frac{\Delta t}{\Delta x} \left[
+                    a u_{i}^{n} + \frac{1}{2} a \frac{1-\nu}{\nu}  \left( u_{i}^{n}-u_{i}^{n+1} \right)
+                    -\left(
+                    a u_{i-1}^{n} + \frac{1}{2} a \frac{1-\nu}{\nu}  \left( u_{i-1}^{n}-u_{i-1}^{n+1} \right)
+                \right)
+                \right] \\
+                    &= u_{i}^{n} - \nu \left( 
+                        u_{i}^{n} - u_{i-1}^{n}
+                    \right) - \frac{1-\nu}{2} \left( u_{i}^{n}-u_{i}^{n+1} - u_{i-1}^{n} + u_{i-1}^{n+1} \right).
+    \end{split}
+\end{equation*}
+
+This equation couples the unknowns at time \(t^{n+1}\) into a linear system.
+By rearranging the terms to group values at \(t^{n+1}\) on the left and \(t^n\) on the right, we arrive at the remarkably symmetric matrix form of the scheme:
+\begin{equation}
+    \label{eq:second_order_implicit_matrix}
+    \left( 1-\nu \right) u_{i-1}^{n+1} + \left( 1+\nu \right) u_{i}^{n+1} =
+    \left( 1+\nu \right) u_{i-1}^{n} + \left( 1-\nu \right) u_{i}^{n}.
+\end{equation}
+This scheme, sometimes known as the box scheme -- widely used for river modelling, see \cite{morton2005numerical} and references therein -- has several important properties.
+First, for a Courant number of \(\nu=1\), the scheme becomes \(2u_i^{n+1} = 2u_{i-1}^n\), or \(u_i^{n+1} = u_{i-1}^n\).
+This is the exact solution for advection by one full cell.
+This is a significant improvement over the first-order implicit upwind scheme, which becomes less accurate as \(\nu\) increases.
+
+Second, for Courant numbers in the range \(0 \leq \nu \leq 1\), the scheme can be interpreted as a
+Reconstruct-Evolve-Average (REA) algorithm.
+However, for \(\nu > 1\), the geometric REA interpretation breaks down, even though the scheme remains well-defined and stable.
+In this regime, it is best understood purely through its definition as a flux-based method.
+
+The resulting scheme, shown in Equation \eqref{eq:second_order_implicit_matrix}, is a second-order implicit finite volume method.
+Interestingly, this formula is algebraically identical to the well-known Box Scheme, which is typically derived from a finite difference perspective.
+
 \section{The Implicit Upwind Range Condition}%
 \label{sec:implicit-upwind-range}
 
@@ -113,24 +204,13 @@ However, in the implicit literature, stability is typically analyzed through alg
 To our knowledge, an extension of the Upwind Range Condition to implicit schemes has not yet been formulated.
 In this section, we derive such a condition.
 We demonstrate that the algebraic M-Matrix constraints can be reinterpreted geometrically as an \textit{Implicit Upwind Range Condition}.
-This unified perspective allows us to construct high-resolution semi-implicit schemes completely analogously to the explicit case.
+This unified perspective allows us to construct high-resolution implicit schemes completely analogously to the explicit case.
 
-We begin by analyzing the stability properties of the classical implicit upwind scheme:
-
-\begin{equation}
-    \label{eq:implicit-upwind}
-    u_{i}^{n+1} = u_{i}^{n} - \nu\left(u_{i}^{n+1} - u_{i-1}^{n+1}\right),
-\end{equation}
+We begin by analyzing the stability properties of the classical implicit upwind scheme \eqref{eq:implicit_upwind_cons}.
 
 It is well known that this scheme is unconditionally stable for any non-negative Courant number \(\nu \geq 0\).
-This stability can be understood by rearranging \eqref{eq:implicit-upwind} to solve for the new average \(u_{i}^{n+1}\):
 
-\begin{equation}
-    \label{eq:implicit-upwind-solution}
-    u_{i}^{n+1} = \frac{1}{1+\nu}u_{i}^{n} + \frac{\nu}{1+\nu}u_{i-1}^{n+1}.
-\end{equation}
-
-Observing the coefficients, we note that \(\frac{1}{1+\nu} + \frac{\nu}{1+\nu} = 1\).
+Observing the coefficients in \eqref{eq:implicit_upwind_solution}, we note that \(\frac{1}{1+\nu} + \frac{\nu}{1+\nu} = 1\).
 Furthermore, for any \(\nu \geq 0\), both coefficients are non-negative.
 Consequently, \(u_{i}^{n+1}\) is a \textit{convex combination} of the previous local value \(u_{i}^{n}\) and the new upstream value \(u_{i-1}^{n+1}\).
 
@@ -143,11 +223,11 @@ This implies that the solution satisfies a local maximum principle
 By analogy with the explicit case derived in Section \ref{sec:monotonicity_toro}, we can reformulate this boundedness as a constraint:
 
 \begin{equation}
-    \label{eq:implicit-upwind-range-condition}
+    \label{eq:implicit_upwind_range_condition}
     0 \leq \frac{u_{i}^{n+1}-u_{i}^{n}}{u_{i-1}^{n+1}-u_{i}^{n}} \leq 1.
 \end{equation}
 
-Substituting \eqref{eq:implicit-upwind-solution} into \eqref{eq:implicit-upwind-range-condition}, we find that for the first-order implicit upwind scheme, this ratio is exactly:
+Substituting \eqref{eq:implicit_upwind_solution} into \eqref{eq:implicit_upwind_range_condition}, we find that for the first-order implicit upwind scheme, this ratio is exactly:
 
 \[
     \frac{u_{i}^{n+1}-u_{i}^{n}}{u_{i-1}^{n+1}-u_{i}^{n}} = \frac{\nu}{1+\nu}.
@@ -157,8 +237,9 @@ Since \(\nu \geq 0\), this ratio is always contained in the interval \([0, 1)\),
 This result establishes a direct structural analogy with the Explicit Upwind Range Condition.
 In the explicit case, the update is limited by the inflow from the \textit{old} time level (\(u_{i-1}^n - u_i^n\)).
 In the implicit case, the update is limited by the inflow from the \textit{new} time level (\(u_{i-1}^{n+1} - u_i^n\)).
-We define \eqref{eq:implicit-upwind-range-condition} as the \textit{Implicit Upwind Range Condition} and will utilize it to construct oscillation-free high-resolution semi-implicit schemes.
+We define \eqref{eq:implicit_upwind_range_condition} as the \textit{Implicit Upwind Range Condition} and will utilize it to construct oscillation-free high-resolution implicit schemes.
 
 \paragraph{Connection to Algebraic Constraints}
 It is important to note that this geometric condition is the 1D scalar equivalent of the \textit{M-Matrix property} required for monotonicity in general implicit systems, as analyzed by Kuzmin \cite{kuzmin2014hierarchical}.
 In the matrix formulation \(A u^{n+1} = u^n\), monotonicity is guaranteed if \(A\) is an M-matrix (i.e., \(A^{-1} \geq 0\)).
+While the M-Matrix property provides a rigorous algebraic guarantee of monotonicity, the geometric perspective offered by the Implicit Upwind Range Condition is more intuitive for constructing and understanding the behavior of slope limiters in a finite volume context.

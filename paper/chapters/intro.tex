@@ -44,3 +44,12 @@ Rearranging terms, we obtain the cell average at the next time step:
     \label{eq:fvm_general}
     u_i^{n+1} = u_i^{n} - \frac{\Delta t}{\Delta x} \left( F_{i+1/2} - F_{i-1/2} \right).
 \end{equation}
+
+\section{Overview of this Work}
+\label{sec:overview}
+
+This thesis is structured as follows.
+Chapter \ref{sec:The Explicit Geometric Framework} reviews the well-established explicit geometric framework for finite volume methods, known as the Reconstruct-Evolve-Average (REA) algorithm. We discuss first- and second-order schemes and the necessity of nonlinear limiters to ensure monotonicity.
+
+Chapter \ref{sec:The Implicit Geometric Framework} extends this framework to the implicit case.
+The central contribution of this thesis is the formulation of an \textit{Implicit Upwind Range Condition}, a novel geometric criterion for designing high-resolution implicit schemes. We show that this condition is the direct analogue of its explicit counterpart and allows for the construction of limiters in a clear and intuitive manner, bridging a gap between the algebraic and geometric approaches to monotonicity.
