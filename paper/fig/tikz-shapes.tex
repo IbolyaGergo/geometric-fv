@@ -66,9 +66,9 @@
     }
 }
 
-\def\dx{1.5}%
-\def\dt{.4*\dx}%
-\def\dotSize{1.5pt}
+\newcommand{\dx}{1.5}
+\newcommand{\dt}{.4*\dx}%
+\newcommand{\dotSize}{1.5pt}
 
 \colorlet{newcolor}{green}
 
@@ -103,9 +103,9 @@
     \DrawFVGrid
 
     % Heights of the bars
-    \def\hL{.4*\dx}  % Left cell (i-1)
-    \def\hM{1.1*\dx}  % Middle cell (i)
-    \def\hR{1.5*\dx}  % Right cell (i+1)
+    \newcommand{\hL}{.4*\dx}  % Left cell (i-1)
+    \newcommand{\hM}{1.1*\dx}  % Middle cell (i)
+    \newcommand{\hR}{1.5*\dx}  % Right cell (i+1)
 
     % 2. Calculate New Heights (Using PGF Math, not Text replacement)
     % We group variables in (...) to ensure safety against text expansion order
