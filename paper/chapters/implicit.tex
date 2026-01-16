@@ -1,4 +1,4 @@
-%! TeX root: ../main.tex
+%near start,! TeX root: ../main.tex
 \chapter{The Implicit Geometric Framework}%
 \label{sec:The Implicit Geometric Framework}
 
@@ -126,10 +126,6 @@ In the next section, we construct a second-order accurate implicit scheme by def
 \section{Second-Order implicit schemes}%
 \label{sec:second_order_implicit}
 
-% TODO: Add reconstruction and flux fig
-% Caption: (Top) The consistent, piecewise-linear reconstruction at time \(t^n\).
-% The slope \(\sigma_i\) is chosen such that the line passes through the back-traced new average \(u_i^{n+1}\).
-% (Bottom) The corresponding numerical flux.
 % TODO: Plot result second order vs implicit upwind.
 %"Caption: "Comparison of numerical solutions for the advection of a Gaussian pulse.
 % The first-order scheme exhibits significant numerical diffusion, while the second-order scheme remains much closer to the exact solution.
@@ -147,6 +143,28 @@ For this to hold, we require \(\tilde{u}(x_i - a\Delta t, t^n) = u_i^{n+1}\), wh
 \]
 This choice of slope provides a direct physical link between the spatial variation within the cell and the temporal change of its average value.
 Crucially, since the reconstruction has a value of \(u_i^n\) at the cell's midpoint, it satisfies the integral average constraint, resolving the inconsistency of the first-order scheme.
+This reconstruction is illustrated in Figure~\ref{fig:box_reconstruct}. 
+\begin{figure}[htbp]
+    \centering
+
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includestandalone[mode=buildnew]{fig/box-reconstruct}
+    \end{subfigure}
+
+    \vspace{1cm}
+    
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includestandalone[mode=buildnew]{fig/box-flux}
+    \end{subfigure}
+
+    \caption{(Top) Second-order implicit, piecewise-linear reconstruction at time \(t^n\).
+        The slope \(\sigma_i\) is chosen such that the line passes through the old average \(u_{i}^{n}\) (black dot) at the cell center and the new average \(u_i^{n+1}\) (green dot) at the back-traced location \(x_i - a\Delta t\).
+(Bottom) Numerical flux for the second-order implicit scheme.
+The red trapezoids represent the area swept across the cell interfaces by the linear reconstruction over the time step.}
+    \label{fig:box_reconstruct}
+\end{figure}
 
 The linear reconstruction (see Section \ref{sub:second_order}) yields a flux
 \begin{equation}
