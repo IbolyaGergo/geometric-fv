@@ -21,6 +21,19 @@ This is often referred to as the \textit{implicit upwind} or \textit{backward-ti
 Unlike explicit methods, the values from the new time step \(t^{n+1}\) appear on both sides of the equation, coupling the grid points into a linear system.
 It has the remarkable property, that it is stable for \(\nu \geq 0\).
 
+% TODO: Plot explicit upwind vs implicit upwind to show the difference
+
+By rearranging \eqref{eq:implicit_upwind_cons} we solve for the new average \(u_{i}^{n+1}\):
+\begin{equation}
+    \label{eq:implicit_upwind_solution}
+    u_{i}^{n+1} = \frac{1}{1+\nu}u_{i}^{n} + \frac{\nu}{1+\nu}u_{i-1}^{n+1}.
+\end{equation}
+If we supply inflow boundary conditions and sweep from the upwind direction, \(u_{i-1}^{n+1}\) is already known when computing \(u_{i}^{n+1}\).
+Thus, the only unknown in equation \eqref{eq:implicit_upwind_solution} is \(u_{i}^{n+1}\).
+
+We observe that the solution \(u_{i}^{n+1}\) is a linear interpolation between \(u_{i}^{n}\) and \(u_{i-1}^{n+1}\).
+In contrast, the explicit scheme is a linear interpolation between the old values \(u_{i}^{n}\) and \(u_{i-1}^{n}\) (see Equation \eqref{eq:godunov_integral}).
+
 \subsection{Von Neumann Stability Analysis}
 To formally verify the stability of the scheme, we perform a von Neumann stability analysis. 
 We consider the evolution of a single Fourier mode. 
@@ -70,27 +83,14 @@ Consequently, \(|G| = 1/(1+2\nu)\).
 As \(\nu\) increases, this value decreases, meaning the scheme strongly damps short-wavelength oscillations. 
 While this ensures robustness, it is the cause of the significant numerical diffusion observed in solutions.
 
-% TODO: Plot explicit upwind vs implicit upwind to show the difference
-The cost of the stability is considerable numerical diffusion. Compared to the explicit upwind scheme, the implicit formulation exhibits significantly higher damping.
-Another notable difference is the relationship between accuracy and the time step: while the explicit upwind scheme becomes exact as the Courant number approaches 1, the implicit scheme becomes less accurate as the Courant number increases.
-We analyze this behavior using geometric arguments.
-
-By rearranging \eqref{eq:implicit_upwind_cons} we solve for the new average \(u_{i}^{n+1}\):
-\begin{equation}
-    \label{eq:implicit_upwind_solution}
-    u_{i}^{n+1} = \frac{1}{1+\nu}u_{i}^{n} + \frac{\nu}{1+\nu}u_{i-1}^{n+1}.
-\end{equation}
-If we supply inflow boundary conditions and sweep from the upwind direction, \(u_{i-1}^{n+1}\) is already known when computing \(u_{i}^{n+1}\).
-Thus, the only unknown in equation \eqref{eq:implicit_upwind_solution} is \(u_{i}^{n+1}\).
-
-We observe that the solution \(u_{i}^{n+1}\) is a linear interpolation between \(u_{i}^{n}\) and \(u_{i-1}^{n+1}\).
-In contrast, the explicit scheme is a linear interpolation between the old values \(u_{i}^{n}\) and \(u_{i-1}^{n}\) (see Equation \eqref{eq:godunov_integral}).
+\subsection{Geometric and Physical Interpretation}%
+\label{sub:implicit_upwind_geom_interp}
 
 To gain more insight, we visualize the old values along with the new values at the old time level \(t^n\).
 Since the solution travels along characteristics, we can trace back from the new time level to the old one.
 The boundaries from which the new average \(u_{i}^{n+1}\) is computed correspond to the boundaries of the grid cell \(i\) shifted backwards by \(a\Delta t\).
 
-\begin{figure}[h]
+\begin{figure}[htbp]
     \centering
 
     \begin{subfigure}[b]{\textwidth}
@@ -118,8 +118,8 @@ As illustrated in Figure \ref{fig:backtrace}, this geometric view explains the o
 In the implicit case, as the time step (and thus \(\nu\)) increases, the value \(u_{i-1}^{n+1}\) becomes a less accurate approximation of the inflow than \(u_{i-1}^{n}\).
 In contrast, for the explicit upwind scheme, as \(\nu \to 1\), the inflow is better approximated by the upwind neighbor \(u_{i-1}^{n}\).
 
-\subsection{Numerical Flux}%
-\label{sub:implicit_upwind_geometric_flux}
+\subsection{Numerical Flux and Reconstruction Inconsistency}%
+\label{sub:implicit_upwind_flux}
 
 Unlike the explicit scheme, the implicit upwind scheme cannot be strictly interpreted as evolving a reconstruction of the data at \(t^n\).
 Instead, it is best understood through the geometric definition of the \textit{numerical flux}.
