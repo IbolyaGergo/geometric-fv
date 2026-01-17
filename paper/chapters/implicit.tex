@@ -36,6 +36,7 @@ In contrast, the explicit scheme is a linear interpolation between the old value
 
 \subsection{Von Neumann Stability Analysis}
 To formally verify the stability of the scheme, we perform a von Neumann stability analysis. 
+For a comprehensive treatment of the theory, see, e.g., \cite{hirsch2007numerical, leveque2002finite}.
 We consider the evolution of a single Fourier mode. 
 To avoid confusion with the imaginary unit \( \mathrm{i} = \sqrt{-1} \), we use the index \( j \) for spatial position in this subsection:
 \[
@@ -259,6 +260,48 @@ In this regime, it is best understood purely through its definition as a flux-ba
 
 The resulting scheme, shown in Equation \eqref{eq:second_order_implicit_matrix}, is a second-order implicit finite volume method.
 Interestingly, this formula is algebraically identical to the well-known Box Scheme, which is typically derived from a finite difference perspective.
+
+\subsection{Von Neumann Stability Analysis}
+We perform the stability analysis on the scheme for positive velocity \( a > 0 \). The update equation is:
+\begin{equation}
+    (1-\nu) u_{j-1}^{n+1} + (1+\nu) u_{j}^{n+1} = (1+\nu) u_{j-1}^{n} + (1-\nu) u_{j}^{n}.
+\end{equation}
+We introduce the Fourier mode \( u_j^n = \hat{u}^n e^{\mathrm{i} j \theta} \), where \( \mathrm{i} = \sqrt{-1} \) and \( \theta = k \Delta x \).
+Substituting this into the update equation gives:
+\[
+    (1-\nu) G e^{\mathrm{i} (j-1) \theta} + (1+\nu) G e^{\mathrm{i} j \theta} = (1+\nu) e^{\mathrm{i} (j-1) \theta} + (1-\nu) e^{\mathrm{i} j \theta}.
+\]
+Dividing by the common factor \( e^{\mathrm{i} j \theta} \) reduces the terms \( e^{\mathrm{i} (j-1) \theta} \) to \( e^{-\mathrm{i} \theta} \):
+\[
+    G \left[ (1-\nu) e^{-\mathrm{i} \theta} + (1+\nu) \right] = (1+\nu) e^{-\mathrm{i} \theta} + (1-\nu).
+\]
+Solving for the amplification factor \( G \):
+\[
+    G = \frac{(1+\nu) e^{-\mathrm{i} \theta} + (1-\nu)}{(1-\nu) e^{-\mathrm{i} \theta} + (1+\nu)}.
+\]
+To analyze the magnitude of \( G \), we multiply the numerator and denominator by \( e^{\mathrm{i} \theta/2} \). This symmetrizes the exponents:
+\[
+    G = \frac{(1+\nu) e^{-\mathrm{i} \theta/2} + (1-\nu) e^{\mathrm{i} \theta/2}}{(1-\nu) e^{-\mathrm{i} \theta/2} + (1+\nu) e^{\mathrm{i} \theta/2}}.
+\]
+Grouping terms by \(\nu\):
+\[
+    G = \frac{ (e^{\mathrm{i} \theta/2} + e^{-\mathrm{i} \theta/2}) - \nu(e^{\mathrm{i} \theta/2} - e^{-\mathrm{i} \theta/2}) }{ (e^{\mathrm{i} \theta/2} + e^{-\mathrm{i} \theta/2}) + \nu(e^{\mathrm{i} \theta/2} - e^{-\mathrm{i} \theta/2}) }.
+\]
+Using Euler's identities \( e^{\mathrm{i} x} + e^{-\mathrm{i} x} = 2\cos x \) and \( e^{\mathrm{i} x} - e^{-\mathrm{i} x} = 2\mathrm{i}\sin x \), this simplifies to:
+\begin{equation}
+    G = \frac{ 2\cos(\theta/2) - 2\mathrm{i}\nu\sin(\theta/2) }{ 2\cos(\theta/2) + 2\mathrm{i}\nu\sin(\theta/2) } 
+      = \frac{ \cos(\theta/2) - \mathrm{i}\nu\sin(\theta/2) }{ \cos(\theta/2) + \mathrm{i}\nu\sin(\theta/2) }.
+\end{equation}
+The numerator is the complex conjugate of the denominator. 
+Therefore, for any real numbers \(\nu\) and \(\theta\), the magnitude is exactly unity:
+\begin{equation}
+    |G| = \left| \frac{z^*}{z} \right| = 1.
+\end{equation}
+
+This result highlights the fundamental difference between the first-order and second-order implicit schemes.
+While the first-order scheme is dissipative (\(|G| < 1\)), the second-order scheme is \textit{neutrally stable} and \textit{non-dissipative} (\(|G|=1\)).
+The scheme preserves the amplitude of all wave modes exactly, regardless of the time step size.
+Errors in this scheme manifest purely as \textit{dispersion} (phase errors) rather than diffusion (smearing), which explains why the solution preserves sharp gradients much better than the first-order upwind method, though it may exhibit trailing oscillations (dispersive ripples) near discontinuities.
 
 \subsection*{General Formulation}
 The scheme can be written in a unified form valid for any velocity \( a \) by utilizing the absolute value to automatically select the upwind direction.
