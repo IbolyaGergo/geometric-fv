@@ -341,10 +341,12 @@ Therefore, for any real numbers \(\nu\) and \(\theta\), the magnitude is exactly
     |G| = \left| \frac{z^*}{z} \right| = 1.
 \end{equation}
 
-This result highlights the fundamental difference between the first-order and second-order implicit schemes.
-While the first-order scheme is dissipative (\(|G| < 1\)), the second-order scheme is \textit{neutrally stable} and \textit{non-dissipative} (\(|G|=1\)).
-The scheme preserves the amplitude of all wave modes exactly, regardless of the time step size.
-Errors in this scheme manifest purely as \textit{dispersion} (phase errors) rather than diffusion (smearing), which explains why the solution preserves sharp gradients much better than the first-order upwind method, though it may exhibit trailing oscillations (dispersive ripples) near discontinuities.
+Consequently, all numerical error for this scheme manifests as dispersion. The numerical phase, \(\phi_{\text{num}} = \arg(G)\), is given by:
+\begin{equation}
+    \phi_{\text{num}} = -2\arctan\left(\nu\tan\frac{\theta}{2}\right).
+    \label{eq:box_scheme_phase}
+\end{equation}
+An analysis of this phase shows that for Courant numbers \(\nu < 1\), the scheme exhibits a leading phase error (numerical waves travel too fast), while for \(\nu > 1\) it has a lagging phase error (waves travel too slow). For the specific case where \(\nu=1\), the phase is exact, \(\phi_{\text{num}} = -\theta\), confirming that the scheme perfectly advects waves by one cell per time step. This non-dissipative but dispersive character is a key feature of the box scheme, which explains why the solution preserves sharp gradients much better than the first-order upwind method, though it may exhibit trailing oscillations (dispersive ripples) near discontinuities.
 
 \subsection*{General Formulation}
 The scheme can be written in a unified form valid for any velocity \( a \) by utilizing the absolute value to automatically select the upwind direction.
