@@ -21,6 +21,55 @@ This is often referred to as the \textit{implicit upwind} or \textit{backward-ti
 Unlike explicit methods, the values from the new time step \(t^{n+1}\) appear on both sides of the equation, coupling the grid points into a linear system.
 It has the remarkable property, that it is stable for \(\nu \geq 0\).
 
+\subsection{Von Neumann Stability Analysis}
+To formally verify the stability of the scheme, we perform a von Neumann stability analysis. 
+We consider the evolution of a single Fourier mode. 
+To avoid confusion with the imaginary unit \( \mathrm{i} = \sqrt{-1} \), we use the index \( j \) for spatial position in this subsection:
+\[
+    u_j^n = \hat{u}^n e^{\mathrm{i} k j \Delta x},
+\]
+where \(k\) is the wave number.
+The solution at the next time step is related by an amplification factor \(G\), such that \(u_j^{n+1} = G \hat{u}^n e^{\mathrm{i} k j \Delta x}\). 
+Substituting this into the scheme \eqref{eq:implicit_upwind_cons} yields:
+\begin{align*}
+    G \hat{u}^n e^{\mathrm{i} k j \Delta x} &= \hat{u}^n e^{\mathrm{i} k j \Delta x} - \nu \left( G \hat{u}^n e^{\mathrm{i} k j \Delta x} - G \hat{u}^n e^{\mathrm{i} k (j-1) \Delta x} \right).
+\end{align*}
+Dividing by \(\hat{u}^n e^{\mathrm{i} k j \Delta x}\) and rearranging gives:
+\begin{align*}
+    G &= 1 - \nu G (1 - e^{-\mathrm{i} k \Delta x}) \\
+    G (1 + \nu(1 - e^{-\mathrm{i} k \Delta x})) &= 1.
+\end{align*}
+Solving for the amplification factor \(G\) results in:
+\begin{equation}
+    \label{eq:implicit_upwind_g}
+    G = \frac{1}{1 + \nu(1 - e^{-\mathrm{i}\theta})},
+\end{equation}
+where \(\theta = k \Delta x\) is the dimensionless wave number. 
+To analyze stability, we examine the magnitude of \(G\). The squared magnitude of the denominator is:
+\begin{align*}
+    |1 + \nu(1 - \cos\theta + \mathrm{i}\sin\theta)|^2 &= |(1 + \nu(1-\cos\theta)) + \mathrm{i}\nu\sin\theta|^2 \\
+    &= (1 + \nu(1-\cos\theta))^2 + (\nu\sin\theta)^2 \\
+    &= 1 + 2\nu(1-\cos\theta) + \nu^2(1-\cos\theta)^2 + \nu^2\sin^2\theta \\
+    &= 1 + 2\nu(1-\cos\theta) + \nu^2(1 - 2\cos\theta + \cos^2\theta + \sin^2\theta) \\
+    &= 1 + 2\nu(1-\cos\theta) + 2\nu^2(1 - \cos\theta) \\
+    &= 1 + 2(\nu + \nu^2)(1-\cos\theta).
+\end{align*}
+For any Courant number \(\nu \geq 0\), the term \(2(\nu + \nu^2)\) is non-negative. 
+The term \(1-\cos\theta\) is also always non-negative. 
+Therefore, the denominator's squared magnitude is always greater than or equal to 1. 
+Since \(|G|^2 = 1 / |\text{denominator}|^2\), we have:
+\[
+    |G|^2 \leq 1 \quad \text{for all } \nu \geq 0 \text{ and for all } \theta.
+\]
+This proves that the first-order implicit upwind scheme is \textit{unconditionally stable}.
+
+The magnitude \(|G|\) also reveals the scheme's dissipative nature. 
+The scheme is most dissipative for the highest-frequency waves representable on the grid, where \(\theta = \pi\). 
+At this frequency, \( \cos \theta = -1 \), and the denominator squared becomes \( 1 + 4\nu + 4\nu^2 = (1+2\nu)^2 \). 
+Consequently, \(|G| = 1/(1+2\nu)\). 
+As \(\nu\) increases, this value decreases, meaning the scheme strongly damps short-wavelength oscillations. 
+While this ensures robustness, it is the cause of the significant numerical diffusion observed in solutions.
+
 % TODO: Plot explicit upwind vs implicit upwind to show the difference
 The cost of the stability is considerable numerical diffusion. Compared to the explicit upwind scheme, the implicit formulation exhibits significantly higher damping.
 Another notable difference is the relationship between accuracy and the time step: while the explicit upwind scheme becomes exact as the Courant number approaches 1, the implicit scheme becomes less accurate as the Courant number increases.
@@ -105,23 +154,21 @@ For positive velocity \(a > 0\), the flow across the interface \(x_{i+1/2}\) is 
         \includestandalone[mode=buildnew]{fig/implicit-upwind-flux}
     \end{subfigure}
 
-    \caption{(Top) Assumed reconstruction at time \(t^{n}\) used for estimating the fluxes in the implicit upwind scheme \eqref{eq:implicit_upwind_cons}.
-    (Bottom) Numerical flux is the area swept across the interfaces (red) during the evolution.}
+    \caption{(Top) The piecewise-constant data profile \(\tilde{u}(x,t^n)\) used to define the numerical flux in the implicit upwind scheme \eqref{eq:implicit_upwind_cons}.
+    (Bottom) The numerical flux is the area swept (red) by this reconstruction across the interfaces during the evolution.}
     \label{fig:implicit_upwind_flux}
 \end{figure}
 
 This reveals a critical property of the implicit upwind scheme: it employs a reconstruction that is inconsistent with the data at time \(t^n\).
-Specifically, it does not satisfy the integral average constraint:
+Specifically, the cell average of the reconstruction is not the cell average of the data at time \(t^n\):
 \[
     \frac{1}{\Delta x}\int\limits_{{x_{i-1/2}}}^{{x_{i+1/2}}} {\tilde{u}(x,t^n)} \,\diff x = u_{i}^{n+1} \neq u_{i}^{n}.
 \]
 
+This inconsistency is a primary source of the scheme's low accuracy and high numerical diffusion.
+In case of the implicit upwind scheme, the reconstruction serves solely to define the \textit{fluxes}, not to represent the evolution of the specific fluid elements currently in the cell.
 
-This highlights that in case of the implicit upwind scheme, the reconstruction serves solely to define the \textit{fluxes}, not to represent the evolution of the specific fluid elements currently in the cell.
-
-To overcome the low accuracy and high numerical diffusion of this approach, we must develop a higher-order scheme.
-Following the logic from the explicit framework, this requires a more sophisticated, piecewise-linear reconstruction of the data.
-In the next section, we construct a second-order accurate implicit scheme by defining a linear reconstruction that is consistent with the cell average data at time \(t^n\).
+To overcome these limitations, we must develop higher-order schemes based on more sophisticated, consistent reconstructions, which we explore in the next section.
 
 \section{Second-Order implicit schemes}%
 \label{sec:second_order_implicit}
