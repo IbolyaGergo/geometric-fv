@@ -84,6 +84,49 @@ Consequently, \(|G| = 1/(1+2\nu)\).
 As \(\nu\) increases, this value decreases, meaning the scheme strongly damps short-wavelength oscillations. 
 While this ensures robustness, it is the cause of the significant numerical diffusion observed in solutions.
 
+While the magnitude \(|G|\) determines how the scheme modifies the \emph{amplitude} of a wave (dissipation), the complex argument \(\arg(G)\) determines how it modifies the \emph{propagation speed} (dispersion).
+
+Ideally, a physical wave with wave number \(k\) traveling at velocity \(a\) shifts its phase by \(-ak\Delta t = -\nu\theta\) over one time step.
+The numerical scheme, however, shifts the phase by an angle \(\phi = \arg(G)\).
+The ratio of the numerical phase speed \(c_{num}\) to the physical speed \(a\) is defined as:
+\begin{equation}
+    \frac{c_{num}}{a} = \frac{\phi}{-\nu\theta}.
+\end{equation}
+If this ratio is \(1\), the error is zero. If \(<1\), the numerical wave moves too slowly (phase lag); if \(>1\), it moves too fast (phase lead).
+
+Recall the amplification factor derived in Equation \eqref{eq:implicit_upwind_g}:
+\[
+    G = \frac{1}{1 + \nu(1 - \cos\theta) + \mathrm{i}\nu\sin\theta}.
+\]
+To find the argument \(\phi\), we use the property that for a complex number \(z = 1/D\), the angle is \(\arg(z) = -\arg(D)\).
+Let \(D = R + \mathrm{i}I\), where the real part \(R = 1 + \nu(1-\cos\theta)\) and the imaginary part \(I = \nu\sin\theta\).
+The numerical phase shift is:
+\begin{equation}
+    \phi = -\arctan\left( \frac{I}{R} \right) = -\arctan\left( \frac{\nu\sin\theta}{1 + \nu(1 - \cos\theta)} \right).
+\end{equation}
+
+By analyzing the ratio \(c_{num}/a = -\phi / (\nu\theta)\), we can determine the dispersion characteristics:
+
+\begin{enumerate}
+    \item \textit{Long Wave Limit (\(\theta \to 0\)):}
+    For well-resolved waves, \(\sin\theta \approx \theta\) and \(\cos\theta \approx 1\).
+    The argument of the arctangent becomes \(\approx \nu\theta / 1\).
+    Thus, \(\phi \approx -\nu\theta\), and the relative phase speed approaches \(1\).
+    This confirms the scheme is consistent: long waves travel at the correct speed.
+
+    \item \textit{Short Wave Limit (\(\theta \to \pi\)):}
+    For the highest frequencies, the denominator \(R\) becomes large (\(1 + 2\nu\)).
+    This reduces the effective phase angle compared to the ideal linear growth.
+    Calculations show that for all \(\nu > 0\), the magnitude of the numerical phase shift is smaller than the physical shift: \(|\phi| < |-\nu\theta|\).
+\end{enumerate}
+
+\textit{Physical Interpretation:}
+Since \(|\phi| < \nu\theta\), the relative phase speed is strictly less than 1 for all wave numbers.
+This indicates that the implicit upwind scheme introduces a \textit{phase lag}.
+Numerical waves travel slower than the physical flow.
+While the scheme is heavily dissipative (which tends to kill off these errors before they accumulate), this phase lag is a characteristic feature of implicit schemes.
+Combined with the dissipation analysis, we conclude that the first-order implicit upwind scheme tends to both smear out features (diffusion) and retard their propagation speed (dispersion).
+
 \subsection{Geometric and Physical Interpretation}%
 \label{sub:implicit_upwind_geom_interp}
 
