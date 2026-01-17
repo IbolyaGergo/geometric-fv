@@ -311,11 +311,56 @@ The general numerical flux is composed of the standard first-order upwind flux p
     \begin{split}
         F_{i+1/2} &= \underbrace{\frac{a+|a|}{2} u_{i}^{n} + \frac{a-|a|}{2} u_{i+1}^{n}}_{\text{Upwind Flux}}  \\
                   &+ 
-        \underbrace{\frac{1}{2}\frac{1-|\nu|}{|\nu|} \left[ \frac{a+|a|}{2} \left( u_{i}^{n} - u_{i}^{n+1} \right) + \frac{a-|a|}{2} \left( u_{i+1}^{n} - u_{i+1}^{n+1} \right) \right]}_{\text{Implicit Correction}}.
+        \underbrace{\frac{1-|\nu|}{2|\nu|} \left[ \frac{a+|a|}{2} \left( u_{i}^{n} - u_{i}^{n+1} \right) + \frac{a-|a|}{2} \left( u_{i+1}^{n} - u_{i+1}^{n+1} \right) \right]}_{\text{Implicit Correction}}.
     \end{split}
 \end{equation}
 While algebraically denser, this formulation reveals a key property of the scheme: the correction term vanishes exactly when \( |\nu| = 1 \), reducing the flux to the pure upwind flux of the exact solution. 
 Substituting this general flux into the update formula recovers the symmetric matrix coefficients for both positive and negative velocities.
+
+\subsection{The Inflow-Implicit/Outflow-Explicit (IIOE) Scheme}
+
+Similar to the box scheme, we can derive another second-order implicit scheme by defining the reconstruction based on a different set of geometric constraints. For this scheme, we define the reconstruction in cell \(i\) to be the line that passes through two points: the new cell average \(u_i^{n+1}\) at the characteristic origin \(x_i - a\Delta t\), and the old average of the downstream neighbor, \(u_{i+1}^n\), at the location \(x_{i+1}\).
+
+Unlike the box scheme, this reconstruction does not pass through the point \((x_i, u_i^n)\). The slope of this line is given by:
+\begin{equation}
+    \sigma_i = \frac{u_{i+1}^n - u_i^{n+1}}{\Delta x + a\Delta t}.
+    \label{eq:iioe_slope}
+\end{equation}
+The reconstruction can be written as \(\tilde{u}(x, t^n) = u_i^{n+1} + \sigma_i(x - (x_i - a\Delta t))\). We derive the average flux \(F_{i+1/2}\) by evaluating this reconstruction at the space-time midpoint of the flux-averaging window, \((x_{i+1/2} - a\Delta t/2)\), and multiplying by the advection speed \(a\).
+\begin{align*}
+    u_{i+1/2, \text{avg}} &= \tilde{u}(x_{i+1/2} - a\Delta t/2) \\
+    &= u_i^{n+1} + \sigma_i\left( (x_{i+1/2} - a\Delta t/2) - (x_i - a\Delta t) \right) \\
+    &= u_i^{n+1} + \sigma_i\left( (x_{i+1/2} - x_i) + (a\Delta t - a\Delta t/2) \right) \\
+    &= u_i^{n+1} + \frac{1}{2}\sigma_i(\Delta x + a\Delta t).
+\end{align*}
+Substituting the definition of \(\sigma_i\) into this expression yields:
+\begin{equation*}
+    \begin{split}
+        u_{i+1/2, \text{avg}} &= u_i^{n+1} + \frac{1}{2}\left(\frac{u_{i+1}^n - u_i^{n+1}}{\Delta x + a\Delta t}\right)(\Delta x + a\Delta t)\\
+                              &= u_i^{n+1} + \frac{1}{2}(u_{i+1}^n - u_i^{n+1}) = \frac{1}{2}(u_{i+1}^n + u_i^{n+1}).
+    \end{split}
+\end{equation*}
+This leads to the remarkably simple and symmetric numerical flux:
+\begin{equation}
+    F_{i+1/2} = \frac{a}{2}(u_{i+1}^n + u_i^{n+1}).
+\end{equation}
+By shifting the index, the inflow flux is \(F_{i-1/2} = \frac{a}{2}(u_i^n + u_{i-1}^{n+1})\). Substituting these into the finite volume update, \(u_i^{n+1} = u_i^n - \frac{\Delta t}{\Delta x}(F_{i+1/2} - F_{i-1/2})\), gives:
+\begin{equation}
+    u_i^{n+1} = u_i^n - \frac{\nu}{2}\left( (u_{i+1}^n + u_i^{n+1}) - (u_i^n + u_{i-1}^{n+1}) \right).
+    \label{eq:iioe_scheme_simple}
+\end{equation}
+Rearranging this equation to group terms by time level yields the final form of the scheme:
+\begin{equation}
+    \frac{\nu}{2}u_{i-1}^{n+1} + \left(1+\frac{\nu}{2}\right)u_i^{n+1} = \left(1+\frac{\nu}{2}\right)u_i^n - \frac{\nu}{2}u_{i+1}^n.
+    \label{eq:iioe_scheme}
+\end{equation}
+
+\paragraph{Connection to the IIOE Scheme}
+This scheme is a second-order accurate implicit method known as the Inflow-Implicit/Outflow-Explicit (IIOE) scheme \cite{2014_Mikula}. It is insightful to note that while our geometric derivation results in both inflow and outflow fluxes being implicit, the scheme's established name originates from an alternative flux-splitting formulation. The algebraic equivalence of these different conceptual paths is a non-trivial result that highlights the rich structure of the scheme.
+
+\paragraph{Properties}
+This scheme is fundamentally inconsistent because the underlying reconstruction used to define the fluxes does not satisfy the cell-average constraint, i.e., \(\frac{1}{\Delta x}\int_{x_{i-1/2}}^{x_{i+1/2}} \tilde{u}(x,t^n) dx \neq u_i^n\). This is the same type of inconsistency inherent in the first-order implicit upwind scheme (see Section \ref{sub:implicit_upwind_flux}). A direct consequence is that, unlike the consistent box scheme, the IIOE scheme is not exact when the Courant number is unity (\(\nu=1\)). Despite this inconsistency, the scheme possesses favorable stability properties, which are analyzed in the literature.
+
 
 \section{The Implicit Upwind Range Condition}%
 \label{sec:implicit-upwind-range}
