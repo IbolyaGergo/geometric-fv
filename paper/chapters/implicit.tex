@@ -260,6 +260,20 @@ In this regime, it is best understood purely through its definition as a flux-ba
 The resulting scheme, shown in Equation \eqref{eq:second_order_implicit_matrix}, is a second-order implicit finite volume method.
 Interestingly, this formula is algebraically identical to the well-known Box Scheme, which is typically derived from a finite difference perspective.
 
+\subsection*{General Formulation}
+The scheme can be written in a unified form valid for any velocity \( a \) by utilizing the absolute value to automatically select the upwind direction.
+The general numerical flux is composed of the standard first-order upwind flux plus an implicit correction term:
+\begin{equation}
+    \label{eq:second_order_implicit_flux_general}
+    \begin{split}
+        F_{i+1/2} &= \underbrace{\frac{a+|a|}{2} u_{i}^{n} + \frac{a-|a|}{2} u_{i+1}^{n}}_{\text{Upwind Flux}}  \\
+                  &+ 
+        \underbrace{\frac{1}{2}\frac{1-|\nu|}{|\nu|} \left[ \frac{a+|a|}{2} \left( u_{i}^{n} - u_{i}^{n+1} \right) + \frac{a-|a|}{2} \left( u_{i+1}^{n} - u_{i+1}^{n+1} \right) \right]}_{\text{Implicit Correction}}.
+    \end{split}
+\end{equation}
+While algebraically denser, this formulation reveals a key property of the scheme: the correction term vanishes exactly when \( |\nu| = 1 \), reducing the flux to the pure upwind flux of the exact solution. 
+Substituting this general flux into the update formula recovers the symmetric matrix coefficients for both positive and negative velocities.
+
 \section{The Implicit Upwind Range Condition}%
 \label{sec:implicit-upwind-range}
 
