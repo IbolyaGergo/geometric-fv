@@ -396,7 +396,7 @@ By shifting the index, the inflow flux is \(F_{i-1/2} = \frac{a}{2}(u_i^n + u_{i
 \end{equation}
 Rearranging this equation to group terms by time level yields the final form of the scheme:
 \begin{equation}
-    \frac{\nu}{2}u_{i-1}^{n+1} + \left(1+\frac{\nu}{2}\right)u_i^{n+1} = \left(1+\frac{\nu}{2}\right)u_i^n - \frac{\nu}{2}u_{i+1}^n.
+    -\frac{\nu}{2}u_{i-1}^{n+1} + \left(1+\frac{\nu}{2}\right)u_i^{n+1} = \left(1+\frac{\nu}{2}\right)u_i^n - \frac{\nu}{2}u_{i+1}^n.
     \label{eq:iioe_scheme}
 \end{equation}
 
@@ -406,6 +406,26 @@ This scheme is a second-order accurate implicit method known as the Inflow-Impli
 \paragraph{Properties}
 This scheme is fundamentally inconsistent because the underlying reconstruction used to define the fluxes does not satisfy the cell-average constraint, i.e., \(\frac{1}{\Delta x}\int_{x_{i-1/2}}^{x_{i+1/2}} \tilde{u}(x,t^n) dx \neq u_i^n\). This is the same type of inconsistency inherent in the first-order implicit upwind scheme (see Section \ref{sub:implicit_upwind_flux}). A direct consequence is that, unlike the consistent box scheme, the IIOE scheme is not exact when the Courant number is unity (\(\nu=1\)). Despite this inconsistency, the scheme possesses favorable stability properties, which are analyzed in the literature.
 
+\paragraph{Von Neumann Stability Analysis}
+To investigate the properties of the scheme given by Equation \eqref{eq:iioe_scheme}, we perform a stability analysis. Substituting the Fourier mode \( u_j^n = \hat{u}^n e^{\mathrm{i} j \theta} \) into the scheme:
+\[
+    G \left[ \left(1+\frac{\nu}{2}\right) - \frac{\nu}{2}e^{-\mathrm{i}\theta} \right] = \left(1+\frac{\nu}{2}\right) - \frac{\nu}{2}e^{\mathrm{i}\theta}.
+\]
+Solving for the amplification factor \(G\) gives:
+\begin{equation}
+    G = \frac{1+\frac{\nu}{2} - \frac{\nu}{2}e^{\mathrm{i}\theta}}{1+\frac{\nu}{2} - \frac{\nu}{2}e^{-\mathrm{i}\theta}}.
+    \label{eq:iioe_g}
+\end{equation}
+An analysis of the magnitude \(|G|\) reveals a fundamental property: the numerator is the complex conjugate of the denominator, i.e., \(N = \bar{D}\).
+Therefore, \(|G|^2 = |N|^2 / |D|^2 = |\bar{D}|^2 / |D|^2 = 1\).
+This means the IIOE scheme is \textit{unconditionally stable} and \textit{non-dissipative} (\(|G|=1\)), similar to the box scheme.
+
+Consequently, all numerical error for this scheme manifests as dispersion. The numerical phase, \(\phi_{\text{num}} = \arg(G)\), is given by:
+\begin{equation}
+    \phi_{\text{num}} = -2\arctan\left(\frac{\frac{\nu}{2}\sin\theta}{1+\frac{\nu}{2} - \frac{\nu}{2}\cos\theta}\right) = -2\arctan\left(\frac{\nu\sin\theta}{2+\nu(1-\cos\theta)}\right).
+    \label{eq:iioe_phase}
+\end{equation}
+This phase relationship is nonlinear, indicating the scheme is dispersive. Similar to the box scheme, it can exhibit leading or lagging phase errors depending on the Courant number and wavenumber.
 
 \section{The Implicit Upwind Range Condition}%
 \label{sec:implicit-upwind-range}
