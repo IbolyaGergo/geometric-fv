@@ -457,6 +457,38 @@ The final blended numerical flux, as presented in \cite{frolkovic2023high}, is t
 \right).
 \end{equation}
 Here, \(\omega \in [0, 1]\) is a blending parameter. When \(\omega=0\), the scheme recovers the IIOE scheme. For a full derivation and detailed analysis of its properties, the reader is referred to the original article.
+
+
+\section{Comparative Analysis}
+
+A classic von Neumann stability analysis allows us to compare the dissipative (amplitude) and dispersive (phase) errors of the schemes.
+The following plots illustrate these properties for a Courant number \(CFL=3.0\).
+Figure~\ref{fig:implicit-ampl-analysis} shows the amplification factor magnitude \(|G|\) versus the dimensionless wavenumber \(\theta\), where \(|G|<1\) indicates numerical dissipation.
+Figure~\ref{fig:implicit-phase-analysis} shows the relative phase speed, where a value other than 1 indicates a phase error.
+
+\begin{figure}[htbp]
+    \centering
+    \includestandalone[mode=buildnew]{fig/implicit-ampl-analysis}
+    \caption{Comparison of numerical dissipation for the implicit schemes (\(CFL=3.0\)). The second-order Box and IIOE schemes are non-dissipative (\(|G|=1\)), while the first-order implicit upwind scheme is highly dissipative.}
+    \label{fig:implicit-ampl-analysis}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includestandalone[mode=buildnew]{fig/implicit-phase-analysis}
+    \caption{Comparison of numerical dispersion for the implicit schemes (\(CFL=3.0\)). The black dashed line represents the exact solution.}
+    \label{fig:implicit-phase-analysis}
+\end{figure}
+
+The analysis reveals significant differences:
+\begin{itemize}
+    \item The \textit{first-order implicit upwind} scheme is highly dissipative and exhibits substantial phase lag.
+    \item The \textit{Box scheme} and \textit{IIOE scheme} are non-dissipative (\(|G|=1\)).
+        However, at \(CFL=3.0\), both the Box scheme and the IIOE scheme exhibit lagging phase error.
+        These dispersive errors can lead to oscillations in the solution, without damping.
+\end{itemize}
+For a detailed analysis of the blended scheme of Frolkovi\v{c} and \v{Z}erav\'{y}, the reader is referred to \cite{frolkovic2023high}.
+
 \section{The Implicit Upwind Range Condition}%
 
 In the context of explicit schemes, the Upwind Range Condition (URC) provides a robust geometric constraint for constructing high-resolution methods.

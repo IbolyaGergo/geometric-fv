@@ -1,0 +1,76 @@
+\documentclass[tikz,border=10pt,class=report]{standalone}%
+
+% Needed for standalone compilation of fig/*.tex
+\IfFileExists{../preamble.tex}%
+{\input{../preamble.tex}}% If compiling *.tex directly
+{\input{preamble.tex}}% If compiling main.tex
+
+\IfFileExists{tikz-shapes.tex}%
+{\input{tikz-shapes.tex}}%
+{\input{fig/tikz-shapes.tex}}%
+
+\usepackage{pgfplots}%
+\pagestyle{empty}
+
+\begin{document}%
+\begin{tikzpicture}%
+    \begin{axis}[
+        scale only axis, % Added scale only axis
+        % Axis Labels
+        xlabel={Wavenumber $\theta$},
+        ylabel={Relative Phase Speed $ \frac{\phi_{\text{num}}}{\phi_{\text{exact}}}$},
+        %
+        % Domain and Ticks
+        xmin=0, xmax=pi, % Use pi for precision
+        xtick={0, pi/4, pi/2, 3*pi/4, pi}, % Use pi for precision
+        xticklabels={$0$, $\pi/4$, $\pi/2$, $3\pi/4$, $\pi$},
+        %
+        % Grid and Legend
+        grid=major,
+        legend style={at={(0.97,0.97)},anchor=north east, font=\footnotesize},
+        legend cell align={left},
+        %
+        % IMPORTANT: Set trig functions to work in radians
+        trig format plots=rad,
+        %
+        % Visual limits (adjust based on CFL)
+        enlargelimits=false,
+        ymin=0.0, ymax=1.0, % Adjusted ymax for better visualization
+        cycle list name=color list,
+        width=12cm, height=8cm, % Increased size for clarity
+    ]
+
+    % =========================================================
+    % DEFINITION: Courant Number (CFL)
+    % Change this value to see how schemes react (e.g., 0.5, 1.0, 1.5)
+    \def\cfl{3.0} % Use a decimal for consistency
+    % =========================================================
+
+    % 1. Exact Reference (y=1)
+    \addplot[black, dashed, domain=0:pi, samples=2] {1}; % Use pi for precision
+    \addlegendentry{Exact}
+
+    % 2. Implicit Upwind
+    % Formula: arctan( (cfl*sin(x)) / (1 + cfl*(1-cos(x))) ) / (cfl*x)
+    \addplot[blue, thick, domain=0.01:pi, samples=200] 
+        { atan( (\cfl*sin(x)) / (1 + \cfl*(1-cos(x))) ) / (\cfl*x) };
+    \addlegendentry{Implicit Upwind}
+
+    % 3. Box Scheme
+    % Formula: 2*arctan( cfl * tan(x/2) ) / (cfl*x)
+    \addplot[red, thick, dashdotted, domain=0.01:pi, samples=200] 
+        { 2*atan( \cfl * tan(x/2) ) / (\cfl*x) };
+    \addlegendentry{Box Scheme}
+
+    % 4. IIOE Scheme
+    % Formula: 2*atan( (cfl*sin(x)) / (2 + cfl*(1-cos(x))) ) / (cfl*x)
+    \addplot[green!60!black, thick, dotted, domain=0.01:pi, samples=200] 
+        { 2*atan( (\cfl*sin(x)) / (2 + \cfl*(1-cos(x))) ) / (\cfl*x) };
+    \addlegendentry{IIOE Scheme}
+
+    % Add a node to display the CFL number used
+    \node[anchor=north, draw=black, fill=white, font=\small] at (axis cs: pi/2, 0.97) {$CFL = \pgfmathprintnumber{\cfl}$};
+
+    \end{axis}
+\end{tikzpicture}%
+\end{document}%
