@@ -389,6 +389,10 @@ This leads to the remarkably simple and symmetric numerical flux:
 \begin{equation}
     F_{i+1/2} = \frac{a}{2}(u_{i+1}^n + u_i^{n+1}).
 \end{equation}
+This flux can also be written as a correction to the first-order implicit upwind flux:
+\begin{equation}
+    F_{i+1/2} = \underbrace{a u_i^{n+1}}_{\text{Implicit Upwind}} + \underbrace{\frac{a}{2}(u_{i+1}^n - u_i^{n+1})}_{\text{Correction}}.
+\end{equation}
 By shifting the index, the inflow flux is \(F_{i-1/2} = \frac{a}{2}(u_i^n + u_{i-1}^{n+1})\). Substituting these into the finite volume update, \(u_i^{n+1} = u_i^n - \frac{\Delta t}{\Delta x}(F_{i+1/2} - F_{i-1/2})\), gives:
 \begin{equation}
     u_i^{n+1} = u_i^n - \frac{\nu}{2}\left( (u_{i+1}^n + u_i^{n+1}) - (u_i^n + u_{i-1}^{n+1}) \right).
@@ -427,15 +431,40 @@ Consequently, all numerical error for this scheme manifests as dispersion. The n
 \end{equation}
 This phase relationship is nonlinear, indicating the scheme is dispersive. Similar to the box scheme, it can exhibit leading or lagging phase errors depending on the Courant number and wavenumber.
 
+\subsection{A General Blended Implicit Scheme}
+
+Further exploration of this geometric framework reveals that other choices of reconstruction are possible, providing a path to understanding and generalizing families of implicit methods. A notable example is the high-resolution compact scheme developed by Frolkovi\v{c} and \v{Z}erav\'{y} \cite{frolkovic2023high}. While their work utilizes an Inverse Lax-Wendroff procedure, our geometric approach provides an alternative interpretation.
+
+The scheme blends two different second-order accurate fluxes. One component is the IIOE scheme. The other, which can be viewed as an implicit counterpart to the Beam-Warming scheme, is derived from a "mixed-time" slope connecting the current cell center at the old time level to the upwind neighbor at the new time level. The slope is given as:
+\[
+    \sigma_i = \frac{u_i^n - u_{i-1}^{n+1}}{\Delta x + a\Delta t}.
+\]
+The corresponding numerical flux, evaluated using the same reconstruction rule as the IIOE scheme (but with this different slope), is:
+\[
+    F_{i+1/2, 2} = a \left( u_i^{n+1} + \frac{1+\nu}{2}\Delta x \sigma_i \right).
+\]
+Substituting the slope definition into the flux equation, and using the relation \(\Delta x + a\Delta t = \Delta x(1+\nu)\), reveals a convenient cancellation:
+\begin{equation}
+    \begin{split}
+        F_{i+1/2, 2} &= a \left[ u_i^{n+1} + \frac{1+\nu}{2}\Delta x \left( \frac{u_i^n - u_{i-1}^{n+1}}{\Delta x (1 + \nu)} \right) \right] \\
+                  &= a \left[ u_i^{n+1} + \frac{1}{2} \left( u_i^n - u_{i-1}^{n+1} \right) \right].
+    \end{split}
+\end{equation}
+
+The final blended numerical flux, as presented in \cite{frolkovic2023high}, is then given by:
+\begin{equation}
+    F_{i+1/2, \omega} = u_{i}^{n+1} - \frac{1}{2}\left( (1-\omega)(u_{i}^{n+1} - u_{i+1}^{n}) + \omega(u_{i-1}^{n+1} - u_{i}^{n})
+\right).
+\end{equation}
+Here, \(\omega \in [0, 1]\) is a blending parameter. When \(\omega=0\), the scheme recovers the IIOE scheme. For a full derivation and detailed analysis of its properties, the reader is referred to the original article.
 \section{The Implicit Upwind Range Condition}%
-\label{sec:implicit-upwind-range}
 
 In the context of explicit schemes, the Upwind Range Condition (URC) provides a robust geometric constraint for constructing high-resolution methods.
 However, in the implicit literature, stability is typically analyzed through algebraic properties of the system matrix, specifically the \textit{M-Matrix property} or \textit{positivity preservation} (see, e.g., Kuzmin \cite{kuzmin2014hierarchical}).
 
 To our knowledge, an extension of the Upwind Range Condition to implicit schemes has not yet been formulated.
 In this section, we derive such a condition.
-We demonstrate that the algebraic M-Matrix constraints can be reinterpreted geometrically as an \textit{Implicit Upwind Range Condition}.
+We demonstrate that the algebraic M-Matrix constraints can be reinterpreted geometrically as an \textit{Implicit~Upwind~Range~Condition}.
 This unified perspective allows us to construct high-resolution implicit schemes completely analogously to the explicit case.
 
 We begin by analyzing the stability properties of the classical implicit upwind scheme \eqref{eq:implicit_upwind_cons}.
