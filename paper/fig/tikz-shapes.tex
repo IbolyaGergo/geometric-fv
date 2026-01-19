@@ -101,9 +101,9 @@
 
 \newcommand{\SetupAvgs}{%
     % Heights of the bars
-    \newcommand{\hL}{.4*\dx}  % Left cell (i-1)
-    \newcommand{\hM}{1.1*\dx}  % Middle cell (i)
-    \newcommand{\hR}{1.5*\dx}  % Right cell (i+1)
+    \pgfmathsetmacro{\hL}{.4*\dx}  % Left cell (i-1)
+    \pgfmathsetmacro{\hM}{1.1*\dx}  % Middle cell (i)
+    \pgfmathsetmacro{\hR}{1.5*\dx}  % Right cell (i+1)
 
     % 2. Calculate New Heights (Using PGF Math, not Text replacement)
     % We group variables in (...) to ensure safety against text expansion order
