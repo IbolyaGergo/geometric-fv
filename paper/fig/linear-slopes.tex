@@ -18,6 +18,7 @@
 
 \begin{document}%
 \begin{tikzpicture}[x=2cm,y=2cm]
+    \DrawFVGrid
     \SetupLinear
 
     % Redefine u_{i+1} for better readability
@@ -48,7 +49,7 @@
     }
 
     \draw[help lines,dashed] (-\dx,0) --
-        ($(cM) - 0.75*($(cR)-(cL)$)$)
+        ($(cM) - 0.75*($(cR)-(cL)$)$);
     \draw[help lines,dashed] (0,0) --
         ($(cM)!-0.5!(cR)$);
     \draw[help lines,dashed] (\dx,0) --

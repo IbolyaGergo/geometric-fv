@@ -12,8 +12,9 @@
 \pagestyle{empty}
 
 \begin{document}%
-\begin{tikzpicture}[x=2cm,y=2cm]
-    \SetupLinear
+\begin{tikzpicture}[x=2cm,y=2cm]%
+    \DrawFVGrid
+    \SetupLinear%
 
     \foreach \pos \avg \s \edgeR \edgeL \idx in {
         -\dx / \hL / \sL / \edgeLR / \edgeLL / {i-1},
