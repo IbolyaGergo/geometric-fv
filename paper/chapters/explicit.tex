@@ -19,7 +19,6 @@ The exact solution to \eqref{eq:linadv} is
 \section{Reconstruct-Evolve-Average Algorithm}
 \label{sub:Reconstruct-Evolve-Average Algorithm}
 Explicit finite volume schemes for solving \eqref{eq:linadv} can be derived using the Reconstruct-Evolve-Average (REA) algorithm, a geometric framework detailed extensively in \cite{leveque1992numerical,leveque2002finite}.
-% TODO: Actually, Van Leer interpreted it as an REA
 The method was originally proposed by Godunov \cite{godunov1959finite} who introduced the concept of evolving a piecewise constant reconstruction for solving the nonlinear Euler equations of gas dynamics.
 
 Van Leer \cite{van1977towards} demonstrated that the algorithm can be extended to higher-order accuracy by replacing Godunov's constant reconstruction with higher-degree polynomials.
@@ -298,59 +297,96 @@ minmod, superbee, Van Leer).
 \paragraph{Implications for Implicit Schemes:}
 In Chapter \ref{sec:The Implicit Geometric Framework} we will derive an analogous ratio for the implicit formulation and enforce strict monotonicity without the time-step restrictions of explicit methods.
 
-\section{Construction of High-Resolution Schemes}
+\section{High-Resolution Schemes}
 \label{sec:construction_limiters}
-To satisfy the Upwind Range Condition derived above, we must ensure that the scheme adapts to the local smoothness of the solution.
-In the geometric framework, this means we cannot use a fixed high-order slope \(\sigma_i\) everywhere.
+The unphysical oscillations produced by linear high-order schemes can be eliminated by introducing a non-linear mechanism known as \textit{slope limiting}. The fundamental idea is to retain the piecewise-linear reconstruction from Section \ref{sub:second_order}, but to adaptively modify the slope in each cell based on the local smoothness of the solution.
 
-Instead, we seek a method that acts as a \textit{hybrid}: it should behave like the high-order (trapezoidal) reconstruction in smooth regions to maintain accuracy, but switch to the constant (rectangular) reconstruction near discontinuities to preserve monotonicity.
-
-\subsection{The Limited Slope and Flux}
-We achieve this by introducing a slope limiter function \(\Psi(r_i)\), which depends on the local smoothness monitor \(r_i\).
-We define the effective slope \(\sigma_i\) as a modification of a standard high-order reference slope \(\sigma_i^{HO}\):
+\subsection{The Limited Slope}
+In each cell, we assume a linear reconstruction as
+\[
+    \tilde{u}(x, t^n) = u_i^n + \sigma_i (x - x_i).
+\]
+Instead of using a fixed formula for the slope \(\sigma_i\), we define it as the product of a high-order reference slope and a limiter function \(\Psi_i\):
 \begin{equation}
-    \label{eq:limited_slope}
-    \sigma_i = \Psi(r_i) \, \sigma_i^{HO}.
+    \sigma_i = \Psi_i \, \sigma_i^{\text{HO}}.
 \end{equation}
-A standard choice for the reference slope is the downwind difference (corresponding to the Lax-Wendroff scheme):
+The limiter \(\Psi_i\) is a function of the local solution profile, designed to be near 1 in smooth regions (to retain second-order accuracy) and near 0 near discontinuities or extrema (to ensure monotonicity).
+
+\subsection{Deriving Limiter Constraints from the Upwind Range Condition}
+The choice of the limiter \(\Psi_i\) is not arbitrary.
+It must be constrained to ensure the resulting scheme is monotonicity-preserving.
+We derive these constraints by substituting the limited slope into the finite volume update and enforcing the Upwind Range Condition (Equation \eqref{eq:upwind_range_condition_explicit}).
+
+Our choice for the high-order reference slope is the downwind slope
 \[
-    \sigma_i^{HO} = \frac{u_{i+1}^n - u_i^n}{\Delta x}.
+    \sigma_i^{\text{HO}} = \frac{u_{i+1}^n - u_i^n}{\Delta x},
 \]
-Substituting this limited slope into the general linear flux equation derived in Section \ref{sub:second_order} (Eq. \ref{eq:linear_flux}), we obtain the general \textit{High-Resolution Flux}:
+which leads to the Lax-Wendroff scheme when used without a limiter.
+
+The flux for a piecewise-linear reconstruction is given by Equation \eqref{eq:linear_flux}.
+Substituting our limited slope yields the limited flux at interface \(x_{i+1/2}\):
+\[
+    F_{i+1/2} = a u_i^n + \frac{1}{2} a (1 - \nu) \Delta x \, \sigma_i = a u_i^n + \frac{1}{2} a (1 - \nu) (u_{i+1}^n - u_i^n) \Psi_i.
+\]
+Substituting to the finite volume update formula yields
+\begin{align*}
+    u_i^{n+1} &= u_i^n - \frac{\Delta t}{\Delta x} (F_{i+1/2} - F_{i-1/2}) \\
+    &= u_i^n - \nu(u_i^n - u_{i-1}^n) - \frac{\nu(1-\nu)}{2} \left[ \Psi_i(u_{i+1}^n - u_i^n) - \Psi_{i-1}(u_i^n - u_{i-1}^n) \right].
+\end{align*}
+Assuming \(u_{i-1}^{n} - u_{i}^{n} \neq 0\), after some algebraic manipulation we reproduce the ratio from \eqref{eq:upwind_range_condition_explicit}
+\[
+    \frac{u_i^{n+1} - u_i^n}{u_{i-1}^n - u_i^n} =
+    \nu + \frac{\nu(1-\nu)}{2} \left( \frac{\Psi_i}{r_i} - \Psi_{i-1} \right),
+\]
+where
+\[
+    r_i = \frac{u_{i}^{n}-u_{i-1}^{n}}{u_{i+1}^{n}-u_{i}^{n}}.
+\]
+The Upwind Range Condition \eqref{eq:upwind_range_condition_explicit} demands that this entire expression must lie in the interval \([0, 1]\)
+\[
+    0 \leq
+    \frac{u_i^{n+1} - u_i^n}{u_{i-1}^n - u_i^n} =
+    \nu + \frac{\nu(1-\nu)}{2} \left( \frac{\Psi_i}{r_i} - \Psi_{i-1} \right)
+    \leq 1.
+\]
+After rearranging we get
+\[
+    -\frac{2}{1-\nu} \le \frac{\Psi_i}{r_i} - \Psi_{i-1} \le \frac{2}{\nu}.
+\]
+% TODO: fig for the downwind flux restriction
+We can further constrain the limiter so that the numerical flux is bounded by the Godunov upwind flux \(a u_{i}^{n}\) and the downwind flux \(a u_{i+1}^{n}\)
+\begin{align*}
+    a u_{i}^{n} &\leq  F_{i+1/2} \leq a u_{i+1}^{n} \\
+    a u_{i}^{n} &\leq a u_i^n + \frac{1}{2} a (1 - \nu) (u_{i+1}^n - u_i^n) \Psi_i \leq a u_{i+1}^{n}
+\end{align*}
+which, provided \(u_{i+1}^{n} - u_{i}^{n} \neq 0\) yields
+\[
+    0 \le \Psi_i \le \frac{2}{1-\nu}.
+\]
+Since this must hold also for \(\Psi_{i-1}\), assuming the worst case scenario, we can derive the sufficient condition
+\[
+    0 \le \frac{\Psi_i}{r_i} \le \frac{2}{\nu}.
+\]
+Collecting these results, we have derived a set of CFL-dependent sufficient conditions for \(r>0\):
+\[
+    0 \le \Psi_i \le \frac{2}{1-\nu} \quad \text{and} \quad \Psi_i \le \frac{2r_i}{\nu}.
+\]
+To create a single, universally applicable limiter, we take the most restrictive form of these bounds across all valid Courant numbers (\(0 \le \nu \le 1\)).
+\begin{itemize}
+    \item The bound \(\Psi_i \le \frac{2}{1-\nu}\) is most restrictive as \(\nu \to 0^+\), where it becomes \(\Psi_i \le 2\).
+    \item The bound \(\Psi_i \le \frac{2r}{\nu}\) is most restrictive as \(\nu \to 1^-\), where it becomes \(\Psi_i \le 2r\).
+\end{itemize}
+By combining these most restrictive, CFL-independent bounds, we arrive at the final set of sufficient conditions for the limiter function \(\Psi_i\) that guarantees monotonicity for \(r>0\):
 \begin{equation}
-    \label{eq:flux_limited}
-    F_{i+1/2} = a u_i^n + \frac{1}{2} a (1 - \nu) \Delta x \left( \Psi(r_i) \frac{u_{i+1}^n - u_i^n}{\Delta x} \right).
+\label{eq:sweby_condition}
+    0 \le \Psi_i \le 2 \quad \text{and} \quad \Psi_i \le 2r_i.
 \end{equation}
-Simplifying the terms, this can be viewed as the first-order Godunov flux plus a limited anti-diffusive correction:
+Furthermore, for non-monotonic data (\(r \le 0\)), we require
 \[
-    F_{i+1/2} = \underbrace{a u_i^n}_{F_{Godunov}} + \underbrace{\frac{1}{2} a (1 - \nu) (u_{i+1}^n - u_i^n) \Psi(r_i)}_{Correction}.
+    \Psi_i = 0.
 \]
-
-\subsection{Deriving the Limiter Constraints}
-We now determine the necessary constraints on the function \(\Psi(r_i)\) such that the resulting scheme satisfies the Upwind Range Condition \eqref{eq:upwind_range_condition_explicit}.
-
-Substituting the limited flux into the conservation law, the normalized update ratio becomes:
-\[
-    \text{Ratio} = \frac{u_i^{n+1} - u_i^n}{u_{i-1}^n - u_i^n} = \nu + \frac{1}{2}\nu(1-\nu) \left[ \Psi(r_{i-1}) - \Psi(r_i) r_i \right].
-\]
-For the scheme to be monotonic, this ratio must lie within the interval \([0, 1]\).
-This inequality must hold for any Courant number \(0 \leq \nu \leq 1\).
-This leads to the following sufficient conditions on the limiter \(\Psi(r)\):
-
-\begin{enumerate}
-    \item \textit{Positive Damping:} For \(r \leq 0\) (which indicates a local extremum), we must set \(\Psi(r) = 0\).
-        This forces the slope to zero, reverting the scheme to the first-order Godunov method to prevent the creation of false extrema.
-
-    \item \textit{TVD Region:} For \(r > 0\) (smooth monotonic data), the function \(\Psi(r)\) must be bounded.
-        A sufficient algebraic condition for satisfying the Upwind Range Condition is:
-    \begin{equation}
-        \label{eq:tvd_region}
-        0 \leq \Psi(r) \leq \min(2, 2r).
-    \end{equation}
-\end{enumerate}
-
-Any limiter function \(\Psi(r)\) that stays within the region defined by \eqref{eq:tvd_region} is guaranteed to produce a scheme that is second-order accurate in smooth regions (where \(\Psi \approx 1\)) and oscillation-free near discontinuities.
-This region is famously known as the \textit{TVD Region} or the \textit{Sweby Diagram} \cite{sweby1984high}.
+% TODO: fig TVD region
+These inequalities together define the famous TVD region, ensuring the scheme is both second-order accurate in smooth regions and robustly monotonic across discontinuities.
 
 Common examples of limiters satisfying these conditions include:
 \begin{itemize}
