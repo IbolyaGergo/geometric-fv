@@ -8,6 +8,8 @@ To overcome this barrier, we turn to \textit{implicit} methods.
 
 In this chapter, we extend the geometric arguments established for explicit methods to construct high-order implicit schemes.
 We demonstrate that the monotonicity constraints derived in the explicit framework have direct analogues in the implicit setting.
+A key contribution of this work is the formulation of an \textit{Implicit Upwind Range Condition (IURC)}, a geometric criterion analogous to the well-known condition for explicit schemes.
+We show that this condition provides an intuitive pathway for deriving novel, probably monotonic implicit limiters
 We begin by analyzing the classical first-order implicit upwind scheme to establish the baseline for stability and accuracy, before deriving our high-resolution implicit extensions.
 
 \section{The First-Order Implicit Upwind Scheme}
@@ -260,6 +262,7 @@ The red trapezoids represent the area swept across the cell interfaces by the li
 The linear reconstruction (see Section \ref{sub:second_order}) yields a flux
 \begin{equation}
     \begin{split}
+        \label{eq:box-flux-explicit-start}
         F_{i+1/2} &= a u_i^n + \frac{1}{2} a (1 - \nu) \Delta x \sigma_i \\
                   &= a u_{i}^{n} + \frac{1}{2} a (1-\nu) \Delta x \frac{ u_{i}^{n}-u_{i}^{n+1} }{a\Delta t} \\
                   &= a u_{i}^{n} + \frac{1}{2} a \frac{1-\nu}{\nu}  \left( u_{i}^{n}-u_{i}^{n+1} \right)
@@ -536,3 +539,101 @@ We define \eqref{eq:implicit_upwind_range_condition} as the \textit{Implicit Upw
 It is important to note that this geometric condition is the 1D scalar equivalent of the \textit{M-Matrix property} required for monotonicity in general implicit systems, as analyzed by Kuzmin \cite{kuzmin2014hierarchical}.
 In the matrix formulation \(A u^{n+1} = u^n\), monotonicity is guaranteed if \(A\) is an M-matrix (i.e., \(A^{-1} \geq 0\)).
 While the M-Matrix property provides a rigorous algebraic guarantee of monotonicity, the geometric perspective offered by the Implicit Upwind Range Condition is more intuitive for constructing and understanding the behavior of slope limiters in a finite volume context.
+\section{A High-Resolution Box Scheme}
+\label{sec:limited_box_scheme}
+
+The analysis has shown that while the box scheme is second-order accurate, it is not monotonic.
+To remedy this, we now construct a high-resolution.
+We follow an analogous approach to the explicit case.
+Since a particular scheme is defined by the slope used for the flux reconstruction, we can limit the slope in such a way to prevent violating the IURC.
+
+\subsection{Slope Limiter}
+
+First note that the box scheme flux \eqref{eq:box-flux-explicit-start} can be expressed also as the implicit upwind flux plus a second-order correction term
+\begin{equation}
+    \label{eq:box-flux-implicit-start}
+    \begin{split}
+        F_{i+1/2} &= a u_{i}^{n} + a \frac{1-\nu}{2\nu}  \left( u_{i}^{n}-u_{i}^{n+1} \right)\\
+                  &= a u_{i}^{n+1} + a\frac{1+\nu}{2\nu}\left( u_{i}^{n}-u_{i}^{n+1} \right).
+    \end{split}
+\end{equation}
+
+As before, we introduce \(\Psi_i\) to limit the slope
+\[
+    F_{i+1/2}^{\text{lim}} = a u_{i}^{n+1} + a\frac{1+\nu}{2\nu}\left( u_{i}^{n}-u_{i}^{n+1} \right)\Psi_i.
+\]
+Notice that we have the unconditionally stable implicit upwind flux as a safety net with \(\Psi_i = 0\).
+The choice \(\Psi_i = 1\) reproduces the box scheme.
+In the next section we derive conditions for the slope-limiter in order to satisfy the IURC.
+
+\subsection{Derivation of the Limiter Constraint}
+\label{sec:implicit_limiter_derivation}
+
+Substituting the limited fluxes to the update formula we get
+\[
+u_i^{n+1} = u_{i}^{n} -\nu(u_i^{n+1} - u_{i-1}^{n+1}) - \frac{1+\nu}{2} \left[ \Psi_i(u_i^n - u_i^{n+1}) - \Psi_{i-1}(u_{i-1}^n - u_{i-1}^{n+1}) \right]
+\]
+To derive conditions for the limiters, we want to enforce the IURC \eqref{eq:implicit_upwind_range_condition} to the limited box scheme.
+After some algebraic manipulation and using
+\[
+    u_{i}^{n+1} - u_{i-1}^{n+1} = u_{i}^{n+1} - u_{i}^{n} - \left( u_{i-1}^{n+1} - u_{i}^{n} \right)
+\]
+we arrive at the equation
+\begin{multline*}
+    u_{i}^{n+1}-u_{i}^{n} =
+    -\nu\left( u_{i}^{n+1}-u_{i}^{n} \right) + \nu \left( u_{i-1}^{n+1}-u_{i}^{n} \right)\\
+    -\frac{1+\nu}{2}
+    \left[ \Psi_i \left( u_{i}^{n}-u_{i}^{n+1} \right) - \Psi_{i-1} \left( u_{i-1}^{n}-u_{i-1}^{n+1} \right) \right].
+\end{multline*}
+Assuming \(u_{i}^{n+1} - u_{i}^{n} \neq 0\) and defining
+\[
+    r_i = \frac{u_{i-1}^{n}-u_{i-1}^{n+1}}{u_{i}^{n}-u_{i}^{n+1}}
+\]
+we arrive at (notice the change of the sign before the limiter terms)
+\[
+    1 = -\nu + \nu\frac{u_{i-1}^{n+1}-u_{i}^{n}}{u_{i}^{n+1}-u_{i}^{n}}
+    +\frac{1+\nu}{2} \left( \Psi_i - \Psi_{i-1}r_i \right).
+\]
+Note the definition of \(r_i\).
+Unlike in the explicit case where it is a ratio of gradients computed from old values, here it is a ratio of the implicit gradients defined earlier.
+This reformulation is key to extending the limiter framework to the implicit context.
+We can recognize the reciprocal of the ratio in IURC in the second term on the RHS.
+To satisfy the IURC we need
+\[
+    0 \leq \frac{u_{i}^{n+1}-u_{i}^{n}}{u_{i-1}^{n+1}-u_{i}^{n}} \leq 1
+    \implies \frac{u_{i-1}^{n+1}-u_{i}^{n}}{u_{i}^{n+1}-u_{i}^{n}} \geq 1.
+\]
+Thus, we deduce the constraint on the limiter
+\begin{equation}
+    \begin{split}
+        1 - \frac{1+\nu}{2} \left( \Psi_i - \Psi_{i-1}r_i \right) &\geq 0\\
+        \Psi_i - \Psi_{i-1}r_i &\leq \frac{2}{1+\nu}.
+    \end{split}
+\end{equation}
+This inequality generalizes the classical Sweby TVD constraints \cite{sweby1984high} to the implicit Box scheme framework, where the bound is now scaled by the Courant number factor \(\frac{1}{1+\nu}\).
+This condition defines the maximum allowable value for \(\Psi_i\) to maintain monotonicity, demonstrating how the IURC directly constrains the limiter depending on the local ratio of implicit gradients changes \(r_i\), and the Courant number \(\nu\).
+
+\subsection{A sufficient condition}%
+\label{sub:implicit_limiter_suff}
+
+Defining lower and upper bounds for the limiter, we can also derive a sufficient condition, just as before.
+Let
+\[
+    u_{i}^{n+1} \leq u_{i}^{n+1} + \frac{1+\nu}{2\nu} \left( u_{i}^{n}-u_{i}^{n+1} \right) \Psi_i \leq u_{i+1}^{n}.
+\]
+We restrict the flux from below by the implicit upwind and above by unlimited box scheme
+\[
+    0 \leq \Psi_i \leq 1.
+\]
+Assuming \(r_i>0\)(monotone section), a sufficient condition for the limiter is 
+\begin{equation*}
+    \begin{split}
+        \frac{\Psi_i}{r_i} &\leq \frac{2}{(1+\nu)r_i} - \Psi_{i-1}\\
+        \frac{\Psi_i}{r_i} &\leq \frac{2}{(1+\nu)r_i} - 1\\
+        \frac{\Psi_i}{r_i} &\leq \frac{2 - (1+\nu)r_i}{(1+\nu)r_i}
+    \end{split}
+\end{equation*}
+
+While the sufficient condition guarantees monotonicity, it is often overly restrictive, leading to excessive numerical diffusion.
+As in \cite{frolkovic2023high}, we will solve the resulting system of equations by sweeping.
+This way we can utilize the necessary condition, in which the limiter from the neighbor cell \(\Psi_{i-1}\) relaxes the condition on the limiter so that we can have a sharper solution.
