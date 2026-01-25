@@ -224,6 +224,7 @@ Furthermore, monotonicity is a global condition.
 Since we know that the exact solution of the advection equation \eqref{eq:linadv} is influenced only by the values in its domain of dependence, we seek a local sufficient condition that guarantees this global property.
 
 \subsection{The Upwind Range Condition}
+
 For the linear advection equation with constant speed \(a > 0\), the physical solution propagates along the characteristics from the upwind direction (from \(i-1\) to \(i\)).
 The updated average \(u_i^{n+1}\) in the \(i\)-th cell should be bounded by the current value \(u_i^n\) and the upwind neighbor \(u_{i-1}^n\).
 Under the CFL condition \( \nu \leq 1 \), this implies:
@@ -231,7 +232,9 @@ Under the CFL condition \( \nu \leq 1 \), this implies:
     \min(u_{i-1}^n, u_i^n) \leq u_i^{n+1} \leq \max(u_{i-1}^n, u_i^n).
 \end{equation}
 
-This physical requirement is formalized by Laney \cite{laney1998computational} as the \textit{Upwind Range Condition}.
+The condition was formalized in many different ways in the literature: upwind range condition\cite{1998_Laney_BOOK},
+data compatibility condition \cite{2009_Toro_BOOK}, upwind monotonic property \cite{1989_Huynh_CONF}, local boundedness property \cite{1982_Roe,1997_Thuburn}.
+
 This condition can be expressed as:
 \begin{equation}
     \label{eq:upwind_range_condition_explicit}
