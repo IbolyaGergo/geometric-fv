@@ -494,51 +494,96 @@ For a detailed analysis of the blended scheme of Frolkovi\v{c} and \v{Z}erav\'{y
 
 \section{The Implicit Upwind Range Condition}%
 
-In the context of explicit schemes, the Upwind Range Condition (URC) provides a robust geometric constraint for constructing high-resolution methods.
+As we demonstrated in Section \ref{sec:construction_limiters}, in the context of explicit schemes, the Upwind Range Condition (URC) provides a robust geometric constraint for constructing high-resolution methods.
 However, in the implicit literature, stability is typically analyzed through algebraic properties of the system matrix, specifically the \textit{M-Matrix property} or \textit{positivity preservation} (see, e.g., Kuzmin \cite{kuzmin2014hierarchical}).
 
-To our knowledge, an extension of the Upwind Range Condition to implicit schemes has not yet been formulated.
-In this section, we derive such a condition.
-We demonstrate that the algebraic M-Matrix constraints can be reinterpreted geometrically as an \textit{Implicit~Upwind~Range~Condition}.
-This unified perspective allows us to construct high-resolution implicit schemes completely analogously to the explicit case.
+In this section, we formulate an \textit{Implicit Upwind Range Condition (IURC)}, an extension of the classical Upwind Range Condition that, to our knowledge, has not been previously formulated.
+We demonstrate that the algebraic M-Matrix constraints can be reinterpreted geometrically as an Implicit~Upwind~Range~Condition(IURC).
+Furthermore, as shown in Section \ref{sub:implicit_tvd}, any scheme satisfying the IURC is also Total Variation Diminishing (TVD).
 
-We begin by analyzing the stability properties of the classical implicit upwind scheme \eqref{eq:implicit_upwind_cons}.
+The primary motivation for introducing this \textit{local} property is its conceptual simplicity and practical utility compared to global algebraic conditions.
+As a geometric constraint, it is more intuitive and more readily adaptable to non-uniform grids or variable velocities 
+(see also Thuburn \cite{thuburn1997tvd} who pointed out similar arguments for the explicit case).
+This unified perspective allows for the construction of high-resolution implicit schemes in direct analogy to the well-established framework for explicit schemes.
 
-It is well known that this scheme is unconditionally stable for any non-negative Courant number \(\nu \geq 0\).
-
-Observing the coefficients in \eqref{eq:implicit_upwind_solution}, we note that \(\frac{1}{1+\nu} + \frac{\nu}{1+\nu} = 1\).
-Furthermore, for any \(\nu \geq 0\), both coefficients are non-negative.
-Consequently, \(u_{i}^{n+1}\) is a \textit{convex combination} of the previous local value \(u_{i}^{n}\) and the new upstream value \(u_{i-1}^{n+1}\).
-
-This implies that the solution satisfies a local maximum principle
-
+The classical implicit upwind scheme \eqref{eq:implicit_upwind_cons} provides the foundation for our analysis.
+Its solution can be expressed as:
+\begin{equation}
+    \label{eq:implicit_upwind_solution_iurc}
+    u_{i}^{n+1} = \frac{1}{1+\nu}u_{i}^{n} + \frac{\nu}{1+\nu}u_{i-1}^{n+1}.
+\end{equation}
+For any non-negative Courant number, \(\nu \geq 0\), the coefficients form a convex combination, i.e., they are non-negative and sum to unity.
+A direct consequence is that the scheme satisfies a local maximum principle, that the new value \(u_{i}^{n+1}\) is bounded by the old value \(u_{i}^{n}\) and the new upwind value \(u_{i-1}^{n+1}\)
 \[
-    \min(u_{i}^{n},u_{i-1}^{n+1}) \leq u_{i}^{n+1} \leq \max(u_{i}^{n},u_{i-1}^{n+1})
+    \min(u_{i}^{n},u_{i-1}^{n+1}) \leq u_{i}^{n+1} \leq \max(u_{i}^{n},u_{i-1}^{n+1}).
 \]
-
-By analogy with the explicit case derived in Section \ref{sec:monotonicity_toro}, we can reformulate this boundedness as a constraint:
-
+This property is key.
+By analogy with the explicit framework derived in Section \ref{sec:monotonicity_toro}, we can reformulate this boundedness into an equivalent ratio form:
 \begin{equation}
     \label{eq:implicit_upwind_range_condition}
     0 \leq \frac{u_{i}^{n+1}-u_{i}^{n}}{u_{i-1}^{n+1}-u_{i}^{n}} \leq 1.
 \end{equation}
+We define this as the \textit{Implicit~Upwind~Range~Condition}.
+This geometric constraint serves as a fundamental building block for constructing high-resolution, oscillation-free implicit schemes, providing a direct analogue to explicit methods.
 
-Substituting \eqref{eq:implicit_upwind_solution} into \eqref{eq:implicit_upwind_range_condition}, we find that for the first-order implicit upwind scheme, this ratio is exactly:
+\subsection{TVD Property}%
+\label{sub:implicit_tvd}
 
+A key result is that any scheme satisfying the IURC \eqref{eq:implicit_upwind_range_condition} is also Total Variation Diminishing (TVD).
+We demonstrate this by first showing that the IURC implies that a scheme can be written in a form known to be TVD.
+
+The IURC requires that the new cell average \(u_{i}^{n+1}\) lies between the values \(u_{i-1}^{n+1}\) and \(u_{i}^{n}\).
+This is equivalent to stating that \(u_{i}^{n+1}\) can be written as a convex combination of the two:
+\begin{equation}
+    u_{i}^{n+1} = k_i u_{i}^{n} + (1-k_i)u_{i-1}^{n+1},
+\end{equation}
+for some \(k_i \in [0, 1]\).
+Since the condition was derived from the solution of the implicit upwind scheme, for any non-zero \(k_i \neq 0 \), this expression can be recast into the conservative form of the first-order implicit upwind scheme.
+By rearranging the equation above, we get:
+\begin{equation}
+    u_{i}^{n+1} = u_{i}^{n} - \frac{1-k_i}{k_i} \left( u_{i}^{n+1} - u_{i-1}^{n+1} \right).
+\end{equation}
+If we define \(c_i = (1-k_i)/k_i\), we see that \(c_i \ge 0\).
+The scheme now has the general form of the implicit upwind method, which is sufficient for a scheme to be TVD, see, e.g.,~\cite{duraisamy2007implicit,frolkovic2023high}.
+
+If \(k_{i} = 0\), then
 \[
-    \frac{u_{i}^{n+1}-u_{i}^{n}}{u_{i-1}^{n+1}-u_{i}^{n}} = \frac{\nu}{1+\nu}.
+    u_{i}^{n+1} = u_{i-1}^{n+1},
 \]
+thus, no new extrema is created.
 
-Since \(\nu \geq 0\), this ratio is always contained in the interval \([0, 1)\), regardless of the time step size.
-This result establishes a direct structural analogy with the Explicit Upwind Range Condition.
-In the explicit case, the update is limited by the inflow from the \textit{old} time level (\(u_{i-1}^n - u_i^n\)).
-In the implicit case, the update is limited by the inflow from the \textit{new} time level (\(u_{i-1}^{n+1} - u_i^n\)).
-We define \eqref{eq:implicit_upwind_range_condition} as the \textit{Implicit Upwind Range Condition} and will utilize it to construct oscillation-free high-resolution implicit schemes.
+\subsection{M-Matrix Property}%
+\label{sub:implicit_m_matrix}
 
-\paragraph{Connection to Algebraic Constraints}
 It is important to note that this geometric condition is the 1D scalar equivalent of the \textit{M-Matrix property} required for monotonicity in general implicit systems, as analyzed by Kuzmin \cite{kuzmin2014hierarchical}.
 In the matrix formulation \(A u^{n+1} = u^n\), monotonicity is guaranteed if \(A\) is an M-matrix (i.e., \(A^{-1} \geq 0\)).
 While the M-Matrix property provides a rigorous algebraic guarantee of monotonicity, the geometric perspective offered by the Implicit Upwind Range Condition is more intuitive for constructing and understanding the behavior of slope limiters in a finite volume context.
+
+\subsection{Analysis of the Box Scheme}
+\label{sec:box_scheme_iurc_analysis}
+
+A next step is to determine if the unmodified second-order box scheme satisfies the IURC.
+First, we solve the box scheme equation \eqref{eq:second_order_implicit_matrix} for \(u_i^{n+1}\):
+\begin{align*}
+    (1+\nu)u_{i}^{n+1} &= (1+\nu)u_{i-1}^{n} + (1-\nu)u_i^{n} - (1-\nu)u_{i-1}^{n+1} \\
+    u_i^{n+1} &= u_{i-1}^{n} + \frac{1-\nu}{1+\nu}u_i^{n} - \frac{1-\nu}{1+\nu}u_{i-1}^{n+1}\\
+              &= u_{i-1}^{n} + \frac{1-\nu}{1+\nu}\left( u_i^{n} - u_{i-1}^{n+1} \right)
+\end{align*}
+Next, we substitute this into the IURC ratio, \(\frac{u_{i}^{n+1}-u_{i}^{n}}{u_{i-1}^{n+1}-u_{i}^{n}}\). The numerator becomes:
+\begin{equation*}
+    u_i^{n+1} - u_i^n = \frac{1-\nu}{1+\nu}\left( u_i^{n} - u_{i-1}^{n+1} \right) - \left( u_i^n - u_{i-1}^{n}  \right).
+\end{equation*}
+Thus, the full expression for the ratio:
+\[
+    \frac{u_{i}^{n+1}-u_{i}^{n}}{u_{i-1}^{n+1}-u_{i}^{n}} = 
+    -\frac{1-\nu}{1+\nu} + \frac{u_{i}^{n}-u_{i-1}^{n}}{u_{i}^{n}-u_{i-1}^{n+1}}.
+\]
+The expression is clearly not a constant value; it depends on the solution profile itself.
+This proves that the IURC is not satisfied for arbitrary data.
+
+Despite its unconditional stability and second-order accuracy, the box scheme is not guaranteed to be monotonic.
+This provides motivation for developing a limited version of the scheme, which we will address in the following section.
+
 \section{A High-Resolution Box Scheme}
 \label{sec:limited_box_scheme}
 
