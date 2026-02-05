@@ -1,0 +1,27 @@
+# contents of pyproject.toml
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "geometric_fv"
+version = "0.1.0"
+
+[tool.pytest]
+addopts = ["-ra", "--showlocals"]
+strict = true
+filterwarnings = ["error"]
+log_level = "INFO"
+testpaths = [
+  "test",
+]
+
+[tool.ruff.lint]
+extend-select = [
+  "B",      # flake8-bugbear, finds bug prone patterns
+  "I",      # sorts includes
+  "C4",     # looks for places that could use comprehensions
+  "PT",     # helps to follow best pytest practices
+  "FURB",   # collection of helpful cleanups from refurb tool
+  "PYI",    # typing checks
+]
