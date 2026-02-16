@@ -30,20 +30,33 @@ env: ## Create the conda environment from environment.yaml.
 # TESTING, LINTING, AND FORMATTING
 # ====================================================================================
 
+# Directories to check
+PYTHON_DIRS := src test scripts
+
 .PHONY: test
 test: ## Run tests using pytest.
 	@echo "Running tests..."
 	@pytest
 
-.PHONY: lint
-lint: ## Run linters and formatters using pre-commit on all files.
-	@echo "Running pre-commit hooks for linting and formatting..."
-	@pre-commit run --all-files
+.PHONY: ruff-check
+ruff-check:
+	@echo "Running ruff for linting..."
+	@ruff check $(PYTHON_DIRS)
 
-.PHONY: format
-format: ## Run linters and formatters using pre-commit on all files.
-	@echo "Running pre-commit hooks for linting and formatting..."
-	@pre-commit run --all-files
+.PHONY: ruff-format
+ruff-format:
+	@echo "Running ruff for formatting..."
+	@ruff format $(PYTHON_DIRS)
+
+.PHONY: mypy
+mypy:
+	@echo "Running mypy for type checking..."
+	@mypy $(PYTHON_DIRS)
+
+.PHONY: codespell
+codespell:
+	@echo "Running codespell for spelling..."
+	@codespell $(PYTHON_DIRS)
 
 
 # ====================================================================================
