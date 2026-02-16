@@ -12,7 +12,6 @@ dependencies:
   - pip:
     - codespell
     - mypy
-    - pycln
     - ruff==0.14.11
   - pre-commit
   - pytest
