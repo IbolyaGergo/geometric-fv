@@ -4,12 +4,13 @@ import pytest
 from geometric_fv.grid import Grid1D
 
 
-@pytest.mark.parametrize("x_min, x_max, ncells",
+@pytest.mark.parametrize(
+    ("x_min", "x_max", "ncells"),
     [
         (1.0, 0.0, 10),  # x_max < x_min
         (0.0, 1.0, 0),  # ncells = 0
         (0.0, 1.0, -1),  # ncells < 0
-    ]
+    ],
 )
 def test_grid_uniform_raises_error_for_invalid_inputs(x_min, x_max, ncells):
     with pytest.raises(ValueError):
@@ -17,7 +18,7 @@ def test_grid_uniform_raises_error_for_invalid_inputs(x_min, x_max, ncells):
 
 
 @pytest.mark.parametrize(
-    "x_min, x_max, ncells",
+    ("x_min", "x_max", "ncells"),
     [
         (0.0, 1.0, 1),
         (0.0, 1.0, 10),

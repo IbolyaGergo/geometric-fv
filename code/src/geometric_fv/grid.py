@@ -1,6 +1,7 @@
 """A module for creating and managing 1D computational grids."""
 
 from dataclasses import dataclass
+
 import numpy as np
 
 
