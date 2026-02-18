@@ -1,5 +1,6 @@
 import abc
 from dataclasses import dataclass
+import numpy as np
 from geometric_fv.utils import simple_fixed_point
 
 
@@ -14,7 +15,7 @@ class Scheme(abc.ABC):
 class ImplicitUpwind(Scheme):
     nghost: int = 1
 
-    def sweep(self, u_old, u_new, cfl):
+    def sweep(self, u_old: np.ndarray, u_new: np.ndarray, cfl: float):
         nghost = self.nghost
         if cfl > 0:
             for i in range(nghost, len(u_old) - nghost):
@@ -28,7 +29,7 @@ class ImplicitUpwind(Scheme):
 class Box(Scheme):
     nghost: int = 1
 
-    def sweep(self, u_old, u_new, cfl):
+    def sweep(self, u_old: np.ndarray, u_new: np.ndarray, cfl: float):
         nghost = self.nghost
         coeff = (1 - cfl) / (1 + cfl)
         for i in range(nghost, len(u_old) - nghost):
@@ -74,6 +75,7 @@ class SecondOrderImplicit(Scheme):
             else:
                 print(f"Warning: Solver failed to converge at cell {i}.")
                 print(f"Message: {result.message}")
+
                 u_new[i] = u_new_i_guess
 
             grad[i] = (u_old[i] - u_new[i]) / cfl
