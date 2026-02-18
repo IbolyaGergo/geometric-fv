@@ -1,13 +1,14 @@
-import abc
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import numpy as np
 from geometric_fv.utils import simple_fixed_point
 
 
-class Scheme(abc.ABC):
+class Scheme(ABC):
     nghost: int
 
-    def sweep(self, u_old, u_new, cfl):
+    @abstractmethod
+    def sweep(self, u_old: np.ndarray, u_new: np.ndarray, cfl: float):
         pass
 
 
