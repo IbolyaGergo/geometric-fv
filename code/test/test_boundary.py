@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from geometric_fv.boundary import *
+from geometric_fv.boundary import BCType, apply_bc
 from geometric_fv.grid import Grid1D
 
 mesh = Grid1D.uniform(0.0, 1.0, 50)
