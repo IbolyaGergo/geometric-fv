@@ -13,7 +13,7 @@ def test_update_cell_implicit_upwind_constant_input(val):
     )
 
 
-@pytest.mark.parametrize("u_old_i, u_new_im1, expected", [(1, 2, 1.5)])
+@pytest.mark.parametrize(("u_old_i", "u_new_im1", "expected"), [(1, 2, 1.5)])
 def test_update_cell_implicit_upwind_concrete_values(u_old_i, u_new_im1, expected):
     u_stencil_old = np.array([0, u_old_i, 0])
     u_stencil_new = np.array([u_new_im1, 0, 0])
@@ -25,7 +25,7 @@ def test_update_cell_implicit_upwind_concrete_values(u_old_i, u_new_im1, expecte
 def test_sweep_implicit_upwind_ones():
     ncells = 10
     u_old = np.ones(ncells)
-    u_new = np.ones(ncells)
+
     cfl = 1
     sol = sweep(
         ncells=ncells,
