@@ -1,6 +1,7 @@
-from enum import Enum
-import numpy as np
 import typing
+from enum import Enum
+
+import numpy as np
 
 
 class SchemeType(Enum):

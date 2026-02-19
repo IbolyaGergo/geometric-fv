@@ -1,4 +1,4 @@
-from typing import NamedTuple, Callable
+from typing import Callable, NamedTuple
 
 
 class FixedPointResult(NamedTuple):
