@@ -58,8 +58,6 @@ class SecondOrderImplicit(Scheme):
         coeff = (1 - cfl) / (1 + cfl)
         for i in range(nghost, len(u_old) - nghost):
             u_new_i_guess = coeff * u_old[i] + u_old[i - 1] - coeff * u_new[i - 1]
-            # u_new_i_guess = u_old[i]
-            # u_new_i_guess = (u_old[i] + cfl * u_new[i - 1]) / (1.0 + cfl)
 
             result = simple_fixed_point(
                     self.func,

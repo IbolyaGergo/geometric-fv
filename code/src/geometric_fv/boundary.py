@@ -38,13 +38,13 @@ def _apply_bc_quasi_periodic(
         u_old[-1 - i] = u_old[2 * nghost - 1 - i]
 
     if cfl > 0.0:
-        u_new[nghost - 1] =\
-            (1 + int(np.floor(cfl)) - cfl) * u_old[-2 - int(np.floor(cfl))] +\
-                (cfl - int(np.floor(cfl))) * u_old[-3 - int(np.floor(cfl))]
+        u_new[nghost - 1] = (1 + int(np.floor(cfl)) - cfl) * u_old[
+            -2 - int(np.floor(cfl))
+        ] + (cfl - int(np.floor(cfl))) * u_old[-3 - int(np.floor(cfl))]
     else:
-        u_new[-1] =\
-            (1 + int(np.floor(-cfl)) - (-cfl)) * u_old[1 + int(np.floor(-cfl))] +\
-                  (-cfl - int(np.floor(-cfl))) * u_old[2 + int(np.floor(-cfl))]
+        u_new[-1] = (1 + int(np.floor(-cfl)) - (-cfl)) * u_old[
+            1 + int(np.floor(-cfl))
+        ] + (-cfl - int(np.floor(-cfl))) * u_old[2 + int(np.floor(-cfl))]
 
 
 _apply_bc_types = {

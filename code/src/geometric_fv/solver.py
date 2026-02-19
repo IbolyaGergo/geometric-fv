@@ -1,6 +1,6 @@
 from enum import Enum
-
 import numpy as np
+import typing
 
 
 class SchemeType(Enum):
@@ -8,7 +8,11 @@ class SchemeType(Enum):
 
 
 def _update_cell_implicit_upwind(
-    idx: int, u_old: np.ndarray, u_new: np.ndarray, cfl: float, get_bc_func: callable
+    idx: int,
+    u_old: np.ndarray,
+    u_new: np.ndarray,
+    cfl: float,
+    get_bc_func: typing.Callable,
 ) -> float:
     if idx == 0:
         u_new_BC_left = get_bc_func(u_old, cfl)[0]
@@ -26,7 +30,7 @@ def update_cell(
     u_new: np.ndarray,
     cfl: float,
     scheme_type: SchemeType = SchemeType.IMPLICIT_UPWIND,
-    get_bc_func: callable = None,
+    get_bc_func: typing.Callable = None,
 ) -> float:
     """
     Solves for u_i^{n+1} using the specified scheme.
@@ -49,11 +53,11 @@ def sweep(
     u_old: np.ndarray,
     cfl: float,
     scheme_type: SchemeType = SchemeType.IMPLICIT_UPWIND,
-    get_bc_func: callable = None,
+    get_bc_func: typing.Callable = None,
 ) -> np.ndarray:
     u_new = np.zeros(ncells)
 
-    if get_bc_func == None:
+    if get_bc_func is None:
         get_bc_func = lambda u_old, cfl: np.array([0.0, 0.0])
 
     for i in range(ncells):

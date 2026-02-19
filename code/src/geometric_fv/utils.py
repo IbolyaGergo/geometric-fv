@@ -1,19 +1,15 @@
 from typing import NamedTuple, Callable
 
 
-
 class FixedPointResult(NamedTuple):
     x: float
     success: bool
     nit: int
     message: str
 
+
 def simple_fixed_point(
-        func: Callable,
-        x0: int,
-        args=(),
-        tol: float = 1e-8,
-        maxiter: int = 50
+    func: Callable, x0: int, args=(), tol: float = 1e-8, maxiter: int = 50
 ) -> FixedPointResult:
     """
     Finds a solution for x = func(x, *args) using fixed-point iteration.
@@ -29,7 +25,7 @@ def simple_fixed_point(
                 x=x_new,
                 success=True,
                 nit=i + 1,  # Number of iterations
-                message='Converged successfully.'
+                message="Converged successfully.",
             )
         x_old = x_new
 
@@ -38,5 +34,5 @@ def simple_fixed_point(
         x=x_new,  # Return the last computed value
         success=False,
         nit=maxiter,
-        message=f'Failed to converge after {maxiter} iterations.'
+        message=f"Failed to converge after {maxiter} iterations.",
     )
