@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from geometric_fv.slope import compute_slope
 from geometric_fv.utils import simple_fixed_point
 
 
@@ -43,30 +44,32 @@ class Box(Scheme):
 class SecondOrderImplicit(Scheme):
     nghost: int = 1
 
-    def func(
+    def _update_cell_iter(
         self,
-        u_new_i_guess: float,
-        u_old_i: float,
-        u_new_im1: float,
-        grad_im1: float,
+        u_new_i_current: float,
+        u_new: np.ndarray,
+        u_old: np.ndarray,
+        slope: float,
         cfl: float,
+        i: int,
     ) -> float:
-        grad_i = (u_old_i - u_new_i_guess) / cfl
-        u_new_i_next = (u_old_i + cfl * u_new_im1) / (1.0 + cfl) \
-                - 0.5 * cfl * (grad_i - grad_im1)
+        slope_i = compute_slope(u_old, u_new, cfl, i, u_new_i_current)
+
+        u_new_i_next = (u_old[i] + cfl * u_new[i - 1]) / (1.0 + cfl) \
+                - 0.5 * cfl * (slope_i - slope[i - 1])
         return u_new_i_next
 
     def sweep(self, u_old: np.ndarray, u_new: np.ndarray, cfl: float):
         nghost = self.nghost
-        grad = np.zeros(len(u_old))
+        slope = np.zeros(len(u_old))
         coeff = (1 - cfl) / (1 + cfl)
         for i in range(nghost, len(u_old) - nghost):
             u_new_i_guess = coeff * u_old[i] + u_old[i - 1] - coeff * u_new[i - 1]
 
             result = simple_fixed_point(
-                self.func,
+                self._update_cell_iter,
                 u_new_i_guess,
-                args=(u_old[i], u_new[i - 1], grad[i - 1], cfl),
+                args=(u_new, u_old, slope, cfl, i),
                 tol=1e-6,
                 maxiter=50,
             )
@@ -81,4 +84,4 @@ class SecondOrderImplicit(Scheme):
 
                 u_new[i] = u_new_i_guess
 
-            grad[i] = (u_old[i] - u_new[i]) / cfl
+            slope[i] = compute_slope(u_old, u_new, cfl, i)
