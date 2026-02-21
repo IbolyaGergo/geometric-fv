@@ -9,7 +9,7 @@ class FixedPointResult(NamedTuple):
 
 
 def simple_fixed_point(
-    func: Callable, x0: int, args=(), tol: float = 1e-8, maxiter: int = 50
+    func: Callable, x0: float, args=(), tol: float = 1e-8, maxiter: int = 50
 ) -> FixedPointResult:
     """
     Finds a solution for x = func(x, *args) using fixed-point iteration.
