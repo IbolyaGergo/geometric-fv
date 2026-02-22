@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from geometric_fv.schemes import Box, ImplicitUpwind, SecondOrderImplicit
+from geometric_fv.slope import SlopeType
 
 
 @pytest.mark.parametrize("scheme", [ImplicitUpwind(), Box(), SecondOrderImplicit()])
@@ -26,7 +27,7 @@ def test_SecondOrderImplicit_equals_Box():
     x_c = np.linspace(0.0, 1.0, ncells)
     u_old = np.sin(2 * np.pi * x_c)
 
-    scheme = SecondOrderImplicit()
+    scheme = SecondOrderImplicit(slope_type=SlopeType.BOX)
     u_new_2ndO = np.zeros(len(u_old))
     scheme.sweep(u_old, u_new_2ndO, cfl)
 
@@ -35,3 +36,21 @@ def test_SecondOrderImplicit_equals_Box():
     scheme.sweep(u_old, u_new_Box, cfl)
 
     np.testing.assert_allclose(u_new_2ndO, u_new_Box)
+
+
+def test_SecondOrderImplicit_equals_ImplicitUpwind_when_limit_is_ZERO():
+    ncells = 20
+
+    x_c = np.linspace(0.0, 1.0, ncells)
+    u_old = np.sin(2 * np.pi * x_c)
+
+    cfl = 1.6
+    scheme = SecondOrderImplicit(slope_type=SlopeType.ZERO)
+    u_new_2ndO = np.zeros(len(u_old))
+    scheme.sweep(u_old, u_new_2ndO, cfl)
+
+    scheme = ImplicitUpwind()
+    u_new_ImplUp = np.zeros(ncells)
+    scheme.sweep(u_old, u_new_ImplUp, cfl)
+
+    np.testing.assert_allclose(u_new_2ndO, u_new_ImplUp)
