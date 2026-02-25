@@ -15,32 +15,6 @@ class Scheme(ABC):
     def sweep(self, state):
         pass
 
-
-@dataclass(frozen=True)
-class ImplicitUpwind(Scheme):
-    nghost: int = 1
-
-    def sweep(self, state):
-        nghost = self.nghost
-
-        cfl = state.get_cfl()
-        if cfl > 0:
-            for i in range(nghost, len(state.u_old) - nghost):
-                u_old_i = state.get_u_old(i)
-                u_old_im1 = state.get_u_old(i - 1)
-                u_new_im1 = state.get_u_new(i - 1)
-                u_new_ip1 = state.get_u_new(i + 1)
-
-                state.u_new[i] = (u_old_i + cfl * u_new_im1) / (1.0 + cfl)
-        else:
-            for i in reversed(range(nghost, len(state.u_old) - nghost)):
-                u_old_i = state.get_u_old(i)
-                u_old_im1 = state.get_u_old(i - 1)
-                u_new_im1 = state.get_u_new(i - 1)
-                u_new_ip1 = state.get_u_new(i + 1)
-
-                state.u_new[i] = (u_old_i + (-cfl) * u_new_ip1) / (1.0 + (-cfl))
-
 @dataclass(frozen=True)
 class SecondOrderImplicit(Scheme):
     nghost: int = 1

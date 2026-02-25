@@ -1,14 +1,14 @@
 import numpy as np
 import pytest
 
-from geometric_fv.schemes import ImplicitUpwind, SecondOrderImplicit
+from geometric_fv.schemes import SecondOrderImplicit
 from geometric_fv.slope import SlopeType
 from geometric_fv.solver import SolverState
 
 
-@pytest.mark.parametrize("scheme", [ImplicitUpwind(), SecondOrderImplicit()])
-def test_constant_solution(scheme):
+def test_constant_solution():
     ncells = 20
+    scheme = SecondOrderImplicit()
 
     for val in np.linspace(0.0, 2.0, 10):
         u_new = val * np.ones(ncells)
@@ -60,9 +60,10 @@ def test_SecondOrderImplicit_equals_ImplicitUpwind_when_limit_is_ZERO():
     state2ndO = SolverState(u_old=u_old, u_new=u_new_2ndO, slope=slope, cfl=cfl)
     scheme.sweep(state2ndO)
 
-    scheme = ImplicitUpwind()
+    # Implicit Uwpind
+    nghost = 1
     u_new_ImplUp = np.zeros(ncells)
-    stateImplUp = SolverState(u_old=u_old, u_new=u_new_ImplUp, slope=slope, cfl=cfl)
-    scheme.sweep(stateImplUp)
+    for i in range(nghost, len(u_old) - nghost):
+        u_new_ImplUp[i] = (u_old[i] + cfl * u_new_ImplUp[i - 1]) / (1.0 + cfl)
 
     np.testing.assert_allclose(u_new_2ndO, u_new_ImplUp)
