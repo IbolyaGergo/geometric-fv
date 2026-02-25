@@ -25,10 +25,10 @@ class SecondOrderImplicit(Scheme):
     def _update_cell_guess(
         self, state, i: int
     ) -> float:
-        u_old_i = state.get_u_old(i)
-        u_old_im1 = state.get_u_old(i - 1)
+        u_old_i = state.u_old[i]
+        u_old_im1 = state.u_old[i - 1]
         u_new_im1 = state.get_u_new(i - 1)
-        cfl = state.get_cfl()
+        cfl = state.cfl
 
         coeff = (1 - cfl) / (1 + cfl)
         u_new_i_guess = coeff * u_old_i + u_old_im1 - coeff * u_new_im1
@@ -49,13 +49,13 @@ class SecondOrderImplicit(Scheme):
                 u_new_i_current=u_new_i_current,
                 slope_type=self.slope_type
         )
-        state.set_slope(i, slope_i)
+        state.slope[i] = slope_i
 
-        u_old_i = state.get_u_old(i)
-        u_old_im1 = state.get_u_old(i - 1)
+        u_old_i = state.u_old[i]
+        u_old_im1 = state.u_old[i - 1]
         u_new_im1 = state.get_u_new(i - 1)
-        slope_im1 = state.get_slope(i - 1)
-        cfl = state.get_cfl()
+        slope_im1 = state.slope[i - 1]
+        cfl = state.cfl
 
         # fmt: off
         u_new_i_next = (u_old_i + cfl * u_new_im1) / (1.0 + cfl) \
