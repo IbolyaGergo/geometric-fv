@@ -3,6 +3,7 @@ import pytest
 
 from geometric_fv.schemes import Box, ImplicitUpwind, SecondOrderImplicit
 from geometric_fv.slope import SlopeType
+from geometric_fv.solver import SolverState
 
 
 @pytest.mark.parametrize("scheme", [ImplicitUpwind(), Box(), SecondOrderImplicit()])
@@ -14,7 +15,10 @@ def test_constant_solution(scheme):
         u_old = val * np.ones(ncells)
 
         cfl = 1.6
-        scheme.sweep(u_old, u_new, cfl)
+
+        slope = np.zeros_like(u_old)
+        state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+        scheme.sweep(state)
 
         expected = val * np.ones(ncells)
         np.testing.assert_allclose(u_new, expected)
@@ -26,14 +30,17 @@ def test_SecondOrderImplicit_equals_Box():
 
     x_c = np.linspace(0.0, 1.0, ncells)
     u_old = np.sin(2 * np.pi * x_c)
+    slope = np.zeros_like(u_old)
 
     scheme = SecondOrderImplicit(slope_type=SlopeType.BOX)
     u_new_2ndO = np.zeros(len(u_old))
-    scheme.sweep(u_old, u_new_2ndO, cfl)
+    state2ndO = SolverState(u_old=u_old, u_new=u_new_2ndO, slope=slope, cfl=cfl)
+    scheme.sweep(state2ndO)
 
     scheme = Box()
     u_new_Box = np.zeros(len(u_old))
-    scheme.sweep(u_old, u_new_Box, cfl)
+    stateBox = SolverState(u_old=u_old, u_new=u_new_Box, slope=slope, cfl=cfl)
+    scheme.sweep(stateBox)
 
     np.testing.assert_allclose(u_new_2ndO, u_new_Box)
 
@@ -43,14 +50,17 @@ def test_SecondOrderImplicit_equals_ImplicitUpwind_when_limit_is_ZERO():
 
     x_c = np.linspace(0.0, 1.0, ncells)
     u_old = np.sin(2 * np.pi * x_c)
+    slope = np.zeros_like(u_old)
 
     cfl = 1.6
     scheme = SecondOrderImplicit(slope_type=SlopeType.ZERO)
     u_new_2ndO = np.zeros(len(u_old))
-    scheme.sweep(u_old, u_new_2ndO, cfl)
+    state2ndO = SolverState(u_old=u_old, u_new=u_new_2ndO, slope=slope, cfl=cfl)
+    scheme.sweep(state2ndO)
 
     scheme = ImplicitUpwind()
     u_new_ImplUp = np.zeros(ncells)
-    scheme.sweep(u_old, u_new_ImplUp, cfl)
+    stateImplUp = SolverState(u_old=u_old, u_new=u_new_ImplUp, slope=slope, cfl=cfl)
+    scheme.sweep(stateImplUp)
 
     np.testing.assert_allclose(u_new_2ndO, u_new_ImplUp)
