@@ -22,7 +22,7 @@ def _compute_slope_limiter_box(
     i: int,
     u_new_i_current: float,
 ) -> float:
-    u_new_i = state.get_u_new(i, override=u_new_i_current)
+    u_new_i = u_new_i_current
     u_old_i = state.u_old[i]
     cfl = state.cfl
 
@@ -36,7 +36,7 @@ def _compute_slope_limiter_tvd_box(
     i: int,
     u_new_i_current: float,
 ) -> float:
-    u_new_i = state.get_u_new(i, override=u_new_i_current)
+    u_new_i = u_new_i_current
     u_old_i = state.u_old[i]
     cfl = state.cfl
 
@@ -64,9 +64,9 @@ _limit_slope_types = {
 
 
 def compute_slope(
-        state,
+    state,
     i: int,
-    u_new_i_current: float = np.nan,
+    u_new_i_current: float,
     slope_type: SlopeType = SlopeType.TVD_BOX,
 ) -> float:
     compute_slope_func = _compute_slope_types.get(slope_type)

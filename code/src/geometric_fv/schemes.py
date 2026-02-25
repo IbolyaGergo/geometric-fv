@@ -27,7 +27,7 @@ class SecondOrderImplicit(Scheme):
     ) -> float:
         u_old_i = state.u_old[i]
         u_old_im1 = state.u_old[i - 1]
-        u_new_im1 = state.get_u_new(i - 1)
+        u_new_im1 = state.u_new[i - 1]
         cfl = state.cfl
 
         coeff = (1 - cfl) / (1 + cfl)
@@ -53,7 +53,7 @@ class SecondOrderImplicit(Scheme):
 
         u_old_i = state.u_old[i]
         u_old_im1 = state.u_old[i - 1]
-        u_new_im1 = state.get_u_new(i - 1)
+        u_new_im1 = state.u_new[i - 1]
         slope_im1 = state.slope[i - 1]
         cfl = state.cfl
 
