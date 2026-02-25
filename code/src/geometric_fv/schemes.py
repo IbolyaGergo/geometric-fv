@@ -41,24 +41,6 @@ class ImplicitUpwind(Scheme):
 
                 state.u_new[i] = (u_old_i + (-cfl) * u_new_ip1) / (1.0 + (-cfl))
 
-
-@dataclass(frozen=True)
-class Box(Scheme):
-    nghost: int = 1
-
-    def sweep(self, state):
-        nghost = self.nghost
-
-        cfl = state.get_cfl()
-        coeff = (1 - cfl) / (1 + cfl)
-        for i in range(nghost, len(state.u_old) - nghost):
-            u_old_i = state.get_u_old(i)
-            u_old_im1 = state.get_u_old(i - 1)
-            u_new_im1 = state.get_u_new(i - 1)
-
-            state.u_new[i] = coeff * u_old_i + u_old_im1 - coeff * u_new_im1
-
-
 @dataclass(frozen=True)
 class SecondOrderImplicit(Scheme):
     nghost: int = 1

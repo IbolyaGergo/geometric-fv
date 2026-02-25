@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
 
-from geometric_fv.schemes import Box, ImplicitUpwind, SecondOrderImplicit
+from geometric_fv.schemes import ImplicitUpwind, SecondOrderImplicit
 from geometric_fv.slope import SlopeType
 from geometric_fv.solver import SolverState
 
 
-@pytest.mark.parametrize("scheme", [ImplicitUpwind(), Box(), SecondOrderImplicit()])
+@pytest.mark.parametrize("scheme", [ImplicitUpwind(), SecondOrderImplicit()])
 def test_constant_solution(scheme):
     ncells = 20
 
@@ -37,10 +37,12 @@ def test_SecondOrderImplicit_equals_Box():
     state2ndO = SolverState(u_old=u_old, u_new=u_new_2ndO, slope=slope, cfl=cfl)
     scheme.sweep(state2ndO)
 
-    scheme = Box()
+    # Box scheme
+    nghost = 1
+    coeff = (1 - cfl) / (1 + cfl)
     u_new_Box = np.zeros(len(u_old))
-    stateBox = SolverState(u_old=u_old, u_new=u_new_Box, slope=slope, cfl=cfl)
-    scheme.sweep(stateBox)
+    for i in range(nghost, len(u_old) - nghost):
+        u_new_Box[i] = coeff * u_old[i] + u_old[i - 1] - coeff * u_new_Box[i - 1]
 
     np.testing.assert_allclose(u_new_2ndO, u_new_Box)
 
