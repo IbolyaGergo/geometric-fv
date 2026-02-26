@@ -2,6 +2,8 @@ from enum import Enum
 
 import numpy as np
 
+from geometric_fv.solver import SolverState
+
 
 class SlopeType(Enum):
     BOX = 0
@@ -66,6 +68,7 @@ def _compute_slope_box(state: SolverState, i: int, u_new_i: float) -> float:
     slope_i = (u_old_i - u_new_i) / cfl
 
     return slope_i
+
 
 _limit_slope_types = {
     LimiterType.FULL: _limit_slope_full,

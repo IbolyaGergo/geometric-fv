@@ -18,9 +18,9 @@ def test_compute_slope_Box():
     slope_type = SlopeType.BOX
     limiter_type = LimiterType.NONE
 
-    state= SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
     slope_i = compute_slope(
-            state, i, u_new_i=u_new[i], slope_type=slope_type, limiter_type=limiter_type
+        state, i, u_new_i=u_new[i], slope_type=slope_type, limiter_type=limiter_type
     )
     assert pytest.approx(slope_i) == 2.0
 
@@ -44,9 +44,9 @@ def test_compute_slope_Box_indexing():
     slope_type = SlopeType.BOX
     limiter_type = LimiterType.NONE
 
-    state= SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
     slope_i = compute_slope(
-            state, i, u_new_i=u_new[i], slope_type=slope_type, limiter_type=limiter_type
+        state, i, u_new_i=u_new[i], slope_type=slope_type, limiter_type=limiter_type
     )
 
     assert pytest.approx(slope_i) == 3.0
