@@ -1,5 +1,5 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 from geometric_fv.boundary import BCType, apply_bc
 from geometric_fv.grid import Grid1D
@@ -26,10 +26,12 @@ slope = np.zeros_like(u_old)
 
 bc_type = BCType.QUASI_PERIODIC
 cfl = 1.6
-for _t in range(1):
-    apply_bc(bc_type, u_old, u_new, nghost, cfl)
 
-    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+
+for _t in range(1):
+    apply_bc(state, bc_type, nghost)
+
     scheme.sweep(state)
     u_old[:] = u_new[:]
 

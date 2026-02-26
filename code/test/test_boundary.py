@@ -3,6 +3,7 @@ import pytest
 
 from geometric_fv.boundary import BCType, apply_bc
 from geometric_fv.grid import Grid1D
+from geometric_fv.solver import SolverState
 
 mesh = Grid1D.uniform(0.0, 1.0, 50)
 
@@ -18,8 +19,12 @@ bc_type = BCType.QUASI_PERIODIC
 def test_apply_bc_quasi_periodic_nghost_1_2(nghost):
     u_old = np.pad(u0, (nghost, nghost), "constant", constant_values=0.0)
     u_new = np.copy(u_old)
+    slope = np.zeros_like(u_old)
+    cfl = 0.0
 
-    apply_bc(bc_type, u_old, u_new, nghost, cfl=0.0)
+    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+
+    apply_bc(state, bc_type, nghost)
 
     if nghost == 1:
         # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
@@ -40,8 +45,12 @@ def test_apply_bc_quasi_periodic_cfl(cfl):
 
     u_old = np.pad(u0, (nghost, nghost), "constant", constant_values=0.0)
     u_new = np.copy(u_old)
+    slope = np.zeros_like(u_old)
 
-    apply_bc(bc_type, u_old, u_new, nghost, cfl)
+    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+
+    apply_bc(state, bc_type, nghost)
+
     if cfl >= 0.0 and cfl <= 1.0:
         assert pytest.approx(u_new[0]) == (1 - cfl) * u_old[-2] + cfl * u_old[-3]
     elif cfl >= 1.0 and cfl <= 2.0:
@@ -57,8 +66,11 @@ def test_apply_bc_quasi_periodic_negative_cfl(cfl):
 
     u_old = np.pad(u0, (nghost, nghost), "constant", constant_values=0.0)
     u_new = np.copy(u_old)
+    slope = np.zeros_like(u_old)
 
-    apply_bc(bc_type, u_old, u_new, nghost, cfl)
+    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+
+    apply_bc(state, bc_type, nghost)
     if -cfl >= 0.0 and -cfl <= 1.0:
         assert pytest.approx(u_new[-1]) == (1 - (-cfl)) * u_old[1] + (-cfl) * u_old[2]
     if -cfl >= 1.0 and -cfl <= 2.0:
