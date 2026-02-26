@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 
 from geometric_fv.schemes import SecondOrderImplicit
 from geometric_fv.slope import LimiterType, SlopeType

@@ -14,7 +14,7 @@ class LimiterType(Enum):
 
 
 def _limit_slope_full(
-    state,
+    state: SolverState,
     i: int,
     u_new_i: float,
     slope_i_current: float,
@@ -23,7 +23,7 @@ def _limit_slope_full(
 
 
 def _limit_slope_none(
-    state,
+    state: SolverState,
     i: int,
     u_new_i: float,
     slope_i_current: float,
@@ -32,7 +32,7 @@ def _limit_slope_none(
 
 
 def _limit_slope_tvd(
-    state,
+    state: SolverState,
     i: int,
     u_new_i: float,
     slope_i_current: float,
@@ -59,7 +59,7 @@ def _limit_slope_tvd(
     return slope_i_lim
 
 
-def _compute_slope_box(state, i: int, u_new_i: float) -> float:
+def _compute_slope_box(state: SolverState, i: int, u_new_i: float) -> float:
     u_old_i = state.u_old[i]
     cfl = state.cfl
 
@@ -79,7 +79,7 @@ _compute_slope_types = {
 
 
 def compute_slope(
-    state,
+    state: SolverState,
     i: int,
     u_new_i: float,
     slope_type: SlopeType = SlopeType.BOX,

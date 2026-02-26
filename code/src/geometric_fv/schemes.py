@@ -12,7 +12,7 @@ class Scheme(ABC):
     nghost: int
 
     @abstractmethod
-    def sweep(self, state):
+    def sweep(self, state: SolverState):
         pass
 
 
@@ -24,7 +24,7 @@ class SecondOrderImplicit(Scheme):
     tol: float = 1e-6
     maxiter: int = 50
 
-    def _update_cell_guess(self, state, i: int) -> float:
+    def _update_cell_guess(self, state: SolverState, i: int) -> float:
         u_old_i = state.u_old[i]
         u_old_im1 = state.u_old[i - 1]
         u_new_im1 = state.u_new[i - 1]
@@ -40,7 +40,7 @@ class SecondOrderImplicit(Scheme):
     def _update_cell_iter(
         self,
         u_new_i_current: float,
-        state,
+        state: SolverState,
         i: int,
     ) -> float:
         slope_i = compute_slope(
@@ -53,7 +53,6 @@ class SecondOrderImplicit(Scheme):
         state.slope[i] = slope_i
 
         u_old_i = state.u_old[i]
-        u_old_im1 = state.u_old[i - 1]
         u_new_im1 = state.u_new[i - 1]
         slope_im1 = state.slope[i - 1]
         cfl = state.cfl
@@ -64,7 +63,7 @@ class SecondOrderImplicit(Scheme):
         # fmt: on
         return u_new_i_next
 
-    def sweep(self, state):
+    def sweep(self, state: SolverState):
         nghost = self.nghost
 
         for i in range(nghost, len(state.u_old) - nghost):
