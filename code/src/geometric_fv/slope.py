@@ -4,8 +4,7 @@ import numpy as np
 
 
 class SlopeType(Enum):
-    ZERO = 0
-    BOX = 1
+    BOX = 0
 
 
 class LimiterType(Enum):
@@ -60,42 +59,13 @@ def _limit_slope_tvd(
     return slope_i_lim
 
 
-def _compute_slope_limiter_full(
-    state,
-    i: int,
-    u_new_i: float,
-) -> float:
-    return 0.0
-
-
-def _compute_slope_limiter_box(state, i: int, u_new_i: float) -> float:
+def _compute_slope_box(state, i: int, u_new_i: float) -> float:
     u_old_i = state.u_old[i]
     cfl = state.cfl
 
     slope_i = (u_old_i - u_new_i) / cfl
 
     return slope_i
-
-
-def _compute_slope_limiter_tvd_box(
-    state,
-    i: int,
-    u_new_i: float,
-) -> float:
-    u_old_i = state.u_old[i]
-    cfl = state.cfl
-
-    slope_i_current = (u_old_i - u_new_i) / cfl
-
-    slope_i_lim = _limit_slope_tvd(
-        state,
-        i=i,
-        u_new_i=u_new_i,
-        slope_i_current=slope_i_current,
-    )
-
-    return slope_i_lim
-
 
 _limit_slope_types = {
     LimiterType.FULL: _limit_slope_full,
@@ -104,7 +74,7 @@ _limit_slope_types = {
 }
 
 _compute_slope_types = {
-    SlopeType.BOX: _compute_slope_limiter_box,
+    SlopeType.BOX: _compute_slope_box,
 }
 
 
