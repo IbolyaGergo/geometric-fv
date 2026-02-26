@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from geometric_fv.schemes import SecondOrderImplicit
-from geometric_fv.slope import SlopeType
+from geometric_fv.slope import LimiterType, SlopeType
 from geometric_fv.solver import SolverState
 
 
@@ -32,7 +32,10 @@ def test_SecondOrderImplicit_equals_Box():
     u_old = np.sin(2 * np.pi * x_c)
     slope = np.zeros_like(u_old)
 
-    scheme = SecondOrderImplicit(slope_type=SlopeType.BOX)
+    slope_type = SlopeType.BOX
+    limiter_type = LimiterType.NONE
+    scheme = SecondOrderImplicit(slope_type=slope_type, limiter_type=limiter_type)
+
     u_new_2ndO = np.zeros(len(u_old))
     state2ndO = SolverState(u_old=u_old, u_new=u_new_2ndO, slope=slope, cfl=cfl)
     scheme.sweep(state2ndO)
@@ -47,15 +50,18 @@ def test_SecondOrderImplicit_equals_Box():
     np.testing.assert_allclose(u_new_2ndO, u_new_Box)
 
 
-def test_SecondOrderImplicit_equals_ImplicitUpwind_when_limit_is_ZERO():
+def test_SecondOrderImplicit_equals_ImplicitUpwind_when_limit_is_FULL():
     ncells = 20
+    cfl = 1.6
 
     x_c = np.linspace(0.0, 1.0, ncells)
     u_old = np.sin(2 * np.pi * x_c)
     slope = np.zeros_like(u_old)
 
-    cfl = 1.6
-    scheme = SecondOrderImplicit(slope_type=SlopeType.ZERO)
+    slope_type = SlopeType.BOX
+    limiter_type = LimiterType.FULL
+    scheme = SecondOrderImplicit(slope_type=slope_type, limiter_type=limiter_type)
+
     u_new_2ndO = np.zeros(len(u_old))
     state2ndO = SolverState(u_old=u_old, u_new=u_new_2ndO, slope=slope, cfl=cfl)
     scheme.sweep(state2ndO)

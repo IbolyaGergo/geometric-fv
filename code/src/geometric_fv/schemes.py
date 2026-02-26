@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from geometric_fv.slope import SlopeType, compute_slope
+from geometric_fv.slope import LimiterType, SlopeType, compute_slope
 from geometric_fv.solver import SolverState
 from geometric_fv.utils import simple_fixed_point
 
@@ -15,16 +15,16 @@ class Scheme(ABC):
     def sweep(self, state):
         pass
 
+
 @dataclass(frozen=True)
 class SecondOrderImplicit(Scheme):
     nghost: int = 1
-    slope_type: SlopeType = SlopeType.TVD_BOX
+    slope_type: SlopeType = SlopeType.BOX
+    limiter_type: LimiterType = LimiterType.TVD
     tol: float = 1e-6
     maxiter: int = 50
 
-    def _update_cell_guess(
-        self, state, i: int
-    ) -> float:
+    def _update_cell_guess(self, state, i: int) -> float:
         u_old_i = state.u_old[i]
         u_old_im1 = state.u_old[i - 1]
         u_new_im1 = state.u_new[i - 1]
@@ -32,7 +32,7 @@ class SecondOrderImplicit(Scheme):
 
         coeff = (1 - cfl) / (1 + cfl)
         u_new_i_guess = coeff * u_old_i + u_old_im1 - coeff * u_new_im1
-        if self.slope_type is SlopeType.TVD_BOX:
+        if self.limiter_type is not LimiterType.NONE:
             u_new_i_guess = np.median([u_new_i_guess, u_old_i, u_new_im1])
 
         return u_new_i_guess
@@ -44,10 +44,11 @@ class SecondOrderImplicit(Scheme):
         i: int,
     ) -> float:
         slope_i = compute_slope(
-                state,
-                i=i,
-                u_new_i_current=u_new_i_current,
-                slope_type=self.slope_type
+            state,
+            i=i,
+            u_new_i=u_new_i_current,
+            slope_type=self.slope_type,
+            limiter_type=self.limiter_type,
         )
         state.slope[i] = slope_i
 
@@ -67,10 +68,7 @@ class SecondOrderImplicit(Scheme):
         nghost = self.nghost
 
         for i in range(nghost, len(state.u_old) - nghost):
-            u_new_i_guess = self._update_cell_guess(
-                    state,
-                    i=i
-            )
+            u_new_i_guess = self._update_cell_guess(state, i=i)
 
             result = simple_fixed_point(
                 self._update_cell_iter,
