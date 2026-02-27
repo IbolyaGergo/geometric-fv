@@ -68,6 +68,14 @@ docs: ## Build the documentation.
 	@echo "Building documentation..."
 	@sphinx-build docs/ docs/build/
 
+#
+# ====================================================================================
+# TAGS
+# ====================================================================================
+
+.PHONY: tags
+tags:
+	@ctags -R --exclude=envs --exclude=docs --exclude=.*/* --exclude=Makefile .
 
 # ====================================================================================
 # CLEANUP
