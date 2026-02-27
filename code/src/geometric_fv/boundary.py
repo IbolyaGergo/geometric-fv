@@ -65,4 +65,12 @@ def apply_bc(state: SolverState, bc_type: BCType, nghost: int) -> None:
     apply_bc_func = _apply_bc_types.get(bc_type)
     if apply_bc_func is None:
         raise ValueError(f"Unsupported BC type: {bc_type}")
-    return apply_bc_func(state, nghost)
+    apply_bc_func(state, nghost)
+
+    u_old = state.u_old
+    u_new = state.u_new
+    slope = state.slope
+    cfl = state.cfl
+
+    if np.not_equal(cfl, 0.0):
+        slope[0] = (u_old[0] - u_new[0]) / cfl
