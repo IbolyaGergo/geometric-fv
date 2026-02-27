@@ -19,7 +19,7 @@ def _limit_slope_full(
     state: SolverState,
     i: int,
     u_new_i: float,
-    slope_i_current: float,
+    slope_i: float,
 ) -> float:
     return 0.0
 
@@ -28,44 +28,40 @@ def _limit_slope_none(
     state: SolverState,
     i: int,
     u_new_i: float,
-    slope_i_current: float,
+    slope_i: float,
 ) -> float:
-    return slope_i_current
+    return slope_i
 
 
 def _limit_slope_tvd(
     state: SolverState,
     i: int,
     u_new_i: float,
-    slope_i_current: float,
+    slope_i: float,
 ) -> float:
-    u_old_i = state.u_old[i]
-    u_old_ip1 = state.u_old[i + 1]
-
-    u_new_im1 = state.u_new[i - 1]
-
-    slope_i = slope_i_current
-    slope_im1 = state.slope[i - 1]
+    u_old = state.u_old
+    u_new = state.u_new
+    slope = state.slope
     cfl = state.cfl
 
     slope_i_1 = np.median(
         [
-            slope_im1 - 2.0 * (u_old_i - u_new_im1) / (1.0 + cfl),
-            slope_im1 + 2.0 * (u_old_i - u_new_im1) / ((cfl) * (1.0 + cfl)),
+            slope[i - 1] - 2.0 * (u_old[i] - u_new[i - 1]) / (1.0 + cfl),
+            slope[i - 1] + 2.0 * (u_old[i] - u_new[i - 1]) / ((cfl) * (1.0 + cfl)),
             slope_i,
         ]
     )
 
-    slope_i_lim = np.median([0.0, slope_i_1, 2.0 * (u_old_ip1 - u_new_i) / (1.0 + cfl)])
+    slope_i_lim = np.median([0.0, slope_i_1, 2.0 * (u_old[i + 1] - u_new_i) / (1.0 + cfl)])
 
     return slope_i_lim
 
 
 def _compute_slope_box(state: SolverState, i: int, u_new_i: float) -> float:
-    u_old_i = state.u_old[i]
+    u_old = state.u_old
     cfl = state.cfl
 
-    slope_i = (u_old_i - u_new_i) / cfl
+    slope_i = (u_old[i] - u_new_i) / cfl
 
     return slope_i
 
