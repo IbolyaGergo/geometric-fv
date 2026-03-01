@@ -88,3 +88,20 @@ def test_apply_bc_quasi_periodic_negative_cfl(cfl):
         assert (
             pytest.approx(u_new[-1]) == (3 - (-cfl)) * u_old[3] + (-cfl - 2) * u_old[4]
         )
+
+@pytest.mark.parametrize("nghost", np.arange(1, 5))
+def test_apply_bc_constant_extend(nghost):
+    bc_type = BCType.CONSTANT_EXTEND
+    config = BoundaryConfig(bc_type=bc_type)
+
+    u_old = np.pad(u0, (nghost, nghost), "constant", constant_values=0.0)
+    u_new = np.copy(u_old)
+    slope = np.zeros_like(u_old)
+    cfl = 1.6
+
+    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+
+    apply_bc(state, config, nghost)
+
+    assert pytest.approx(u_old[:nghost]) == u_old[nghost]
+    assert pytest.approx(u_new[:nghost]) == u_old[nghost]

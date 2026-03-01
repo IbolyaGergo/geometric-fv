@@ -9,12 +9,15 @@ def _apply_bc_constant_extend(state: SolverState, nghost: int) -> None:
     u_old = state.u_old
     u_new = state.u_new
 
-    # BC
-    u_old[0] = u_old[1]
-    u_old[-1] = u_old[-2]
-    u_new[0] = u_old[0]
-    u_new[-1] = u_old[-1]
+    # first/last idx of the physical domain
+    first = nghost
+    last = -nghost - 1
 
+    for i in range(nghost):
+        u_old[i] = u_old[first]
+        u_new[i] = u_old[first]
+        u_old[-1 - i] = u_old[last]
+        u_new[-1 - i] = u_old[last]
 
 # nghost = 1
 # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
