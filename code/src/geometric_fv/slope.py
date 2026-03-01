@@ -42,7 +42,9 @@ def _limit_slope_tvd(
         ]
     )
 
-    slope_i_lim = np.median([0.0, slope_i_1, 2.0 * (u_old[i + 1] - u_new_i) / (1.0 + cfl)])
+    slope_i_lim = np.median(
+        [0.0, slope_i_1, 2.0 * (u_old[i + 1] - u_new_i) / (1.0 + cfl)]
+    )
 
     return slope_i_lim
 
@@ -68,10 +70,7 @@ _compute_slope_types = {
 
 
 def compute_slope(
-    state: SolverState,
-    i: int,
-    u_new_i: float,
-    reconst_config: ReconstConfig
+    state: SolverState, i: int, u_new_i: float, reconst_config: ReconstConfig
 ) -> float:
     slope_type = reconst_config.slope_type
     compute_slope_func = _compute_slope_types.get(slope_type)

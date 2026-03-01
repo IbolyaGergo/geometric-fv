@@ -3,8 +3,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from geometric_fv.config import ReconstConfig, SolverConfig
-from geometric_fv.enums import LimiterType, SlopeType
+from geometric_fv.config import SolverConfig
+from geometric_fv.enums import LimiterType
 from geometric_fv.slope import compute_slope
 from geometric_fv.solver import SolverState
 from geometric_fv.utils import simple_fixed_point
@@ -50,10 +50,7 @@ class SecondOrderImplicit(Scheme):
         cfl = state.cfl
 
         slope[i] = compute_slope(
-            state,
-            i=i,
-            u_new_i=u_new_i_current,
-            reconst_config=self.config.reconst
+            state, i=i, u_new_i=u_new_i_current, reconst_config=self.config.reconst
         )
 
         # fmt: off

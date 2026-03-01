@@ -2,22 +2,25 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from geometric_fv.boundary import apply_bc
-from geometric_fv.config import BoundaryConfig, IterationConfig, ReconstConfig, SolverConfig
+from geometric_fv.config import (
+    BoundaryConfig,
+    IterationConfig,
+    ReconstConfig,
+    SolverConfig,
+)
 from geometric_fv.enums import BCType, LimiterType, SlopeType
 from geometric_fv.grid import Grid1D
 from geometric_fv.schemes import SecondOrderImplicit
-from geometric_fv.slope import LimiterType, SlopeType
 from geometric_fv.solver import SolverState
 
 bc_type = BCType.QUASI_PERIODIC
-slope_type=SlopeType.BOX
-limiter_type=LimiterType.TVD
+slope_type = SlopeType.BOX
+limiter_type = LimiterType.TVD
 
 config = SolverConfig(
-        boundary=BoundaryConfig(bc_type=bc_type),
-        reconst=ReconstConfig(slope_type=slope_type,
-                              limiter_type=limiter_type),
-        iteration=IterationConfig(tol=1e-6, maxiter=50),
+    boundary=BoundaryConfig(bc_type=bc_type),
+    reconst=ReconstConfig(slope_type=slope_type, limiter_type=limiter_type),
+    iteration=IterationConfig(tol=1e-6, maxiter=50),
 )
 
 scheme = SecondOrderImplicit(config=config)

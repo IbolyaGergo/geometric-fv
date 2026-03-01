@@ -47,8 +47,6 @@ def test_compute_slope_Box_indexing():
     reconst_config = ReconstConfig(slope_type=slope_type, limiter_type=limiter_type)
 
     state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
-    slope_i = compute_slope(
-        state, i, u_new_i=u_new[i], reconst_config=reconst_config
-    )
+    slope_i = compute_slope(state, i, u_new_i=u_new[i], reconst_config=reconst_config)
 
     assert pytest.approx(slope_i) == 3.0
