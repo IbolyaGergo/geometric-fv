@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from geometric_fv.config import MeshConfig
 from geometric_fv.grid import Grid1D
 
 
@@ -14,7 +15,7 @@ from geometric_fv.grid import Grid1D
 )
 def test_grid_uniform_raises_error_for_invalid_inputs(x_min, x_max, ncells):
     with pytest.raises(ValueError):
-        Grid1D.uniform(x_min=x_min, x_max=x_max, ncells=ncells)
+        Grid1D.uniform(MeshConfig(x_min=x_min, x_max=x_max, ncells=ncells))
 
 
 @pytest.mark.parametrize(
@@ -27,7 +28,7 @@ def test_grid_uniform_raises_error_for_invalid_inputs(x_min, x_max, ncells):
     ],
 )
 def test_grid_uniform_valid_inputs(x_min, x_max, ncells):
-    grid = Grid1D.uniform(x_min=x_min, x_max=x_max, ncells=ncells)
+    grid = Grid1D.uniform(MeshConfig(x_min=x_min, x_max=x_max, ncells=ncells))
 
     # Check number of cells
     assert grid.ncells == ncells

@@ -5,6 +5,7 @@ from geometric_fv.boundary import apply_bc
 from geometric_fv.config import (
     BoundaryConfig,
     IterationConfig,
+    MeshConfig,
     ReconstConfig,
     SolverConfig,
 )
@@ -13,11 +14,17 @@ from geometric_fv.grid import Grid1D
 from geometric_fv.schemes import SecondOrderImplicit
 from geometric_fv.solver import SolverState
 
+# Mesh
+x_min = 0.0
+x_max = 1.0
+ncells = 100
+
 bc_type = BCType.QUASI_PERIODIC
 slope_type = SlopeType.BOX
 limiter_type = LimiterType.TVD
 
 config = SolverConfig(
+    mesh=MeshConfig(x_min=x_min, x_max=x_max, ncells=ncells),
     boundary=BoundaryConfig(bc_type=bc_type),
     reconst=ReconstConfig(slope_type=slope_type, limiter_type=limiter_type),
     iteration=IterationConfig(tol=1e-6, maxiter=50),
@@ -26,7 +33,7 @@ config = SolverConfig(
 scheme = SecondOrderImplicit(config=config)
 nghost = scheme.nghost
 
-mesh = Grid1D.uniform(0.0, 1.0, 100)
+mesh = Grid1D.uniform(config.mesh)
 x_c = mesh.centers
 ncells = mesh.ncells
 

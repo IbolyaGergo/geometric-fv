@@ -5,9 +5,29 @@ from geometric_fv.enums import BCType, LimiterType, SlopeType
 
 @dataclass(frozen=True)
 class MeshConfig:
+    """
+    x_min : float
+        The minimum coordinate of the grid.
+    x_max : float
+        The maximum coordinate of the grid.
+    ncells : int
+        The number of cells in the grid.
+
+    Raises
+    ------
+    ValueError
+        If `x_max` is not greater than `x_min` or if `ncells` is less than 1.
+    """
+
     x_min: float = 0.0
     x_max: float = 1.0
     ncells: int = 100
+
+    def __post_init__(self):
+        if self.x_min > self.x_max:
+            raise ValueError("x_max must be greater than x_min")
+        if self.ncells <= 0:
+            raise ValueError("ncells must be greater than 0")
 
 
 @dataclass(frozen=True)

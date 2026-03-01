@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from geometric_fv.config import MeshConfig
+
 
 @dataclass(frozen=True)
 class Grid1D:
@@ -37,30 +39,20 @@ class Grid1D:
         return len(self.faces) - 1
 
     @classmethod
-    def uniform(cls, x_min: float, x_max: float, ncells: int) -> "Grid1D":
+    def uniform(cls, mesh_config: MeshConfig) -> "Grid1D":
         """Create a uniform 1D grid.
 
         Parameters
         ----------
-        x_min : float
-            The minimum coordinate of the grid.
-        x_max : float
-            The maximum coordinate of the grid.
-        ncells : int
-            The number of cells in the grid.
+        mesh_config
+            For setting boundary coordinates and number of cells.
 
         Returns
         -------
         Grid1D
             A new Grid1D object with uniform cell spacing.
-
-        Raises
-        ------
-        ValueError
-            If `x_max` is not greater than `x_min` or if `ncells` is less than 1.
         """
-        if x_min > x_max:
-            raise ValueError("x_max must be greater than x_min")
-        if ncells < 1:
-            raise ValueError("ncells must be greater than 0")
+        x_min = mesh_config.x_min
+        x_max = mesh_config.x_max
+        ncells = mesh_config.ncells
         return cls(np.linspace(x_min, x_max, ncells + 1))
