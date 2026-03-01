@@ -10,7 +10,7 @@ from geometric_fv.config import (
     SolverConfig,
 )
 from geometric_fv.enums import BCType, LimiterType, SlopeType
-from geometric_fv.grid import Grid1D
+from geometric_fv.mesh import Mesh1D
 from geometric_fv.schemes import SecondOrderImplicit
 from geometric_fv.solver import SolverState
 
@@ -33,7 +33,7 @@ config = SolverConfig(
 scheme = SecondOrderImplicit(config=config)
 nghost = scheme.nghost
 
-mesh = Grid1D.uniform(config.mesh)
+mesh = Mesh1D.uniform(config.mesh)
 x_c = mesh.centers
 ncells = mesh.ncells
 

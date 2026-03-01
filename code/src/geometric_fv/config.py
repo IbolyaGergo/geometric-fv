@@ -7,11 +7,11 @@ from geometric_fv.enums import BCType, LimiterType, SlopeType
 class MeshConfig:
     """
     x_min : float
-        The minimum coordinate of the grid.
+        The minimum coordinate of the mesh.
     x_max : float
-        The maximum coordinate of the grid.
+        The maximum coordinate of the mesh.
     ncells : int
-        The number of cells in the grid.
+        The number of cells in the mesh.
 
     Raises
     ------

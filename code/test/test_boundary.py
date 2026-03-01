@@ -4,14 +4,14 @@ import pytest
 from geometric_fv.boundary import apply_bc
 from geometric_fv.config import BoundaryConfig, MeshConfig
 from geometric_fv.enums import BCType
-from geometric_fv.grid import Grid1D
+from geometric_fv.mesh import Mesh1D
 from geometric_fv.solver import SolverState
 
 x_min = 0.0
 x_max = 1.0
 ncells = 50
 
-mesh = Grid1D.uniform(MeshConfig(x_min=x_min, x_max=x_max, ncells=ncells))
+mesh = Mesh1D.uniform(MeshConfig(x_min=x_min, x_max=x_max, ncells=ncells))
 
 x_c = mesh.centers
 ncells = mesh.ncells

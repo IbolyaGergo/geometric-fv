@@ -1,4 +1,4 @@
-"""A module for creating and managing 1D computational grids."""
+"""A module for creating and managing 1D computational meshes."""
 
 from dataclasses import dataclass
 
@@ -8,10 +8,10 @@ from geometric_fv.config import MeshConfig
 
 
 @dataclass(frozen=True)
-class Grid1D:
-    """A 1D grid with faces and cell centers.
+class Mesh1D:
+    """A 1D mesh with faces and cell centers.
 
-    This class represents a 1D grid and provides properties to access cell
+    This class represents a 1D mesh and provides properties to access cell
     centers, cell sizes, and the number of cells. It is immutable to prevent
     accidental modification.
 
@@ -35,12 +35,12 @@ class Grid1D:
 
     @property
     def ncells(self) -> int:
-        """The number of cells in the grid."""
+        """The number of cells in the mesh."""
         return len(self.faces) - 1
 
     @classmethod
-    def uniform(cls, mesh_config: MeshConfig) -> "Grid1D":
-        """Create a uniform 1D grid.
+    def uniform(cls, mesh_config: MeshConfig) -> "Mesh1D":
+        """Create a uniform 1D mesh.
 
         Parameters
         ----------
@@ -49,8 +49,8 @@ class Grid1D:
 
         Returns
         -------
-        Grid1D
-            A new Grid1D object with uniform cell spacing.
+        Mesh1D
+            A new Mesh1D object with uniform cell spacing.
         """
         x_min = mesh_config.x_min
         x_max = mesh_config.x_max
