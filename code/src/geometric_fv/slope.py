@@ -71,16 +71,16 @@ def compute_slope(
     state: SolverState,
     i: int,
     u_new_i: float,
-    config: ReconstConfig
+    reconst_config: ReconstConfig
 ) -> float:
-    slope_type = config.slope_type
+    slope_type = reconst_config.slope_type
     compute_slope_func = _compute_slope_types.get(slope_type)
     if compute_slope_func is None:
         raise ValueError(f"Unsupported slope type: {slope_type}")
 
     slope_i = compute_slope_func(state, i, u_new_i)
 
-    limiter_type = config.limiter_type
+    limiter_type = reconst_config.limiter_type
     limit_slope_func = _limit_slope_types.get(limiter_type)
     if limit_slope_func is None:
         raise ValueError(f"Unsupported limiter type: {limiter_type}")
