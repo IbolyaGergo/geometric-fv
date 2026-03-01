@@ -1,13 +1,8 @@
-from enum import Enum
-
 import numpy as np
 
+from geometric_fv.config import BoundaryConfig
+from geometric_fv.enums import BCType
 from geometric_fv.solver import SolverState
-
-
-class BCType(Enum):
-    CONSTANT_EXTEND = "constant_extend"
-    QUASI_PERIODIC = "quasi_periodic"
 
 
 def _apply_bc_constant_extend(state: SolverState, nghost: int) -> None:
@@ -61,7 +56,8 @@ _apply_bc_types = {
 }
 
 
-def apply_bc(state: SolverState, bc_type: BCType, nghost: int) -> None:
+def apply_bc(state: SolverState, config: BoundaryConfig, nghost: int) -> None:
+    bc_type = config.bc_type
     apply_bc_func = _apply_bc_types.get(bc_type)
     if apply_bc_func is None:
         raise ValueError(f"Unsupported BC type: {bc_type}")

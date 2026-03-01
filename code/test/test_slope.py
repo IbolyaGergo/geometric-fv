@@ -1,7 +1,9 @@
 import numpy as np
 import pytest
 
-from geometric_fv.slope import LimiterType, SlopeType, compute_slope
+from geometric_fv.config import ReconstConfig
+from geometric_fv.enums import LimiterType, SlopeType
+from geometric_fv.slope import compute_slope
 from geometric_fv.solver import SolverState
 
 
@@ -17,14 +19,13 @@ def test_compute_slope_Box():
 
     slope_type = SlopeType.BOX
     limiter_type = LimiterType.NONE
+    config = ReconstConfig(slope_type=slope_type, limiter_type=limiter_type)
 
     state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
-    slope_i = compute_slope(
-        state, i, u_new_i=u_new[i], slope_type=slope_type, limiter_type=limiter_type
-    )
+    slope_i = compute_slope(state, i, u_new_i=u_new[i], config=config)
     assert pytest.approx(slope_i) == 2.0
 
-    slope_i = compute_slope(state, i, slope_type=SlopeType.BOX, u_new_i=2.5)
+    slope_i = compute_slope(state, i, u_new_i=2.5, config=config)
     assert pytest.approx(slope_i) == 1.0
 
 
@@ -43,10 +44,11 @@ def test_compute_slope_Box_indexing():
 
     slope_type = SlopeType.BOX
     limiter_type = LimiterType.NONE
+    config = ReconstConfig(slope_type=slope_type, limiter_type=limiter_type)
 
     state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
     slope_i = compute_slope(
-        state, i, u_new_i=u_new[i], slope_type=slope_type, limiter_type=limiter_type
+        state, i, u_new_i=u_new[i], config=config
     )
 
     assert pytest.approx(slope_i) == 3.0

@@ -3,7 +3,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from geometric_fv.slope import LimiterType, SlopeType, compute_slope
+from geometric_fv.config import ReconstConfig
+from geometric_fv.enums import LimiterType, SlopeType
+from geometric_fv.slope import compute_slope
 from geometric_fv.solver import SolverState
 from geometric_fv.utils import simple_fixed_point
 
@@ -19,8 +21,7 @@ class Scheme(ABC):
 @dataclass(frozen=True)
 class SecondOrderImplicit(Scheme):
     nghost: int = 1
-    slope_type: SlopeType = SlopeType.BOX
-    limiter_type: LimiterType = LimiterType.TVD
+    config: ReconstConfig = ReconstConfig()
     tol: float = 1e-6
     maxiter: int = 50
 
@@ -31,7 +32,7 @@ class SecondOrderImplicit(Scheme):
 
         coeff = (1 - cfl) / (1 + cfl)
         u_new_i_guess = coeff * u_old[i] + u_old[i - 1] - coeff * u_new[i - 1]
-        if self.limiter_type is not LimiterType.NONE:
+        if self.config.limiter_type is not LimiterType.NONE:
             u_new_i_guess = np.median([u_new_i_guess, u_old[i], u_new[i - 1]])
 
         return u_new_i_guess
@@ -52,8 +53,7 @@ class SecondOrderImplicit(Scheme):
             state,
             i=i,
             u_new_i=u_new_i_current,
-            slope_type=self.slope_type,
-            limiter_type=self.limiter_type,
+            config=self.config
         )
 
         # fmt: off
@@ -78,8 +78,8 @@ class SecondOrderImplicit(Scheme):
             if result.success:
                 state.u_new[i] = result.x
 
-                niters = result.nit
-                print(f"Cell {i} converged in {niters} number of iterations.")
+                # niters = result.nit
+                # print(f"Cell {i} converged in {niters} number of iterations.")
             else:
                 print(f"Warning: Solver failed to converge at cell {i}.")
                 print(f"Message: {result.message}")

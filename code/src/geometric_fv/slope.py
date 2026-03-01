@@ -1,18 +1,8 @@
-from enum import Enum
-
 import numpy as np
 
+from geometric_fv.config import ReconstConfig
+from geometric_fv.enums import LimiterType, SlopeType
 from geometric_fv.solver import SolverState
-
-
-class SlopeType(Enum):
-    BOX = 0
-
-
-class LimiterType(Enum):
-    FULL = 0
-    NONE = 1
-    TVD = 2
 
 
 def _limit_slope_full(
@@ -81,15 +71,16 @@ def compute_slope(
     state: SolverState,
     i: int,
     u_new_i: float,
-    slope_type: SlopeType = SlopeType.BOX,
-    limiter_type=LimiterType.NONE,
+    config: ReconstConfig
 ) -> float:
+    slope_type = config.slope_type
     compute_slope_func = _compute_slope_types.get(slope_type)
     if compute_slope_func is None:
         raise ValueError(f"Unsupported slope type: {slope_type}")
 
     slope_i = compute_slope_func(state, i, u_new_i)
 
+    limiter_type = config.limiter_type
     limit_slope_func = _limit_slope_types.get(limiter_type)
     if limit_slope_func is None:
         raise ValueError(f"Unsupported limiter type: {limiter_type}")

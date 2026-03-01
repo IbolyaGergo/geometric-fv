@@ -1,5 +1,6 @@
 import numpy as np
 
+from geometric_fv.config import ReconstConfig, SolverConfig
 from geometric_fv.schemes import SecondOrderImplicit
 from geometric_fv.slope import LimiterType, SlopeType
 from geometric_fv.solver import SolverState
@@ -33,7 +34,9 @@ def test_SecondOrderImplicit_equals_Box():
 
     slope_type = SlopeType.BOX
     limiter_type = LimiterType.NONE
-    scheme = SecondOrderImplicit(slope_type=slope_type, limiter_type=limiter_type)
+    config = SolverConfig(reconst=ReconstConfig(slope_type=slope_type,
+                                                limiter_type=limiter_type))
+    scheme = SecondOrderImplicit(config=config.reconst)
 
     u_new_2ndO = np.zeros(len(u_old))
     state2ndO = SolverState(u_old=u_old, u_new=u_new_2ndO, slope=slope, cfl=cfl)
@@ -59,7 +62,9 @@ def test_SecondOrderImplicit_equals_ImplicitUpwind_when_limit_is_FULL():
 
     slope_type = SlopeType.BOX
     limiter_type = LimiterType.FULL
-    scheme = SecondOrderImplicit(slope_type=slope_type, limiter_type=limiter_type)
+    config = SolverConfig(reconst=ReconstConfig(slope_type=slope_type,
+                                                limiter_type=limiter_type))
+    scheme = SecondOrderImplicit(config=config.reconst)
 
     u_new_2ndO = np.zeros(len(u_old))
     state2ndO = SolverState(u_old=u_old, u_new=u_new_2ndO, slope=slope, cfl=cfl)
