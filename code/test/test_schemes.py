@@ -36,7 +36,7 @@ def test_SecondOrderImplicit_equals_Box():
     limiter_type = LimiterType.NONE
     config = SolverConfig(reconst=ReconstConfig(slope_type=slope_type,
                                                 limiter_type=limiter_type))
-    scheme = SecondOrderImplicit(config=config.reconst)
+    scheme = SecondOrderImplicit(config=config)
 
     u_new_2ndO = np.zeros(len(u_old))
     state2ndO = SolverState(u_old=u_old, u_new=u_new_2ndO, slope=slope, cfl=cfl)
@@ -64,7 +64,7 @@ def test_SecondOrderImplicit_equals_ImplicitUpwind_when_limit_is_FULL():
     limiter_type = LimiterType.FULL
     config = SolverConfig(reconst=ReconstConfig(slope_type=slope_type,
                                                 limiter_type=limiter_type))
-    scheme = SecondOrderImplicit(config=config.reconst)
+    scheme = SecondOrderImplicit(config=config)
 
     u_new_2ndO = np.zeros(len(u_old))
     state2ndO = SolverState(u_old=u_old, u_new=u_new_2ndO, slope=slope, cfl=cfl)

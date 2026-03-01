@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from geometric_fv.config import ReconstConfig
+from geometric_fv.config import ReconstConfig, SolverConfig
 from geometric_fv.enums import LimiterType, SlopeType
 from geometric_fv.slope import compute_slope
 from geometric_fv.solver import SolverState
@@ -21,9 +21,7 @@ class Scheme(ABC):
 @dataclass(frozen=True)
 class SecondOrderImplicit(Scheme):
     nghost: int = 1
-    config: ReconstConfig = ReconstConfig()
-    tol: float = 1e-6
-    maxiter: int = 50
+    config: SolverConfig = SolverConfig()
 
     def _update_cell_guess(self, state: SolverState, i: int) -> float:
         u_old = state.u_old
@@ -32,7 +30,9 @@ class SecondOrderImplicit(Scheme):
 
         coeff = (1 - cfl) / (1 + cfl)
         u_new_i_guess = coeff * u_old[i] + u_old[i - 1] - coeff * u_new[i - 1]
-        if self.config.limiter_type is not LimiterType.NONE:
+
+        limiter_type = self.config.reconst.limiter_type
+        if limiter_type is not LimiterType.NONE:
             u_new_i_guess = np.median([u_new_i_guess, u_old[i], u_new[i - 1]])
 
         return u_new_i_guess
@@ -53,7 +53,7 @@ class SecondOrderImplicit(Scheme):
             state,
             i=i,
             u_new_i=u_new_i_current,
-            config=self.config
+            reconst_config=self.config.reconst
         )
 
         # fmt: off
@@ -72,8 +72,8 @@ class SecondOrderImplicit(Scheme):
                 self._update_cell_iter,
                 u_new_i_guess,
                 args=(state, i),
-                tol=self.tol,
-                maxiter=self.maxiter,
+                tol=self.config.iteration.tol,
+                maxiter=self.config.iteration.maxiter,
             )
             if result.success:
                 state.u_new[i] = result.x
@@ -85,5 +85,3 @@ class SecondOrderImplicit(Scheme):
                 print(f"Message: {result.message}")
 
                 state.u_new[i] = u_new_i_guess
-
-            # slope[i] = compute_slope(u_old, u_new, cfl, i, slope_type=self.slope_type)
