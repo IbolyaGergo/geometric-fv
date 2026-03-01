@@ -46,24 +46,24 @@ test: ## Run tests using pytest.
 	@echo "Running tests..."
 	@pytest
 
-.PHONY: ruff-check
-ruff-check:
-	@echo "Running ruff for linting..."
+.PHONY: lint
+lint:
+	@echo "Linting..."
 	@ruff check $(PYTHON_DIRS)
 
-.PHONY: ruff-format
-ruff-format:
-	@echo "Running ruff for formatting..."
+.PHONY: format
+format:
+	@echo "Formatting..."
 	@ruff format $(PYTHON_DIRS)
 
-.PHONY: mypy
-mypy:
-	@echo "Running mypy for type checking..."
+.PHONY: type
+type:
+	@echo "Type checking..."
 	@mypy $(PYTHON_DIRS)
 
-.PHONY: codespell
-codespell:
-	@echo "Running codespell for spelling..."
+.PHONY: spell
+spell:
+	@echo "Spelling..."
 	@codespell $(PYTHON_DIRS)
 
 
