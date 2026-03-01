@@ -7,101 +7,81 @@ from geometric_fv.enums import BCType
 from geometric_fv.mesh import Mesh1D
 from geometric_fv.solver import SolverState
 
-x_min = 0.0
-x_max = 1.0
-ncells = 50
 
-mesh = Mesh1D.uniform(MeshConfig(x_min=x_min, x_max=x_max, ncells=ncells))
+@pytest.fixture
+def mesh():
+    config = MeshConfig(x_min=0.0, x_max=1.0, ncells=50)
+    return Mesh1D.uniform(config)
 
-x_c = mesh.centers
-ncells = mesh.ncells
+@pytest.fixture
+def u0(mesh):
+    return np.sin(2 * np.pi * mesh.centers)
 
-u0 = np.sin(2 * np.pi * x_c)
-
-bc_type = BCType.QUASI_PERIODIC
-config = BoundaryConfig(bc_type=bc_type)
-
-
-@pytest.mark.parametrize("nghost", [1, 2])
-def test_apply_bc_quasi_periodic_nghost_1_2(nghost):
+def create_solver_state(u0, nghost, cfl=0.0):
     u_old = np.pad(u0, (nghost, nghost), "constant", constant_values=0.0)
     u_new = np.copy(u_old)
     slope = np.zeros_like(u_old)
-    cfl = 0.0
 
-    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+    return SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+
+@pytest.mark.parametrize("nghost", np.arange(1, 5))
+def test_constant_extend_bc(mesh, u0, nghost):
+    config = BoundaryConfig(bc_type=BCType.CONSTANT_EXTEND)
+    state = create_solver_state(u0, nghost)
+
+    apply_bc(state, config, nghost)
+
+    # Left boundary: all ghost cells should match the first physical cell
+    assert np.all(state.u_old[:nghost] == u0[0])
+    assert np.all(state.u_new[:nghost] == u0[0])
+
+    # Right boundary: all ghost cells should match the last physical cell
+    assert np.all(state.u_old[-nghost:] == u0[-1])
+    assert np.all(state.u_new[-nghost:] == u0[-1])
+
+@pytest.mark.parametrize("nghost", [1, 2])
+def test_apply_bc_quasi_periodic_ghost_cells(mesh, u0, nghost):
+    config = BoundaryConfig(bc_type=BCType.QUASI_PERIODIC)
+    state = create_solver_state(u0, nghost)
 
     apply_bc(state, config, nghost)
 
     if nghost == 1:
         # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
-        assert u_old[0] == u_old[-1 - nghost]
-        assert u_old[-1] == u_old[1]
+        assert state.u_old[0] == state.u_old[-1 - nghost]
+        assert state.u_old[-1] == state.u_old[1]
     elif nghost == 2:
         # 0 \ 1 \\ 2 \ 3 \ ... \ -4 \ -3 \\ -2 \ -1
-        assert u_old[0] == u_old[-4]
-        assert u_old[1] == u_old[-3]
-        assert u_old[-2] == u_old[2]
-        assert u_old[-1] == u_old[3]
+        assert state.u_old[0] == state.u_old[-4]
+        assert state.u_old[1] == state.u_old[-3]
+        assert state.u_old[-2] == state.u_old[2]
+        assert state.u_old[-1] == state.u_old[3]
 
-
-@pytest.mark.parametrize("cfl", [0.6, 1.5, 2.7])
-def test_apply_bc_quasi_periodic_cfl(cfl):
+@pytest.mark.parametrize(
+    "cfl, target_idx, expected_indices, weights",
+    [
+        # Positive CFL (updates left boundary u_new[0])
+        (0.6, 0, (-2, -3), (0.4, 0.6)),
+        (1.5, 0, (-3, -4), (0.5, 0.5)),
+        (2.7, 0, (-4, -5), (0.3, 0.7)),
+        # Negative CFL (updates right boundary u_new[-1])
+        (-0.6, -1, (1, 2), (0.4, 0.6)),
+        (-1.5, -1, (2, 3), (0.5, 0.5)),
+        (-2.7, -1, (3, 4), (0.3, 0.7)),
+    ],
+)
+def test_quasi_periodic_bc_cfl(mesh, u0, cfl, target_idx, expected_indices, weights):
+    """Verifies u_new and slope calculations for various CFL values."""
     nghost = 1
-    # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
-
-    u_old = np.pad(u0, (nghost, nghost), "constant", constant_values=0.0)
-    u_new = np.copy(u_old)
-    slope = np.zeros_like(u_old)
-
-    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+    config = BoundaryConfig(bc_type=BCType.QUASI_PERIODIC)
+    state = create_solver_state(u0, nghost=nghost, cfl=cfl)
 
     apply_bc(state, config, nghost)
 
-    if cfl >= 0.0 and cfl <= 1.0:
-        assert pytest.approx(u_new[0]) == (1 - cfl) * u_old[-2] + cfl * u_old[-3]
-    elif cfl >= 1.0 and cfl <= 2.0:
-        assert pytest.approx(u_new[0]) == (2 - cfl) * u_old[-3] + (cfl - 1) * u_old[-4]
-    elif cfl >= 2.0 and cfl <= 3.0:
-        assert pytest.approx(u_new[0]) == (3 - cfl) * u_old[-4] + (cfl - 2) * u_old[-5]
+    i1, i2 = expected_indices
+    w1, w2 = weights
+    expected_u_new = w1 * state.u_old[i1] + w2 * state.u_old[i2]
+    assert state.u_new[target_idx] == pytest.approx(expected_u_new)
 
-
-@pytest.mark.parametrize("cfl", [-0.6, -1.5, -2.7])
-def test_apply_bc_quasi_periodic_negative_cfl(cfl):
-    nghost = 1
-    # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
-
-    u_old = np.pad(u0, (nghost, nghost), "constant", constant_values=0.0)
-    u_new = np.copy(u_old)
-    slope = np.zeros_like(u_old)
-
-    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
-
-    apply_bc(state, config, nghost)
-    if -cfl >= 0.0 and -cfl <= 1.0:
-        assert pytest.approx(u_new[-1]) == (1 - (-cfl)) * u_old[1] + (-cfl) * u_old[2]
-    if -cfl >= 1.0 and -cfl <= 2.0:
-        assert (
-            pytest.approx(u_new[-1]) == (2 - (-cfl)) * u_old[2] + (-cfl - 1) * u_old[3]
-        )
-    if -cfl >= 2.0 and -cfl <= 3.0:
-        assert (
-            pytest.approx(u_new[-1]) == (3 - (-cfl)) * u_old[3] + (-cfl - 2) * u_old[4]
-        )
-
-@pytest.mark.parametrize("nghost", np.arange(1, 5))
-def test_apply_bc_constant_extend(nghost):
-    bc_type = BCType.CONSTANT_EXTEND
-    config = BoundaryConfig(bc_type=bc_type)
-
-    u_old = np.pad(u0, (nghost, nghost), "constant", constant_values=0.0)
-    u_new = np.copy(u_old)
-    slope = np.zeros_like(u_old)
-    cfl = 1.6
-
-    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
-
-    apply_bc(state, config, nghost)
-
-    assert pytest.approx(u_old[:nghost]) == u_old[nghost]
-    assert pytest.approx(u_new[:nghost]) == u_old[nghost]
+    expected_slope = (state.u_old[0] - state.u_new[0]) / cfl
+    assert state.slope[0] == pytest.approx(expected_slope)
