@@ -22,33 +22,42 @@ def _apply_bc_constant_extend(state: SolverState, nghost: int) -> None:
 # nghost = 1
 # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
 # for i in [0]:
-#     u[0] = u[-2]
-#     u[-1] = u[1]
+#     u_old[0] = u_old[-2]
+#     u_old[-1] = u_old[1]
 # nghost = 2
-# 0 \ 1 \\ 2 \ 3 \ ... \ -3 \\ -2 \ -1
+# 0 \ 1 \\ 2 \ 3 \ ... \ -4 \ -3 \\ -2 \ -1
 # for i in [0, 1]:
-#     u[0] = u[-4]
-#     u[1] = u[-3]
-#     u[-1] = u[3]
-#     u[-2] = u[2]
+#     u_old[0] = u_old[-4]
+#     u_old[1] = u_old[-3]
+#     u_old[-1] = u_old[3]
+#     u_old[-2] = u_old[2]
 def _apply_bc_quasi_periodic(state: SolverState, nghost: int) -> None:
     u_old = state.u_old
     u_new = state.u_new
     cfl = state.cfl
 
+    # first/last idx of the physical domain
+    first = nghost
+    last = -nghost - 1
+    cfl_frac = np.mod(cfl, 1)
     for i in range(nghost):
-        u_old[i] = u_old[-2 * nghost + i]
-        u_old[-1 - i] = u_old[2 * nghost - 1 - i]
+        u_old[first - 1 - i] = u_old[last - i]
+        u_old[last + 1 + i] = u_old[first + i]
 
-    # fmt: off
+        # fmt: off
+        if cfl > 0.0 or np.isclose(cfl, 0.0):
+            u_new[first - 1 - i] = (1 - cfl_frac) * u_old[last - i - int(cfl)] \
+                           + cfl_frac * u_old[last - i - 1 - int(cfl)]
+
+    cfl_frac = np.mod(cfl, 1)
     if cfl > 0.0:
-        u_new[nghost - 1] = \
-                (1 + int(np.floor(cfl)) - cfl) * u_old[-2 - int(np.floor(cfl))] \
-                + (cfl - int(np.floor(cfl))) * u_old[-3 - int(np.floor(cfl))]
+        # u_new[nghost - 1] = (1 - cfl_frac) * u_old[-2 - int(cfl)] \
+        #                         + cfl_frac * u_old[-3 - int(cfl)]
+        pass
     else:
         u_new[-1] = \
-                (1 + int(np.floor(-cfl)) - (-cfl)) * u_old[ 1 + int(np.floor(-cfl))] \
-                + (-cfl - int(np.floor(-cfl))) * u_old[2 + int(np.floor(-cfl))]
+                (1 + int(-cfl) - (-cfl)) * u_old[ 1 + int(-cfl)] \
+                + (-cfl - int(-cfl)) * u_old[2 + int(-cfl)]
 
     # fmt: on
 
