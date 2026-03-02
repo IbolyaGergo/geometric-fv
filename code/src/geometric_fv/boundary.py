@@ -39,27 +39,22 @@ def _apply_bc_quasi_periodic(state: SolverState, nghost: int) -> None:
     # first/last idx of the physical domain
     first = nghost
     last = -nghost - 1
-    cfl_frac = np.mod(cfl, 1)
     for i in range(nghost):
+        # Old values
         u_old[first - 1 - i] = u_old[last - i]
         u_old[last + 1 + i] = u_old[first + i]
 
+        # New values
         # fmt: off
         if cfl > 0.0 or np.isclose(cfl, 0.0):
+            cfl_frac = np.mod(cfl, 1)
             u_new[first - 1 - i] = (1 - cfl_frac) * u_old[last - i - int(cfl)] \
                            + cfl_frac * u_old[last - i - 1 - int(cfl)]
-
-    cfl_frac = np.mod(cfl, 1)
-    if cfl > 0.0:
-        # u_new[nghost - 1] = (1 - cfl_frac) * u_old[-2 - int(cfl)] \
-        #                         + cfl_frac * u_old[-3 - int(cfl)]
-        pass
-    else:
-        u_new[-1] = \
-                (1 + int(-cfl) - (-cfl)) * u_old[ 1 + int(-cfl)] \
-                + (-cfl - int(-cfl)) * u_old[2 + int(-cfl)]
-
-    # fmt: on
+        else:
+            cfl_frac = np.mod(-cfl, 1)
+            u_new[last + 1 + i] = (1 - cfl_frac) * u_old[first + i + int(-cfl)] \
+                                      + cfl_frac * u_old[first + i + 1 + int(-cfl)]
+        # fmt: on
 
 
 _apply_bc_types = {
