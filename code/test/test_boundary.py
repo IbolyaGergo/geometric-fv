@@ -7,6 +7,7 @@ from geometric_fv.enums import BCType
 from geometric_fv.mesh import Mesh1D
 from geometric_fv.solver import SolverState
 
+
 # FIXTURE {{{1
 @pytest.fixture
 def mesh():
@@ -25,6 +26,7 @@ def create_solver_state(u0, nghost, cfl=0.0):
     slope = np.zeros_like(u_old)
 
     return SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+
 
 # TESTs {{{1
 # test_constant_extend_bc() {{{2
@@ -45,6 +47,7 @@ def test_constant_extend_bc(mesh, u0, nghost):
     # Right boundary: all ghost cells should match the last physical cell
     assert np.all(state.u_old[-nghost:] == u0[-1])
     assert np.all(state.u_new[-nghost:] == u0[-1])
+
 
 # test_apply_bc_quasi_periodic_u_old() {{{2
 @pytest.mark.parametrize("nghost", [1, 2])
@@ -67,6 +70,7 @@ def test_apply_bc_quasi_periodic_u_old(mesh, u0, nghost):
         assert state.u_old[-2] == pytest.approx(state.u_old[2])
         assert state.u_old[-1] == pytest.approx(state.u_old[3])
 
+
 # test_apply_bc_quasi_periodic_u_new_cfl_is_whole_positive() {{{2
 @pytest.mark.parametrize("nghost", [1, 2])
 def test_apply_bc_quasi_periodic_u_new_cfl_is_whole_positive(mesh, u0, nghost):
@@ -83,6 +87,7 @@ def test_apply_bc_quasi_periodic_u_new_cfl_is_whole_positive(mesh, u0, nghost):
             # 0 \ 1 \\ 2 \ 3 \ ... \ -4 \ -3 \\ -2 \ -1
             assert state.u_new[0] == pytest.approx(state.u_old[-4 - int(cfl)])
             assert state.u_new[1] == pytest.approx(state.u_old[-3 - int(cfl)])
+
 
 # test_apply_bc_quasi_periodic_u_new_general_cfl_positive() {{{2
 @pytest.mark.parametrize("nghost", [1, 2])
@@ -113,6 +118,8 @@ def test_apply_bc_quasi_periodic_u_new_general_cfl_positive(mesh, u0, nghost):
                       cfl_frac * state.u_old[-4 - int(cfl)]
             )
     # fmt: on
+
+
 # test_apply_bc_quasi_periodic_u_new_cfl_is_whole_negative() {{{2
 @pytest.mark.parametrize("nghost", [1, 2])
 def test_apply_bc_quasi_periodic_u_new_cfl_is_whole_negative(mesh, u0, nghost):
@@ -129,6 +136,7 @@ def test_apply_bc_quasi_periodic_u_new_cfl_is_whole_negative(mesh, u0, nghost):
             # 0 \ 1 \\ 2 \ 3 \ ... \ -4 \ -3 \\ -2 \ -1
             assert state.u_new[-1] == pytest.approx(state.u_old[3 + int(-cfl)])
             assert state.u_new[-2] == pytest.approx(state.u_old[2 + int(-cfl)])
+
 
 # # params {{{3
 # @pytest.mark.parametrize(
@@ -158,16 +166,16 @@ def test_apply_bc_quasi_periodic_u_new_cfl_is_general_negative(mesh, u0, nghost)
         if nghost == 1:
             # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
             assert state.u_new[-1] == pytest.approx(
-                    (1 - cfl_frac) * state.u_old[1 + int(-cfl)] \
-                    + cfl_frac * state.u_old[2 + int(-cfl)]
-                    )
+                (1 - cfl_frac) * state.u_old[1 + int(-cfl)]
+                + cfl_frac * state.u_old[2 + int(-cfl)]
+            )
         elif nghost == 2:
             # 0 \ 1 \\ 2 \ 3 \ ... \ -4 \ -3 \\ -2 \ -1
             assert state.u_new[-1] == pytest.approx(
-                    (1 - cfl_frac) * state.u_old[3 + int(-cfl)] \
-                            + cfl_frac * state.u_old[4 + int(-cfl)]
-                    )
+                (1 - cfl_frac) * state.u_old[3 + int(-cfl)]
+                + cfl_frac * state.u_old[4 + int(-cfl)]
+            )
             assert state.u_new[-2] == pytest.approx(
-                    (1 - cfl_frac) * state.u_old[2 + int(-cfl)] \
-                            + cfl_frac * state.u_old[3 + int(-cfl)]
-                    )
+                (1 - cfl_frac) * state.u_old[2 + int(-cfl)]
+                + cfl_frac * state.u_old[3 + int(-cfl)]
+            )

@@ -19,6 +19,7 @@ def _apply_bc_constant_extend(state: SolverState, nghost: int) -> None:
         u_old[-1 - i] = u_old[last]
         u_new[-1 - i] = u_old[last]
 
+
 # nghost = 1
 # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
 # for i in [0]:
