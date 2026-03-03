@@ -1,7 +1,8 @@
 import numpy as np
 
-from geometric_fv.config import BoundaryConfig
-from geometric_fv.enums import BCType
+from geometric_fv.config import BoundaryConfig, ReconstConfig
+from geometric_fv.enums import BCType, LimiterType, SlopeType
+from geometric_fv.slope import compute_slope
 from geometric_fv.solver import SolverState
 
 
@@ -76,5 +77,16 @@ def apply_bc(state: SolverState, config: BoundaryConfig, nghost: int) -> None:
     slope = state.slope
     cfl = state.cfl
 
-    if np.not_equal(cfl, 0.0):
-        slope[0] = (u_old[0] - u_new[0]) / cfl
+    # first/last idx of the physical domain
+    first = nghost
+    last = -nghost - 1
+    if cfl > 0.0:
+        i = first - 1
+        slope[i] = compute_slope(
+            state=state,
+            i=i,
+            u_new_i=u_new[i],
+            reconst_config=ReconstConfig(
+                slope_type=SlopeType.BOX, limiter_type=LimiterType.TVD_SUFF
+            ),
+        )

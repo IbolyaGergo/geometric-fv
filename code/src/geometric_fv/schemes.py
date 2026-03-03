@@ -20,7 +20,7 @@ class Scheme(ABC):
 
 @dataclass(frozen=True)
 class SecondOrderImplicit(Scheme):
-    nghost: int = 1
+    nghost: int = 2
     config: SolverConfig = SolverConfig()
 
     def _update_cell_guess(self, state: SolverState, i: int) -> float:

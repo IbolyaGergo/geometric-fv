@@ -37,14 +37,14 @@ mesh = Mesh1D.uniform(config.mesh)
 x_c = mesh.centers
 ncells = mesh.ncells
 
-# u0 = np.sin(2*np.pi*x_c)
-u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 1, 0])
+u0 = np.sin(2*np.pi*x_c)
+# u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 1, 0])
 
 u_new = np.zeros(ncells + 2 * nghost)
 u_old = np.pad(u0, (nghost, nghost), "constant", constant_values=0.0)
 slope = np.zeros_like(u_old)
 
-cfl = 1.6
+cfl = 1.8
 
 state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
 
@@ -56,7 +56,7 @@ for _t in range(20):
     u_old[:] = u_new[:]
 
     plt.figure()
-    plt.plot(x_c, u0, "-o", x_c, u_new[1:-1], "-o")
+    plt.plot(x_c, u0, "-o", x_c, u_new[nghost:-nghost], "-o")
     plt.savefig(f"tvd_box_{str(_t).zfill(3)}.png")
 
 # plt.plot(x_c, u0, "-o", x_c, u_new[1:-1], "-o")
