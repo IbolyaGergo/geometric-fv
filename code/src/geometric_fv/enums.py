@@ -14,3 +14,4 @@ class LimiterType(Enum):
     FULL = 0
     NONE = 1
     TVD = 2
+    TVD_SUFF = 3
