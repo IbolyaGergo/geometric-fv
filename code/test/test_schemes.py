@@ -27,9 +27,11 @@ def test_constant_solution():
 def test_SecondOrderImplicit_equals_Box():
     ncells = 20
     cfl = 1.6
+    coeff = (1 - cfl) / (1 + cfl)
 
     x_c = np.linspace(0.0, 1.0, ncells)
     u_old = np.sin(2 * np.pi * x_c)
+    u_new_2ndO = np.zeros(len(u_old))
     slope = np.zeros_like(u_old)
 
     slope_type = SlopeType.BOX
@@ -38,14 +40,15 @@ def test_SecondOrderImplicit_equals_Box():
         reconst=ReconstConfig(slope_type=slope_type, limiter_type=limiter_type)
     )
     scheme = SecondOrderImplicit(config=config)
+    nghost = scheme.nghost
 
-    u_new_2ndO = np.zeros(len(u_old))
+    idx = nghost - 1
+    u_new_2ndO[idx] = 0.0
+    slope[nghost - 1] = (u_old[nghost - 1] - u_new_2ndO[nghost - 1]) / cfl
     state2ndO = SolverState(u_old=u_old, u_new=u_new_2ndO, slope=slope, cfl=cfl)
     scheme.sweep(state2ndO)
 
     # Box scheme
-    nghost = 1
-    coeff = (1 - cfl) / (1 + cfl)
     u_new_Box = np.zeros(len(u_old))
     for i in range(nghost, len(u_old) - nghost):
         u_new_Box[i] = coeff * u_old[i] + u_old[i - 1] - coeff * u_new_Box[i - 1]
@@ -73,7 +76,7 @@ def test_SecondOrderImplicit_equals_ImplicitUpwind_when_limit_is_FULL():
     scheme.sweep(state2ndO)
 
     # Implicit Uwpind
-    nghost = 1
+    nghost = scheme.nghost
     u_new_ImplUp = np.zeros(ncells)
     for i in range(nghost, len(u_old) - nghost):
         u_new_ImplUp[i] = (u_old[i] + cfl * u_new_ImplUp[i - 1]) / (1.0 + cfl)

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from geometric_fv.boundary import apply_bc
-from geometric_fv.config import BoundaryConfig, MeshConfig
+from geometric_fv.config import BoundaryConfig, MeshConfig, ReconstConfig
 from geometric_fv.enums import BCType
 from geometric_fv.mesh import Mesh1D
 from geometric_fv.solver import SolverState
@@ -36,9 +36,10 @@ def test_constant_extend_bc(mesh, u0, nghost):
     cfl = 0.0
 
     config = BoundaryConfig(bc_type=bc_type)
+    reconst_config = ReconstConfig()
     state = create_solver_state(u0, nghost, cfl=cfl)
 
-    apply_bc(state, config, nghost)
+    apply_bc(state=state, config=config, reconst_config=reconst_config, nghost=nghost)
 
     # Left boundary: all ghost cells should match the first physical cell
     assert np.all(state.u_old[:nghost] == u0[0])
@@ -55,9 +56,10 @@ def test_apply_bc_quasi_periodic_u_old(mesh, u0, nghost):
     bc_type = BCType.QUASI_PERIODIC
 
     config = BoundaryConfig(bc_type=bc_type)
-    state = create_solver_state(u0, nghost)
+    reconst_config = ReconstConfig()
+    state = create_solver_state(u0, nghost, cfl=0.0)
 
-    apply_bc(state, config, nghost)
+    apply_bc(state=state, config=config, reconst_config=reconst_config, nghost=nghost)
 
     if nghost == 1:
         # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
@@ -76,10 +78,12 @@ def test_apply_bc_quasi_periodic_u_old(mesh, u0, nghost):
 def test_apply_bc_quasi_periodic_u_new_cfl_is_whole_positive(mesh, u0, nghost):
     bc_type = BCType.QUASI_PERIODIC
     config = BoundaryConfig(bc_type=bc_type)
+    reconst_config = ReconstConfig()
 
     for cfl in [0.0, 1.0, 2.0]:
         state = create_solver_state(u0, nghost, cfl=cfl)
-        apply_bc(state, config, nghost)
+
+        apply_bc(state=state, config=config, reconst_config=reconst_config, nghost=nghost)
         if nghost == 1:
             # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
             assert state.u_new[0] == pytest.approx(state.u_old[-2 - int(cfl)])
@@ -94,11 +98,12 @@ def test_apply_bc_quasi_periodic_u_new_cfl_is_whole_positive(mesh, u0, nghost):
 def test_apply_bc_quasi_periodic_u_new_general_cfl_positive(mesh, u0, nghost):
     bc_type = BCType.QUASI_PERIODIC
     config = BoundaryConfig(bc_type=bc_type)
+    reconst_config = ReconstConfig()
 
     # fmt: off
     for cfl in [0.6, 1.5, 2.7]:
         state = create_solver_state(u0, nghost, cfl=cfl)
-        apply_bc(state, config, nghost)
+        apply_bc(state=state, config=config, reconst_config=reconst_config, nghost=nghost)
 
         cfl_frac = np.mod(cfl, 1)
         if nghost == 1:
@@ -125,10 +130,11 @@ def test_apply_bc_quasi_periodic_u_new_general_cfl_positive(mesh, u0, nghost):
 def test_apply_bc_quasi_periodic_u_new_cfl_is_whole_negative(mesh, u0, nghost):
     bc_type = BCType.QUASI_PERIODIC
     config = BoundaryConfig(bc_type=bc_type)
+    reconst_config = ReconstConfig()
 
     for cfl in [-1.0, -2.0, -3.0]:
         state = create_solver_state(u0, nghost, cfl=cfl)
-        apply_bc(state, config, nghost)
+        apply_bc(state=state, config=config, reconst_config=reconst_config, nghost=nghost)
         if nghost == 1:
             # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
             assert state.u_new[-1] == pytest.approx(state.u_old[1 + int(-cfl)])
@@ -157,10 +163,11 @@ def test_apply_bc_quasi_periodic_u_new_cfl_is_whole_negative(mesh, u0, nghost):
 def test_apply_bc_quasi_periodic_u_new_cfl_is_general_negative(mesh, u0, nghost):
     bc_type = BCType.QUASI_PERIODIC
     config = BoundaryConfig(bc_type=bc_type)
+    reconst_config = ReconstConfig()
 
     for cfl in [-0.6, -1.6, -2.7]:
         state = create_solver_state(u0, nghost, cfl=cfl)
-        apply_bc(state, config, nghost)
+        apply_bc(state=state, config=config, reconst_config=reconst_config, nghost=nghost)
 
         cfl_frac = np.mod(-cfl, 1)
         if nghost == 1:

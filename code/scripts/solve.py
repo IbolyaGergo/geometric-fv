@@ -49,7 +49,7 @@ cfl = 1.8
 state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
 
 for _t in range(20):
-    apply_bc(state, config.boundary, nghost)
+    apply_bc(state, config.boundary, config.reconst, nghost)
 
     scheme.sweep(state)
 
