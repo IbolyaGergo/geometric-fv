@@ -22,7 +22,7 @@ class Scheme(ABC):
             state=state,
             nghost=self.nghost,
             config=self.config.boundary,
-            reconst_config=self.config.reconst
+            reconst_config=self.config.reconst,
         )
 
     @abstractmethod

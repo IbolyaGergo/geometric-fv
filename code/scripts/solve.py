@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from geometric_fv.boundary import apply_bc
 from geometric_fv.config import (
     BoundaryConfig,
     IterationConfig,

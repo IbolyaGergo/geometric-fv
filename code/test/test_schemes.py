@@ -1,10 +1,9 @@
 from dataclasses import dataclass
-import numpy as np
-import pytest
 
-from geometric_fv.config import BoundaryConfig, MeshConfig, ReconstConfig, SolverConfig
-from geometric_fv.boundary import apply_bc
-from geometric_fv.enums import BCType, LimiterType, SlopeType
+import numpy as np
+
+from geometric_fv.config import MeshConfig, ReconstConfig, SolverConfig
+from geometric_fv.enums import LimiterType, SlopeType
 from geometric_fv.mesh import Mesh1D
 from geometric_fv.schemes import Scheme, SecondOrderImplicit
 from geometric_fv.solver import SolverState
@@ -17,6 +16,7 @@ class ImplicitUpwind(Scheme):
     """
     A simple reference implementation of the ImplicitUpwind scheme for testing.
     """
+
     nghost: int = 2
     config: SolverConfig = SolverConfig()
 
@@ -30,12 +30,14 @@ class ImplicitUpwind(Scheme):
         for i in range(nghost, len(u_old) - nghost):
             u_new[i] = coeff * (u_old[i] + cfl * u_new[i - 1])
 
+
 # Box(Scheme) {{{2
 @dataclass(frozen=True)
 class Box(Scheme):
     """
     A simple reference implementation of the Box scheme for testing.
     """
+
     nghost: int = 2
     config: SolverConfig = SolverConfig()
 
@@ -52,10 +54,11 @@ class Box(Scheme):
 
 mesh_config = MeshConfig(x_min=0.0, x_max=1.0, ncells=20)
 
+
 # init_solver_state() {{{2
 def init_solver_state(scheme, cfl):
     mesh = Mesh1D.uniform(scheme.config.mesh)
-    u0 = np.sin(2 * np.pi * mesh.centers) 
+    u0 = np.sin(2 * np.pi * mesh.centers)
 
     nghost = scheme.nghost
     u_old = np.pad(u0, (nghost, nghost), "constant", constant_values=0.0)
@@ -63,6 +66,7 @@ def init_solver_state(scheme, cfl):
     slope = np.zeros_like(u_old)
 
     return SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+
 
 # TESTs {{{1
 # test_constant_solution() {{{2
@@ -83,14 +87,12 @@ def test_constant_solution():
         expected = val * np.ones(ncells)
         np.testing.assert_allclose(u_new, expected)
 
+
 # test_SecondOrderImplicit_equals_Box() {{{2
 def test_SecondOrderImplicit_equals_Box():
-    config=SolverConfig(
+    config = SolverConfig(
         mesh=mesh_config,
-        reconst=ReconstConfig(
-            slope_type=SlopeType.BOX,
-            limiter_type=LimiterType.NONE
-        ),
+        reconst=ReconstConfig(slope_type=SlopeType.BOX, limiter_type=LimiterType.NONE),
     )
     cfl = 1.6
 
@@ -109,12 +111,9 @@ def test_SecondOrderImplicit_equals_Box():
 
 # test_SecondOrderImplicit_equals_ImplicitUpwind_when_limit_is_FULL() {{{2
 def test_SecondOrderImplicit_equals_ImplicitUpwind_when_limit_is_FULL():
-    config=SolverConfig(
+    config = SolverConfig(
         mesh=mesh_config,
-        reconst=ReconstConfig(
-            slope_type=SlopeType.BOX,
-            limiter_type=LimiterType.FULL
-        ),
+        reconst=ReconstConfig(slope_type=SlopeType.BOX, limiter_type=LimiterType.FULL),
     )
     cfl = 1.6
 

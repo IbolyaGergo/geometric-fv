@@ -1,7 +1,7 @@
 import numpy as np
 
 from geometric_fv.config import BoundaryConfig, ReconstConfig
-from geometric_fv.enums import BCType, LimiterType, SlopeType
+from geometric_fv.enums import BCType
 from geometric_fv.slope import compute_slope
 from geometric_fv.solver import SolverState
 
@@ -65,7 +65,12 @@ _apply_bc_types = {
 }
 
 
-def apply_bc(state: SolverState, nghost: int, config: BoundaryConfig, reconst_config: ReconstConfig) -> None:
+def apply_bc(
+    state: SolverState,
+    nghost: int,
+    config: BoundaryConfig,
+    reconst_config: ReconstConfig,
+) -> None:
     bc_type = config.bc_type
     apply_bc_func = _apply_bc_types.get(bc_type)
     if apply_bc_func is None:
