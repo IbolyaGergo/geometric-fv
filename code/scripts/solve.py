@@ -37,20 +37,19 @@ mesh = Mesh1D.uniform(config.mesh)
 x_c = mesh.centers
 ncells = mesh.ncells
 
-u0 = np.sin(2*np.pi*x_c)
-# u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 1, 0])
+# u0 = np.sin(2*np.pi*x_c)
+u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 1, 0])
 
 u_new = np.zeros(ncells + 2 * nghost)
 u_old = np.pad(u0, (nghost, nghost), "constant", constant_values=0.0)
 slope = np.zeros_like(u_old)
 
-cfl = 1.8
+cfl = 2.8
 
 state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
 
 for _t in range(20):
-    apply_bc(state, nghost, config.boundary, config.reconst)
-
+    scheme.apply_bc(state)
     scheme.sweep(state)
 
     u_old[:] = u_new[:]

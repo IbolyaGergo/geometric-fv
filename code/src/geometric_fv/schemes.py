@@ -12,6 +12,18 @@ from geometric_fv.utils import simple_fixed_point
 
 class Scheme(ABC):
     nghost: int
+    config: SolverConfig
+
+    def apply_bc(self, state: SolverState) -> None:
+        # Local import to avoid circular dependency at the top of the file
+        from geometric_fv.boundary import apply_bc as _apply_bc_kernel
+
+        _apply_bc_kernel(
+            state=state,
+            nghost=self.nghost,
+            config=self.config.boundary,
+            reconst_config=self.config.reconst
+        )
 
     @abstractmethod
     def sweep(self, state: SolverState):
