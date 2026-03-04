@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 import numpy as np
+import pytest
 
 from geometric_fv.config import MeshConfig, ReconstConfig, SolverConfig
 from geometric_fv.enums import LimiterType, SlopeType
@@ -88,43 +89,28 @@ def test_constant_solution():
         np.testing.assert_allclose(u_new, expected)
 
 
-# test_SecondOrderImplicit_equals_Box() {{{2
-def test_SecondOrderImplicit_equals_Box():
+# test_SecondOrderImplicit_equals_other_scheme_for_given_limiter() {{{2
+@pytest.mark.parametrize(
+    ("scheme_other", "limiter_type"),
+    [(ImplicitUpwind, LimiterType.FULL), (Box, LimiterType.NONE)],
+)
+def test_SecondOrderImplicit_equals_other_scheme_for_given_limiter(
+    scheme_other, limiter_type
+):
     config = SolverConfig(
         mesh=mesh_config,
-        reconst=ReconstConfig(slope_type=SlopeType.BOX, limiter_type=LimiterType.NONE),
+        reconst=ReconstConfig(slope_type=SlopeType.BOX, limiter_type=limiter_type),
     )
     cfl = 1.6
 
     scheme_2ndo = SecondOrderImplicit(config=config)
     state_2ndo = init_solver_state(scheme_2ndo, cfl)
 
-    scheme_box = Box(config=config)
-    state_box = init_solver_state(scheme_box, cfl)
+    scheme_other = scheme_other(config=config)
+    state_other = init_solver_state(scheme_other, cfl)
 
-    for s, st in [(scheme_2ndo, state_2ndo), (scheme_box, state_box)]:
+    for s, st in [(scheme_2ndo, state_2ndo), (scheme_other, state_other)]:
         s.apply_bc(st)
         s.sweep(st)
 
-    np.testing.assert_allclose(state_2ndo.u_new, state_box.u_new)
-
-
-# test_SecondOrderImplicit_equals_ImplicitUpwind_when_limit_is_FULL() {{{2
-def test_SecondOrderImplicit_equals_ImplicitUpwind_when_limit_is_FULL():
-    config = SolverConfig(
-        mesh=mesh_config,
-        reconst=ReconstConfig(slope_type=SlopeType.BOX, limiter_type=LimiterType.FULL),
-    )
-    cfl = 1.6
-
-    scheme_2ndo = SecondOrderImplicit(config=config)
-    state_2ndo = init_solver_state(scheme_2ndo, cfl)
-
-    scheme_box = ImplicitUpwind(config=config)
-    state_box = init_solver_state(scheme_box, cfl)
-
-    for s, st in [(scheme_2ndo, state_2ndo), (scheme_box, state_box)]:
-        s.apply_bc(st)
-        s.sweep(st)
-
-    np.testing.assert_allclose(state_2ndo.u_new, state_box.u_new)
+    np.testing.assert_allclose(state_2ndo.u_new, state_other.u_new)
