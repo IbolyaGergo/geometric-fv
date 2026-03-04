@@ -1,8 +1,9 @@
 import numpy as np
 
-from geometric_fv.config import ReconstConfig, SolverConfig
+from geometric_fv.config import BoundaryConfig, ReconstConfig, SolverConfig
+from geometric_fv.boundary import apply_bc
 from geometric_fv.schemes import SecondOrderImplicit
-from geometric_fv.slope import LimiterType, SlopeType
+from geometric_fv.enums import BCType, LimiterType, SlopeType
 from geometric_fv.solver import SolverState
 
 
@@ -34,22 +35,27 @@ def test_SecondOrderImplicit_equals_Box():
     u_new_2ndO = np.zeros(len(u_old))
     slope = np.zeros_like(u_old)
 
+    bc_type = BCType.QUASI_PERIODIC
     slope_type = SlopeType.BOX
     limiter_type = LimiterType.NONE
+
     config = SolverConfig(
-        reconst=ReconstConfig(slope_type=slope_type, limiter_type=limiter_type)
+        boundary=BoundaryConfig(bc_type=bc_type),
+        reconst=ReconstConfig(slope_type=slope_type, limiter_type=limiter_type),
     )
     scheme = SecondOrderImplicit(config=config)
     nghost = scheme.nghost
 
-    idx = nghost - 1
-    u_new_2ndO[idx] = 0.0
-    slope[nghost - 1] = (u_old[nghost - 1] - u_new_2ndO[nghost - 1]) / cfl
     state2ndO = SolverState(u_old=u_old, u_new=u_new_2ndO, slope=slope, cfl=cfl)
+    apply_bc(state2ndO, nghost=nghost, config=config.boundary,
+             reconst_config=config.reconst)
     scheme.sweep(state2ndO)
 
     # Box scheme
     u_new_Box = np.zeros(len(u_old))
+    stateBox = SolverState(u_old=u_old, u_new=u_new_Box, slope=slope, cfl=cfl)
+    apply_bc(stateBox, nghost=nghost, config=config.boundary,
+             reconst_config=config.reconst)
     for i in range(nghost, len(u_old) - nghost):
         u_new_Box[i] = coeff * u_old[i] + u_old[i - 1] - coeff * u_new_Box[i - 1]
 
@@ -64,20 +70,28 @@ def test_SecondOrderImplicit_equals_ImplicitUpwind_when_limit_is_FULL():
     u_old = np.sin(2 * np.pi * x_c)
     slope = np.zeros_like(u_old)
 
+    bc_type = BCType.QUASI_PERIODIC
     slope_type = SlopeType.BOX
     limiter_type = LimiterType.FULL
+
     config = SolverConfig(
-        reconst=ReconstConfig(slope_type=slope_type, limiter_type=limiter_type)
+        boundary=BoundaryConfig(bc_type=bc_type),
+        reconst=ReconstConfig(slope_type=slope_type, limiter_type=limiter_type),
     )
     scheme = SecondOrderImplicit(config=config)
+    nghost = scheme.nghost
 
     u_new_2ndO = np.zeros(len(u_old))
     state2ndO = SolverState(u_old=u_old, u_new=u_new_2ndO, slope=slope, cfl=cfl)
+    apply_bc(state2ndO, nghost=nghost, config=config.boundary,
+             reconst_config=config.reconst)
     scheme.sweep(state2ndO)
 
     # Implicit Uwpind
-    nghost = scheme.nghost
     u_new_ImplUp = np.zeros(ncells)
+    stateImplUp = SolverState(u_old=u_old, u_new=u_new_ImplUp, slope=slope, cfl=cfl)
+    apply_bc(stateImplUp, nghost=nghost, config=config.boundary,
+             reconst_config=config.reconst)
     for i in range(nghost, len(u_old) - nghost):
         u_new_ImplUp[i] = (u_old[i] + cfl * u_new_ImplUp[i - 1]) / (1.0 + cfl)
 

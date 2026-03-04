@@ -72,6 +72,10 @@ def apply_bc(state: SolverState, nghost: int, config: BoundaryConfig, reconst_co
         raise ValueError(f"Unsupported BC type: {bc_type}")
     apply_bc_func(state, nghost)
 
+    # Set slope[nghost - 1] boundary condition
+    slope_type = reconst_config.slope_type
+    limiter_type = reconst_config.limiter_type
+
     u_old = state.u_old
     u_new = state.u_new
     slope = state.slope
@@ -87,6 +91,6 @@ def apply_bc(state: SolverState, nghost: int, config: BoundaryConfig, reconst_co
             i=i,
             u_new_i=u_new[i],
             reconst_config=ReconstConfig(
-                slope_type=SlopeType.BOX, limiter_type=LimiterType.TVD_SUFF
+                slope_type=slope_type, limiter_type=limiter_type
             ),
         )
