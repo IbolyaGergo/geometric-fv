@@ -65,7 +65,7 @@ _apply_bc_types = {
 }
 
 
-def apply_bc(state: SolverState, config: BoundaryConfig, reconst_config: ReconstConfig, nghost: int) -> None:
+def apply_bc(state: SolverState, nghost: int, config: BoundaryConfig, reconst_config: ReconstConfig) -> None:
     bc_type = config.bc_type
     apply_bc_func = _apply_bc_types.get(bc_type)
     if apply_bc_func is None:
