@@ -18,6 +18,7 @@ ENV_DIR := $(shell pwd)/$(ENV_NAME)
 .PHONY: run
 run:
 	@python scripts/solve.py && feh *.png
+	@rm -rf `find . -name '*.png'`
 
 # ====================================================================================
 # DEVELOPMENT ENVIRONMENT
