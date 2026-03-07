@@ -73,6 +73,8 @@ class SecondOrderImplicit(Scheme):
 
     def sweep(self, state: SolverState):
         nghost = self.nghost
+        if state.niter is None:
+            state.niter = np.zeros_like(state.u_old, dtype=int)
 
         for i in range(nghost, len(state.u_old) - nghost):
             u_new_i_guess = self._update_cell_guess(state, i=i)
@@ -86,9 +88,9 @@ class SecondOrderImplicit(Scheme):
             )
             if result.success:
                 state.u_new[i] = result.x
+                state.niter[i] = result.nit
 
-                # niters = result.nit
-                # print(f"Cell {i} converged in {niters} number of iterations.")
+                # print(f"Cell {i} converged in {state.niter[i]} number of iterations.")
             else:
                 print(f"Warning: Solver failed to converge at cell {i}.")
                 print(f"Message: {result.message}")

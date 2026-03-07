@@ -9,3 +9,4 @@ class SolverState:
     u_new: np.ndarray
     slope: np.ndarray
     cfl: float
+    niter: np.ndarray = None

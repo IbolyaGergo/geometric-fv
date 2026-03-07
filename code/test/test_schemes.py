@@ -114,3 +114,28 @@ def test_SecondOrderImplicit_equals_other_scheme_for_given_limiter(
         s.sweep(st)
 
     np.testing.assert_allclose(state_2ndo.u_new, state_other.u_new)
+
+
+# test_iteration_count_for_box_none() {{{2
+def test_iteration_count_for_box_none():
+    """
+    For SlopeType.BOX and LimiterType.NONE, the initial guess corresponds to the
+    solution of the BOX scheme, thus should converge in exactly 1 iteration.
+    """
+    config = SolverConfig(
+        reconst=ReconstConfig(slope_type=SlopeType.BOX, limiter_type=LimiterType.NONE)
+    )
+    scheme = SecondOrderImplicit(config=config)
+
+    # Initialize state with some non-trivial data
+    state = init_solver_state(scheme, cfl=1.2)
+    state.niter = np.zeros_like(state.u_new, dtype=int)
+
+    scheme.apply_bc(state)
+    scheme.sweep(state)
+
+    # Check active cells (excluding ghost cells)
+    ng = scheme.nghost
+    active_niter = state.niter[ng:-ng]
+
+    assert np.all(active_niter == 1), f"Expected 1 iteration, got {active_niter}"
