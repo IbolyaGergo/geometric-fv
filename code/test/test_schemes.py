@@ -129,3 +129,34 @@ def test_iteration_count_for_box_none():
     active_niter = state.niter[ng:-ng]
 
     assert np.all(active_niter == 1), f"Expected 1 iteration, got {active_niter}"
+
+
+# test_cell_indices() {{{2
+def test_cell_indices():
+    """
+    Verifies that the cell_indices method correctly identifies the internal
+    cells (excluding ghost cells) for both forward and reverse traversals.
+    """
+
+    nghost = 2
+    scheme = SecondOrderImplicit(nghost=nghost)
+
+    ninner = 20
+    u0 = np.zeros(ninner)
+    state = scheme.allocate_state(u0, cfl=1.0)
+
+    assert len(state.u_old) == 24
+
+    indices = list(scheme.cell_indices(state))
+    expected_forward = list(range(nghost, len(state.u_old) - nghost))
+
+    assert indices == expected_forward, f"Expected {expected_forward}, got {indices}"
+    assert len(indices) == ninner
+
+    rev_indices = list(scheme.cell_indices(state, reverse=True))
+    expected_reverse = list(reversed(expected_forward))
+
+    assert rev_indices == expected_reverse, (
+        f"Expected {expected_reverse}, got {rev_indices}"
+    )
+    assert len(rev_indices) == ninner

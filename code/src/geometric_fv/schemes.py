@@ -52,6 +52,26 @@ class Scheme(ABC):
             reconst_config=self.config.reconst,
         )
 
+    def cell_indices(
+        self, state: SolverState, reverse: bool = False
+    ) -> range | reversed[int]:
+        """
+        Returns an iterator over the internal cell indices.
+
+        Args:
+            state: The current state to get the total length.
+            reverse: If True, sweeps from right-to-left.
+        """
+        ntotal = len(state.u_old)
+        nghost = self.nghost
+
+        # Define the range of physical (non-ghost) cells
+        idx_range = range(nghost, ntotal - nghost)
+
+        if reverse:
+            return reversed(idx_range)
+        return idx_range
+
     @abstractmethod
     def sweep(self, state: SolverState):
         pass
@@ -98,12 +118,11 @@ class SecondOrderImplicit(Scheme):
         # fmt: on
         return u_new_i_next
 
-    def sweep(self, state: SolverState):
-        nghost = self.nghost
+    def sweep(self, state: SolverState, reverse: bool = False):
         if state.niter is None:
             state.niter = np.zeros_like(state.u_old, dtype=int)
 
-        for i in range(nghost, len(state.u_old) - nghost):
+        for i in self.cell_indices(state, reverse=reverse):
             u_new_i_guess = self._update_cell_guess(state, i=i)
 
             result = simple_fixed_point(
