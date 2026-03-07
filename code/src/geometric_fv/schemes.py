@@ -92,13 +92,13 @@ class SecondOrderImplicit(Scheme):
 
         cfl = state.cfl
 
-        slope[i] = compute_slope(
+        slope_i_current = compute_slope(
             state, i=i, u_new_i=u_new_i_current, reconst_config=self.config.reconst
         )
 
         # fmt: off
         u_new_i_next = (u_old[i] + cfl * u_new[i - 1]) / (1.0 + cfl) \
-                - 0.5 * cfl * (slope[i] - slope[i - 1])
+                - 0.5 * cfl * (slope_i_current - slope[i - 1])
         # fmt: on
         return u_new_i_next
 
@@ -120,6 +120,8 @@ class SecondOrderImplicit(Scheme):
             )
             if result.success:
                 state.u_new[i] = result.x
+                state.slope[i] = compute_slope(state, i, result.x,
+                                               self.config.reconst)
                 state.niter[i] = result.nit
 
                 # print(f"Cell {i} converged in {state.niter[i]} number of iterations.")
