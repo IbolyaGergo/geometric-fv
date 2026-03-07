@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -9,4 +11,4 @@ class SolverState:
     u_new: np.ndarray
     slope: np.ndarray
     cfl: float
-    niter: np.ndarray = None
+    niter: np.ndarray | None = None
