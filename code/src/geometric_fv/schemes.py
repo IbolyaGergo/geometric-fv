@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Callable
 
 import numpy as np
 
@@ -13,6 +14,32 @@ from geometric_fv.utils import simple_fixed_point
 class Scheme(ABC):
     nghost: int
     config: SolverConfig
+
+    def allocate_state(self, u0: np.ndarray, cfl: float) -> SolverState:
+        """Creates a SolverState from an existing array."""
+        u_padded = np.pad(u0, (self.nghost, self.nghost), mode="constant")
+        return SolverState(
+            u_old=u_padded.copy(),
+            u_new=u_padded.copy(),
+            slope=np.zeros_like(u_padded),
+            niter=np.zeros_like(u_padded, dtype=int),
+            cfl=cfl,
+        )
+
+    def init_state(
+        self, func: Callable[[np.ndarray], np.ndarray], cfl: float
+    ) -> SolverState:
+        """
+        Generates u0 using func and the mesh defined in the scheme's config.
+        """
+        # To avoid circular dependency
+        from geometric_fv.mesh import Mesh1D
+
+        mesh = Mesh1D.uniform(self.config.mesh)
+
+        u0 = func(mesh.centers)
+
+        return self.allocate_state(u0, cfl)
 
     def apply_bc(self, state: SolverState) -> None:
         # Local import to avoid circular dependency at the top of the file

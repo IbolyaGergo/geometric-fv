@@ -3,9 +3,8 @@ from dataclasses import dataclass
 import numpy as np
 import pytest
 
-from geometric_fv.config import MeshConfig, ReconstConfig, SolverConfig
-from geometric_fv.enums import LimiterType, SlopeType
-from geometric_fv.mesh import Mesh1D
+from geometric_fv.config import BoundaryConfig, MeshConfig, ReconstConfig, SolverConfig
+from geometric_fv.enums import BCType, LimiterType, SlopeType
 from geometric_fv.schemes import Scheme, SecondOrderImplicit
 from geometric_fv.solver import SolverState
 
@@ -53,40 +52,30 @@ class Box(Scheme):
             u_new[i] = coeff * (u_old[i] - u_new[i - 1]) + u_old[i - 1]
 
 
-mesh_config = MeshConfig(x_min=0.0, x_max=1.0, ncells=20)
-
-
-# init_solver_state() {{{2
-def init_solver_state(scheme, cfl):
-    mesh = Mesh1D.uniform(scheme.config.mesh)
-    u0 = np.sin(2 * np.pi * mesh.centers)
-
-    nghost = scheme.nghost
-    u_old = np.pad(u0, (nghost, nghost), "constant", constant_values=0.0)
-    u_new = np.copy(u_old)
-    slope = np.zeros_like(u_old)
-
-    return SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+def sine_wave(x):
+    return np.sin(2 * np.pi * x)
 
 
 # TESTs {{{1
 # test_constant_solution() {{{2
-def test_constant_solution():
-    ncells = 20
-    scheme = SecondOrderImplicit()
+@pytest.mark.parametrize("val", np.linspace(0.0, 2.0, 5))
+def test_constant_solution(val):
+    config = SolverConfig(
+        mesh=MeshConfig(ncells=20),
+        boundary=BoundaryConfig(bc_type=BCType.CONSTANT_EXTEND),
+    )
+    scheme = SecondOrderImplicit(config=config)
 
-    for val in np.linspace(0.0, 2.0, 10):
-        u_new = val * np.ones(ncells)
-        u_old = val * np.ones(ncells)
+    state = scheme.init_state(lambda x: np.full_like(x, val), cfl=1.6)
 
-        cfl = 1.6
+    scheme.apply_bc(state)
+    scheme.sweep(state)
 
-        slope = np.zeros_like(u_old)
-        state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
-        scheme.sweep(state)
+    # Verify for inner cells
+    nghost = scheme.nghost
+    inner_solution = state.u_new[nghost:-nghost]
 
-        expected = val * np.ones(ncells)
-        np.testing.assert_allclose(u_new, expected)
+    np.testing.assert_allclose(inner_solution, val, err_msg=f"Failed for val={val}")
 
 
 # test_SecondOrderImplicit_equals_other_scheme_for_given_limiter() {{{2
@@ -98,16 +87,16 @@ def test_SecondOrderImplicit_equals_other_scheme_for_given_limiter(
     scheme_other, limiter_type
 ):
     config = SolverConfig(
-        mesh=mesh_config,
+        mesh=MeshConfig(ncells=20),
         reconst=ReconstConfig(slope_type=SlopeType.BOX, limiter_type=limiter_type),
     )
     cfl = 1.6
 
     scheme_2ndo = SecondOrderImplicit(config=config)
-    state_2ndo = init_solver_state(scheme_2ndo, cfl)
+    state_2ndo = scheme_2ndo.init_state(sine_wave, cfl=cfl)
 
     scheme_other = scheme_other(config=config)
-    state_other = init_solver_state(scheme_other, cfl)
+    state_other = scheme_other.init_state(sine_wave, cfl=cfl)
 
     for s, st in [(scheme_2ndo, state_2ndo), (scheme_other, state_other)]:
         s.apply_bc(st)
@@ -123,12 +112,13 @@ def test_iteration_count_for_box_none():
     solution of the BOX scheme, thus should converge in exactly 1 iteration.
     """
     config = SolverConfig(
-        reconst=ReconstConfig(slope_type=SlopeType.BOX, limiter_type=LimiterType.NONE)
+        mesh=MeshConfig(ncells=20),
+        reconst=ReconstConfig(slope_type=SlopeType.BOX, limiter_type=LimiterType.NONE),
     )
     scheme = SecondOrderImplicit(config=config)
 
     # Initialize state with some non-trivial data
-    state = init_solver_state(scheme, cfl=1.2)
+    state = scheme.init_state(sine_wave, cfl=1.2)
     state.niter = np.zeros_like(state.u_new, dtype=int)
 
     scheme.apply_bc(state)
