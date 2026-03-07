@@ -13,7 +13,9 @@ from geometric_fv.mesh import Mesh1D
     ],
 )
 def test_mesh_uniform_raises_error_for_invalid_inputs(x_min, x_max, ncells):
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match=r"x_max must be greater|ncells must be greater"
+    ):
         Mesh1D.uniform(x_min=x_min, x_max=x_max, ncells=ncells)
 
 

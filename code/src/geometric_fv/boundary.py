@@ -87,7 +87,7 @@ def apply_bc(
 
     # first/last idx of the physical domain
     first = nghost
-    last = -nghost - 1
+    # last = -nghost - 1
     if cfl > 0.0:
         i = first - 1
         slope[i] = compute_slope(
