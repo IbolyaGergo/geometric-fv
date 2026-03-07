@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
+
+if TYPE_CHECKING:
+    from geometric_fv.mesh import Mesh1D
 
 
 @dataclass(frozen=True)
@@ -29,7 +35,7 @@ class MeshConfig:
         if self.ncells <= 0:
             raise ValueError("ncells must be greater than 0")
 
-    def create_mesh(self) -> "Mesh1D":
+    def create_mesh(self) -> Mesh1D:
         from geometric_fv.mesh import Mesh1D
 
         return Mesh1D.uniform(self.x_min, self.x_max, self.ncells)
