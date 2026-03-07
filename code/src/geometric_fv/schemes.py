@@ -5,8 +5,7 @@ from typing import Callable
 import numpy as np
 
 from geometric_fv.config import SolverConfig
-from geometric_fv.enums import LimiterType
-from geometric_fv.slope import compute_slope
+from geometric_fv.slope import compute_guess, compute_slope
 from geometric_fv.solver import SolverState
 from geometric_fv.utils import simple_fixed_point
 
@@ -82,20 +81,6 @@ class SecondOrderImplicit(Scheme):
     nghost: int = 2
     config: SolverConfig = SolverConfig()
 
-    def _update_cell_guess(self, state: SolverState, i: int) -> float:
-        u_old = state.u_old
-        u_new = state.u_new
-        cfl = state.cfl
-
-        coeff = (1 - cfl) / (1 + cfl)
-        u_new_i_guess = coeff * u_old[i] + u_old[i - 1] - coeff * u_new[i - 1]
-
-        limiter_type = self.config.reconst.limiter_type
-        if limiter_type is not LimiterType.NONE:
-            u_new_i_guess = np.median([u_new_i_guess, u_old[i], u_new[i - 1]])
-
-        return u_new_i_guess
-
     def _update_cell_iter(
         self,
         u_new_i_current: float,
@@ -123,7 +108,9 @@ class SecondOrderImplicit(Scheme):
             state.niter = np.zeros_like(state.u_old, dtype=int)
 
         for i in self.cell_indices(state, reverse=reverse):
-            u_new_i_guess = self._update_cell_guess(state, i=i)
+            u_new_i_guess = compute_guess(
+                state, i=i, reconst_config=self.config.reconst
+            )
 
             result = simple_fixed_point(
                 self._update_cell_iter,

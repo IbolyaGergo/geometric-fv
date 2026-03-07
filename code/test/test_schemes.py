@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from geometric_fv.config import BoundaryConfig, MeshConfig, ReconstConfig, SolverConfig
-from geometric_fv.enums import BCType, LimiterType, SlopeType
+from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
 from geometric_fv.schemes import Scheme, SecondOrderImplicit
 from geometric_fv.solver import SolverState
 
@@ -105,15 +105,23 @@ def test_SecondOrderImplicit_equals_other_scheme_for_given_limiter(
     np.testing.assert_allclose(state_2ndo.u_new, state_other.u_new)
 
 
-# test_iteration_count_for_box_none() {{{2
-def test_iteration_count_for_box_none():
+# test_iteration_count_for_exact_guess() {{{2
+@pytest.mark.parametrize(
+    ("limiter_type", "guess_type"),
+    [(LimiterType.NONE, GuessType.BOX), (LimiterType.FULL, GuessType.IMPLICIT_UPWIND)],
+)
+def test_iteration_count_for_exact_guess(limiter_type, guess_type):
     """
     For SlopeType.BOX and LimiterType.NONE, the initial guess corresponds to the
     solution of the BOX scheme, thus should converge in exactly 1 iteration.
     """
     config = SolverConfig(
         mesh=MeshConfig(ncells=20),
-        reconst=ReconstConfig(slope_type=SlopeType.BOX, limiter_type=LimiterType.NONE),
+        reconst=ReconstConfig(
+            slope_type=SlopeType.BOX,
+            limiter_type=limiter_type,
+            guess_type=guess_type,
+        ),
     )
     scheme = SecondOrderImplicit(config=config)
 

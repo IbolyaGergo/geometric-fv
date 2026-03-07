@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from geometric_fv.enums import BCType, LimiterType, SlopeType
+from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
 
 
 @dataclass(frozen=True)
@@ -34,6 +34,7 @@ class MeshConfig:
 class ReconstConfig:
     slope_type: SlopeType = SlopeType.BOX
     limiter_type: LimiterType = LimiterType.TVD
+    guess_type: GuessType = GuessType.BOX
 
 
 @dataclass(frozen=True)

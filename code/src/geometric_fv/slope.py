@@ -1,7 +1,7 @@
 import numpy as np
 
 from geometric_fv.config import ReconstConfig
-from geometric_fv.enums import LimiterType, SlopeType
+from geometric_fv.enums import GuessType, LimiterType, SlopeType
 from geometric_fv.solver import SolverState
 
 
@@ -112,3 +112,44 @@ def compute_slope(
     slope_i_lim = limit_slope_func(state, i, u_new_i, slope_i)
 
     return slope_i_lim
+
+
+def _compute_guess_box(state: SolverState, i: int) -> float:
+    u_old = state.u_old
+    u_new = state.u_new
+    cfl = state.cfl
+
+    coeff = (1 - cfl) / (1 + cfl)
+    u_new_i_guess = coeff * u_old[i] + u_old[i - 1] - coeff * u_new[i - 1]
+
+    return u_new_i_guess
+
+
+def _compute_guess_implicit_upwind(state: SolverState, i: int) -> float:
+    u_old = state.u_old
+    u_new = state.u_new
+    cfl = state.cfl
+
+    u_new_i_guess = (u_old[i] + cfl * u_new[i - 1]) / (1.0 + cfl)
+
+    return u_new_i_guess
+
+
+_compute_guess_types = {
+    GuessType.IMPLICIT_UPWIND: _compute_guess_implicit_upwind,
+    GuessType.BOX: _compute_guess_box,
+}
+
+
+def compute_guess(state: SolverState, i: int, reconst_config: ReconstConfig) -> float:
+    guess_type = reconst_config.guess_type
+    compute_guess_func = _compute_guess_types.get(guess_type)
+    if compute_guess_func is None:
+        raise ValueError(f"Unsupported guess type: {guess_type}")
+
+    u_guess = compute_guess_func(state, i)
+
+    if reconst_config.limiter_type != LimiterType.NONE:
+        u_guess = np.median([u_guess, state.u_old[i], state.u_new[i - 1]])
+
+    return u_guess

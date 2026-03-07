@@ -15,3 +15,8 @@ class LimiterType(Enum):
     NONE = 1
     TVD = 2
     TVD_SUFF = 3
+
+
+class GuessType(Enum):
+    IMPLICIT_UPWIND = 0
+    BOX = 1

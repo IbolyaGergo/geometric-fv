@@ -8,7 +8,7 @@ from geometric_fv.config import (
     ReconstConfig,
     SolverConfig,
 )
-from geometric_fv.enums import BCType, LimiterType, SlopeType
+from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
 from geometric_fv.mesh import Mesh1D
 from geometric_fv.schemes import SecondOrderImplicit
 
@@ -19,12 +19,15 @@ ncells = 100
 
 bc_type = BCType.QUASI_PERIODIC
 slope_type = SlopeType.BOX
-limiter_type = LimiterType.NONE
+limiter_type = LimiterType.TVD_SUFF
+guess_type = GuessType.BOX
 
 config = SolverConfig(
     mesh=MeshConfig(x_min=x_min, x_max=x_max, ncells=ncells),
     boundary=BoundaryConfig(bc_type=bc_type),
-    reconst=ReconstConfig(slope_type=slope_type, limiter_type=limiter_type),
+    reconst=ReconstConfig(
+        slope_type=slope_type, limiter_type=limiter_type, guess_type=guess_type
+    ),
     iteration=IterationConfig(tol=1e-6, maxiter=50),
 )
 
@@ -35,8 +38,8 @@ mesh = Mesh1D.uniform(config.mesh)
 x_c = mesh.centers
 ncells = mesh.ncells
 
-u0 = np.sin(2 * np.pi * x_c)
-# u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 1, 0])
+# u0 = np.sin(2 * np.pi * x_c)
+u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 1, 0])
 
 cfl = 1.8
 
