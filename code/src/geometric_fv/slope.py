@@ -57,7 +57,6 @@ def _limit_slope_tvd_suff(
 ) -> float:
     u_old = state.u_old
     u_new = state.u_new
-    slope = state.slope
     cfl = state.cfl
 
     slope_i_1 = np.median(

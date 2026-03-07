@@ -81,7 +81,6 @@ def apply_bc(
     slope_type = reconst_config.slope_type
     limiter_type = reconst_config.limiter_type
 
-    u_old = state.u_old
     u_new = state.u_new
     slope = state.slope
     cfl = state.cfl
