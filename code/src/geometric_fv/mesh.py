@@ -4,8 +4,6 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from geometric_fv.config import MeshConfig
-
 
 @dataclass(frozen=True)
 class Mesh1D:
@@ -39,20 +37,22 @@ class Mesh1D:
         return len(self.faces) - 1
 
     @classmethod
-    def uniform(cls, mesh_config: MeshConfig) -> "Mesh1D":
+    def uniform(cls, x_min: float, x_max: float, ncells: int) -> "Mesh1D":
         """Create a uniform 1D mesh.
+        x_min : float
+            The minimum coordinate of the mesh.
+        x_max : float
+            The maximum coordinate of the mesh.
+        ncells : int
+            The number of cells in the mesh.
 
-        Parameters
-        ----------
-        mesh_config
-            For setting boundary coordinates and number of cells.
-
-        Returns
-        -------
-        Mesh1D
-            A new Mesh1D object with uniform cell spacing.
+        Raises
+        ------
+        ValueError
+            If `x_max` is not greater than `x_min` or if `ncells` is less than 1.
         """
-        x_min = mesh_config.x_min
-        x_max = mesh_config.x_max
-        ncells = mesh_config.ncells
+        if x_min > x_max:
+            raise ValueError("x_max must be greater than x_min")
+        if ncells <= 0:
+            raise ValueError("ncells must be greater than 0")
         return cls(np.linspace(x_min, x_max, ncells + 1))

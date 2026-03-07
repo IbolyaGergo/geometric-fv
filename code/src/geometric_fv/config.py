@@ -29,6 +29,11 @@ class MeshConfig:
         if self.ncells <= 0:
             raise ValueError("ncells must be greater than 0")
 
+    def create_mesh(self) -> "Mesh1D":
+        from geometric_fv.mesh import Mesh1D
+
+        return Mesh1D.uniform(self.x_min, self.x_max, self.ncells)
+
 
 @dataclass(frozen=True)
 class ReconstConfig:

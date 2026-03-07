@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from geometric_fv.boundary import apply_bc
-from geometric_fv.config import BoundaryConfig, MeshConfig, ReconstConfig
+from geometric_fv.config import BoundaryConfig, ReconstConfig
 from geometric_fv.enums import BCType
 from geometric_fv.mesh import Mesh1D
 from geometric_fv.solver import SolverState
@@ -11,8 +11,7 @@ from geometric_fv.solver import SolverState
 # FIXTURE {{{1
 @pytest.fixture
 def mesh():
-    config = MeshConfig(x_min=0.0, x_max=1.0, ncells=50)
-    return Mesh1D.uniform(config)
+    return Mesh1D.uniform(x_min=0.0, x_max=1.0, ncells=50)
 
 
 @pytest.fixture

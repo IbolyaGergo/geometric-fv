@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-from geometric_fv.config import MeshConfig
 from geometric_fv.mesh import Mesh1D
 
 
@@ -15,7 +14,7 @@ from geometric_fv.mesh import Mesh1D
 )
 def test_mesh_uniform_raises_error_for_invalid_inputs(x_min, x_max, ncells):
     with pytest.raises(ValueError):
-        Mesh1D.uniform(MeshConfig(x_min=x_min, x_max=x_max, ncells=ncells))
+        Mesh1D.uniform(x_min=x_min, x_max=x_max, ncells=ncells)
 
 
 @pytest.mark.parametrize(
@@ -28,7 +27,7 @@ def test_mesh_uniform_raises_error_for_invalid_inputs(x_min, x_max, ncells):
     ],
 )
 def test_mesh_uniform_valid_inputs(x_min, x_max, ncells):
-    mesh = Mesh1D.uniform(MeshConfig(x_min=x_min, x_max=x_max, ncells=ncells))
+    mesh = Mesh1D.uniform(x_min=x_min, x_max=x_max, ncells=ncells)
 
     # Check number of cells
     assert mesh.ncells == ncells

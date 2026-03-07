@@ -32,9 +32,8 @@ class Scheme(ABC):
         Generates u0 using func and the mesh defined in the scheme's config.
         """
         # To avoid circular dependency
-        from geometric_fv.mesh import Mesh1D
 
-        mesh = Mesh1D.uniform(self.config.mesh)
+        mesh = self.config.mesh.create_mesh()
 
         u0 = func(mesh.centers)
 
