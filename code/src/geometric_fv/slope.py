@@ -129,7 +129,8 @@ def _compute_guess_implicit_upwind(state: SolverState, i: int) -> float:
     u_new = state.u_new
     cfl = state.cfl
 
-    u_new_i_guess = (u_old[i] + cfl * u_new[i - 1]) / (1.0 + cfl)
+    i_upw = i-1 if state.cfl > 0 else i+1
+    u_new_i_guess = (u_old[i] + abs(cfl) * u_new[i_upw]) / (1.0 + abs(cfl))
 
     return u_new_i_guess
 
@@ -149,6 +150,7 @@ def compute_guess(state: SolverState, i: int, reconst_config: ReconstConfig) -> 
     u_guess = compute_guess_func(state, i)
 
     if reconst_config.limiter_type != LimiterType.NONE:
-        u_guess = np.median([u_guess, state.u_old[i], state.u_new[i - 1]])
+        i_upw = i-1 if state.cfl > 0 else i+1
+        u_guess = np.median([u_guess, state.u_old[i], state.u_new[i_upw]])
 
     return u_guess

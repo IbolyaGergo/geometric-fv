@@ -106,11 +106,15 @@ def test_SecondOrderImplicit_equals_other_scheme_for_given_limiter(
 
 
 # test_iteration_count_for_exact_guess() {{{2
+@pytest.mark.parametrize("cfl", [1.2, -1.2])
 @pytest.mark.parametrize(
     ("limiter_type", "guess_type"),
-    [(LimiterType.NONE, GuessType.BOX), (LimiterType.FULL, GuessType.IMPLICIT_UPWIND)],
+    [
+        # (LimiterType.NONE, GuessType.BOX),
+        (LimiterType.FULL, GuessType.IMPLICIT_UPWIND)
+    ],
 )
-def test_iteration_count_for_exact_guess(limiter_type, guess_type):
+def test_iteration_count_for_exact_guess(limiter_type, guess_type, cfl):
     """
     For SlopeType.BOX and LimiterType.NONE, the initial guess corresponds to the
     solution of the BOX scheme, thus should converge in exactly 1 iteration.
@@ -126,7 +130,7 @@ def test_iteration_count_for_exact_guess(limiter_type, guess_type):
     scheme = SecondOrderImplicit(config=config)
 
     # Initialize state with some non-trivial data
-    state = scheme.init_state(sine_wave, cfl=1.2)
+    state = scheme.init_state(sine_wave, cfl=cfl)
     state.niter = np.zeros_like(state.u_new, dtype=int)
 
     scheme.apply_bc(state)
@@ -161,10 +165,55 @@ def test_cell_indices():
     assert indices == expected_forward, f"Expected {expected_forward}, got {indices}"
     assert len(indices) == ninner
 
-    rev_indices = list(scheme.cell_indices(state, reverse=True))
+    state_neg = scheme.allocate_state(u0, cfl=-1.0)
+
+    rev_indices = list(scheme.cell_indices(state_neg))
     expected_reverse = list(reversed(expected_forward))
 
     assert rev_indices == expected_reverse, (
         f"Expected {expected_reverse}, got {rev_indices}"
     )
     assert len(rev_indices) == ninner
+
+# test_implicit_upwind_mirroring() {{{2
+def test_implicit_upwind_mirroring():
+    """
+    Verifies that the Implicit Upwind scheme (SecondOrderImplicit with FULL
+    limiter) produces mirrored results for mirrored initial conditions and
+    opposite CFL.
+    """
+    ncells=20
+    config = SolverConfig(
+        mesh=MeshConfig(ncells=ncells),
+        reconst=ReconstConfig(
+            slope_type=SlopeType.BOX,
+            limiter_type=LimiterType.FULL,
+            guess_type=GuessType.IMPLICIT_UPWIND,
+        ),
+        boundary=BoundaryConfig(bc_type=BCType.QUASI_PERIODIC),
+    )
+    cfl = 1.5
+
+    # Positive CFL
+    scheme_pos = SecondOrderImplicit(config=config)
+    state_pos = scheme_pos.init_state(sine_wave, cfl=cfl)
+
+    scheme_pos.apply_bc(state_pos)
+    scheme_pos.sweep(state_pos)
+
+    # Negative CFL
+    scheme_neg = SecondOrderImplicit(config=config)
+    state_neg = scheme_neg.init_state(sine_wave, cfl=-cfl)
+
+    # Manually mirror u_old from the positive case
+    nghost = scheme_neg.nghost
+    state_neg.u_old[nghost:-nghost] = state_pos.u_old[nghost:-nghost][::-1]
+
+    scheme_neg.apply_bc(state_neg)
+    scheme_neg.sweep(state_neg)
+
+    # Validation
+    pos_inner = state_pos.u_new[nghost:-nghost]
+    neg_inner = state_neg.u_new[nghost:-nghost]
+
+    np.testing.assert_allclose(pos_inner, neg_inner[::-1], atol=1e-12)

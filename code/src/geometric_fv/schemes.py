@@ -48,9 +48,7 @@ class Scheme(ABC):
             reconst_config=self.config.reconst,
         )
 
-    def cell_indices(
-        self, state: SolverState, reverse: bool=False
-    ) -> range | reversed[int]:
+    def cell_indices(self, state: SolverState) -> range | reversed[int]:
         """
         Returns an iterator over the internal cell indices.
 
@@ -64,7 +62,7 @@ class Scheme(ABC):
         # Define the range of physical (non-ghost) cells
         idx_range = range(nghost, ntotal - nghost)
 
-        if reverse:
+        if state.cfl < 0:
             return reversed(idx_range)
         return idx_range
 
@@ -95,8 +93,12 @@ class SecondOrderImplicit(Scheme):
         )
 
         # fmt: off
-        u_new_i_next = (u_old[i] + cfl * u_new[i - 1]) / (1.0 + cfl) \
-                - 0.5 * cfl * (slope_i_current - slope[i - 1])
+        i_upw = i-1 if state.cfl > 0 else i+1
+        if cfl > 0.0:
+            u_new_i_next = (u_old[i] + cfl * u_new[i - 1]) / (1.0 + cfl) \
+                    - 0.5 * cfl * (slope_i_current - slope[i - 1])
+        else:
+            u_new_i_next = (u_old[i] + abs(cfl) * u_new[i_upw]) / (1.0 + abs(cfl))
         # fmt: on
         return u_new_i_next
 
@@ -104,7 +106,7 @@ class SecondOrderImplicit(Scheme):
         if state.niter is None:
             state.niter = np.zeros_like(state.u_old, dtype=int)
 
-        for i in self.cell_indices(state, reverse=reverse):
+        for i in self.cell_indices(state):
             u_new_i_guess = compute_guess(
                 state, i=i, reconst_config=self.config.reconst
             )
