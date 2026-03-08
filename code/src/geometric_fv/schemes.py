@@ -31,8 +31,6 @@ class Scheme(ABC):
         """
         Generates u0 using func and the mesh defined in the scheme's config.
         """
-        # To avoid circular dependency
-
         mesh = self.config.mesh.create_mesh()
 
         u0 = func(mesh.centers)
@@ -51,7 +49,7 @@ class Scheme(ABC):
         )
 
     def cell_indices(
-        self, state: SolverState, reverse: bool = False
+        self, state: SolverState, reverse: bool=False
     ) -> range | reversed[int]:
         """
         Returns an iterator over the internal cell indices.
@@ -102,7 +100,7 @@ class SecondOrderImplicit(Scheme):
         # fmt: on
         return u_new_i_next
 
-    def sweep(self, state: SolverState, reverse: bool = False):
+    def sweep(self, state: SolverState, reverse: bool=False):
         if state.niter is None:
             state.niter = np.zeros_like(state.u_old, dtype=int)
 
