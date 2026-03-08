@@ -70,8 +70,8 @@ def _limit_slope_tvd_suff(
     slope_i_1 = np.median(
         [
             0.0,
-            2.0 * (u_old[i_dwn] - u_new_i) / (1.0 + abs(cfl)),
-            (2.0 / abs(cfl)) * (u_old[i] - u_new[i_upw]) / (1.0 + abs(cfl)),
+            np.sign(cfl) * 2.0 * (u_old[i_dwn] - u_new_i) / (1.0 + abs(cfl)),
+            (2.0 / cfl) * (u_old[i] - u_new[i_upw]) / (1.0 + abs(cfl)),
         ]
     )
 

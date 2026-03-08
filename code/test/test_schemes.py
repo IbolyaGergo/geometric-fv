@@ -181,7 +181,8 @@ def test_cell_indices():
     ("limiter_type", "guess_type"),
     [
         (LimiterType.NONE, GuessType.BOX),
-        (LimiterType.FULL, GuessType.IMPLICIT_UPWIND)
+        (LimiterType.FULL, GuessType.IMPLICIT_UPWIND),
+        (LimiterType.TVD_SUFF, GuessType.BOX),
     ],
 )
 def test_mirroring(limiter_type, guess_type):
