@@ -5,6 +5,8 @@ from geometric_fv.enums import GuessType, LimiterType, SlopeType
 from geometric_fv.solver import SolverState
 
 
+# LIMITER {{{1
+# _limit_slope_full() {{{2
 def _limit_slope_full(
     state: SolverState,
     i: int,
@@ -14,6 +16,7 @@ def _limit_slope_full(
     return 0.0
 
 
+# _limit_slope_none() {{{2
 def _limit_slope_none(
     state: SolverState,
     i: int,
@@ -23,6 +26,7 @@ def _limit_slope_none(
     return slope_i
 
 
+# _limit_slope_tvd() {{{2
 def _limit_slope_tvd(
     state: SolverState,
     i: int,
@@ -49,6 +53,7 @@ def _limit_slope_tvd(
     return slope_i_lim
 
 
+# _limit_slope_tvd_suff() {{{2
 def _limit_slope_tvd_suff(
     state: SolverState,
     i: int,
@@ -59,11 +64,14 @@ def _limit_slope_tvd_suff(
     u_new = state.u_new
     cfl = state.cfl
 
+    i_upw = i-1 if cfl > 0 else i+1
+    i_dwn = i+1 if cfl > 0 else i-1
+
     slope_i_1 = np.median(
         [
             0.0,
-            2.0 * (u_old[i + 1] - u_new_i) / (1.0 + cfl),
-            (2.0 / cfl) * (u_old[i] - u_new[i - 1]) / (1.0 + cfl),
+            2.0 * (u_old[i_dwn] - u_new_i) / (1.0 + abs(cfl)),
+            (2.0 / abs(cfl)) * (u_old[i] - u_new[i_upw]) / (1.0 + abs(cfl)),
         ]
     )
 
@@ -72,6 +80,8 @@ def _limit_slope_tvd_suff(
     return slope_i_lim
 
 
+# SLOPE {{{1
+# _compute_slope_box() {{{2
 def _compute_slope_box(state: SolverState, i: int, u_new_i: float) -> float:
     u_old = state.u_old
     cfl = state.cfl
@@ -91,11 +101,13 @@ _limit_slope_types = {
     LimiterType.TVD_SUFF: _limit_slope_tvd_suff,
 }
 
+# _compute_slope_types() {{{2
 _compute_slope_types = {
     SlopeType.BOX: _compute_slope_box,
 }
 
 
+# compute_slope() {{{2
 def compute_slope(
     state: SolverState, i: int, u_new_i: float, reconst_config: ReconstConfig
 ) -> float:
@@ -116,6 +128,8 @@ def compute_slope(
     return slope_i_lim
 
 
+# GUESS {{{1
+# _compute_guess_box() {{{2
 def _compute_guess_box(state: SolverState, i: int) -> float:
     u_old = state.u_old
     u_new = state.u_new
@@ -128,6 +142,7 @@ def _compute_guess_box(state: SolverState, i: int) -> float:
     return u_new_i_guess
 
 
+# _compute_guess_implicit_upwind() {{{2
 def _compute_guess_implicit_upwind(state: SolverState, i: int) -> float:
     u_old = state.u_old
     u_new = state.u_new
@@ -145,6 +160,7 @@ _compute_guess_types = {
 }
 
 
+# compute_guess() {{{2
 def compute_guess(state: SolverState, i: int, reconst_config: ReconstConfig) -> float:
     guess_type = reconst_config.guess_type
     compute_guess_func = _compute_guess_types.get(guess_type)
