@@ -77,24 +77,20 @@ def apply_bc(
         raise ValueError(f"Unsupported BC type: {bc_type}")
     apply_bc_func(state, nghost)
 
-    # Set slope[nghost - 1] boundary condition
-    slope_type = reconst_config.slope_type
-    limiter_type = reconst_config.limiter_type
-
     u_new = state.u_new
     slope = state.slope
     cfl = state.cfl
 
     # first/last idx of the physical domain
     first = nghost
-    # last = -nghost - 1
+    last = -nghost - 1
     if cfl > 0.0:
         i = first - 1
-        slope[i] = compute_slope(
-            state=state,
-            i=i,
-            u_new_i=u_new[i],
-            reconst_config=ReconstConfig(
-                slope_type=slope_type, limiter_type=limiter_type
-            ),
-        )
+    else:
+        i = last + 1
+    slope[i] = compute_slope(
+        state=state,
+        i=i,
+        u_new_i=u_new[i],
+        reconst_config=reconst_config,
+    )

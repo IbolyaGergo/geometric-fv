@@ -76,7 +76,10 @@ def _compute_slope_box(state: SolverState, i: int, u_new_i: float) -> float:
     u_old = state.u_old
     cfl = state.cfl
 
-    slope_i = (u_old[i] - u_new_i) / cfl
+    if np.not_equal(cfl, 0.0):
+        slope_i = (u_old[i] - u_new_i) / cfl
+    else:
+        slope_i = 0.0
 
     return slope_i
 
@@ -118,8 +121,9 @@ def _compute_guess_box(state: SolverState, i: int) -> float:
     u_new = state.u_new
     cfl = state.cfl
 
-    coeff = (1 - cfl) / (1 + cfl)
-    u_new_i_guess = coeff * u_old[i] + u_old[i - 1] - coeff * u_new[i - 1]
+    coeff = (1 - abs(cfl)) / (1 + abs(cfl))
+    i_upw = i-1 if cfl > 0 else i+1
+    u_new_i_guess = coeff * u_old[i] + u_old[i_upw] - coeff * u_new[i_upw]
 
     return u_new_i_guess
 

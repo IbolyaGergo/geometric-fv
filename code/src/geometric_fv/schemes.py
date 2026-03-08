@@ -102,11 +102,9 @@ class SecondOrderImplicit(Scheme):
 
         # fmt: off
         i_upw = i-1 if state.cfl > 0 else i+1
-        if cfl > 0.0:
-            u_new_i_next = (u_old[i] + cfl * u_new[i - 1]) / (1.0 + cfl) \
-                    - 0.5 * cfl * (slope_i_current - slope[i - 1])
-        else:
-            u_new_i_next = (u_old[i] + abs(cfl) * u_new[i_upw]) / (1.0 + abs(cfl))
+        u_new_i_next = \
+                (u_old[i] + abs(cfl) * u_new[i_upw]) / (1.0 + abs(cfl)) \
+                - 0.5 * cfl * (slope_i_current - slope[i_upw])
         # fmt: on
         return u_new_i_next
 

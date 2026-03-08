@@ -110,7 +110,7 @@ def test_SecondOrderImplicit_equals_other_scheme_for_given_limiter(
 @pytest.mark.parametrize(
     ("limiter_type", "guess_type"),
     [
-        # (LimiterType.NONE, GuessType.BOX),
+        (LimiterType.NONE, GuessType.BOX),
         (LimiterType.FULL, GuessType.IMPLICIT_UPWIND)
     ],
 )
@@ -126,6 +126,7 @@ def test_iteration_count_for_exact_guess(limiter_type, guess_type, cfl):
             limiter_type=limiter_type,
             guess_type=guess_type,
         ),
+        boundary=BoundaryConfig(bc_type=BCType.QUASI_PERIODIC),
     )
     scheme = SecondOrderImplicit(config=config)
 
@@ -175,8 +176,15 @@ def test_cell_indices():
     )
     assert len(rev_indices) == ninner
 
-# test_implicit_upwind_mirroring() {{{2
-def test_implicit_upwind_mirroring():
+# test_mirroring() {{{2
+@pytest.mark.parametrize(
+    ("limiter_type", "guess_type"),
+    [
+        (LimiterType.NONE, GuessType.BOX),
+        (LimiterType.FULL, GuessType.IMPLICIT_UPWIND)
+    ],
+)
+def test_mirroring(limiter_type, guess_type):
     """
     Verifies that the Implicit Upwind scheme (SecondOrderImplicit with FULL
     limiter) produces mirrored results for mirrored initial conditions and
@@ -187,8 +195,8 @@ def test_implicit_upwind_mirroring():
         mesh=MeshConfig(ncells=ncells),
         reconst=ReconstConfig(
             slope_type=SlopeType.BOX,
-            limiter_type=LimiterType.FULL,
-            guess_type=GuessType.IMPLICIT_UPWIND,
+            limiter_type=limiter_type,
+            guess_type=guess_type,
         ),
         boundary=BoundaryConfig(bc_type=BCType.QUASI_PERIODIC),
     )

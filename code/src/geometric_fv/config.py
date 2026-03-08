@@ -44,7 +44,7 @@ class MeshConfig:
 @dataclass(frozen=True)
 class ReconstConfig:
     slope_type: SlopeType = SlopeType.BOX
-    limiter_type: LimiterType = LimiterType.TVD
+    limiter_type: LimiterType = LimiterType.NONE
     guess_type: GuessType = GuessType.BOX
 
 
