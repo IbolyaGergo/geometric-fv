@@ -38,16 +38,19 @@ def _limit_slope_tvd(
     slope = state.slope
     cfl = state.cfl
 
+    i_upw = i-1 if cfl > 0 else i+1
+    i_dwn = i+1 if cfl > 0 else i-1
+
     slope_i_1 = np.median(
         [
-            slope[i - 1] - 2.0 * (u_old[i] - u_new[i - 1]) / (1.0 + cfl),
-            slope[i - 1] + 2.0 * (u_old[i] - u_new[i - 1]) / ((cfl) * (1.0 + cfl)),
+            slope[i_upw] - np.sign(cfl) * 2.0 * (u_old[i] - u_new[i_upw]) / (1.0 + abs(cfl)),
+            slope[i_upw] + 2.0 * (u_old[i] - u_new[i_upw]) / (cfl * (1.0 + abs(cfl))),
             slope_i,
         ]
     )
 
     slope_i_lim = np.median(
-        [0.0, slope_i_1, 2.0 * (u_old[i + 1] - u_new_i) / (1.0 + cfl)]
+        [0.0, slope_i_1, np.sign(cfl) * 2.0 * (u_old[i_dwn] - u_new_i) / (1.0 + abs(cfl))]
     )
 
     return slope_i_lim
