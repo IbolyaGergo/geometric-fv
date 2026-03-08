@@ -10,10 +10,12 @@ from geometric_fv.solver import SolverState
 from geometric_fv.utils import simple_fixed_point
 
 
+# Scheme() {{{1
 class Scheme(ABC):
     nghost: int
     config: SolverConfig
 
+    # allocate_state() {{{2
     def allocate_state(self, u0: np.ndarray, cfl: float) -> SolverState:
         """Creates a SolverState from an existing array."""
         u_padded = np.pad(u0, (self.nghost, self.nghost), mode="constant")
@@ -25,6 +27,7 @@ class Scheme(ABC):
             cfl=cfl,
         )
 
+    # init_state() {{{2
     def init_state(
         self, func: Callable[[np.ndarray], np.ndarray], cfl: float
     ) -> SolverState:
@@ -37,6 +40,7 @@ class Scheme(ABC):
 
         return self.allocate_state(u0, cfl)
 
+    # apply_bc() {{{2
     def apply_bc(self, state: SolverState) -> None:
         # Local import to avoid circular dependency at the top of the file
         from geometric_fv.boundary import apply_bc as _apply_bc_kernel
@@ -48,6 +52,7 @@ class Scheme(ABC):
             reconst_config=self.config.reconst,
         )
 
+    # cell_indices() {{{2
     def cell_indices(self, state: SolverState) -> range | reversed[int]:
         """
         Returns an iterator over the internal cell indices.
@@ -66,16 +71,19 @@ class Scheme(ABC):
             return reversed(idx_range)
         return idx_range
 
+    # sweep() {{{2
     @abstractmethod
     def sweep(self, state: SolverState):
         pass
 
 
+# SecondOrderImplicit() {{{1
 @dataclass(frozen=True)
 class SecondOrderImplicit(Scheme):
     nghost: int = 2
     config: SolverConfig = SolverConfig()
 
+    # _update_cell_iter() {{{2
     def _update_cell_iter(
         self,
         u_new_i_current: float,
@@ -102,6 +110,7 @@ class SecondOrderImplicit(Scheme):
         # fmt: on
         return u_new_i_next
 
+    # sweep() {{{2
     def sweep(self, state: SolverState, reverse: bool=False):
         if state.niter is None:
             state.niter = np.zeros_like(state.u_old, dtype=int)
