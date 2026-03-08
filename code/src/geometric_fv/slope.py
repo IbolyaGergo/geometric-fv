@@ -38,19 +38,24 @@ def _limit_slope_tvd(
     slope = state.slope
     cfl = state.cfl
 
-    i_upw = i-1 if cfl > 0 else i+1
-    i_dwn = i+1 if cfl > 0 else i-1
+    i_upw = i - 1 if cfl > 0 else i + 1
+    i_dwn = i + 1 if cfl > 0 else i - 1
 
     slope_i_1 = np.median(
         [
-            slope[i_upw] - np.sign(cfl) * 2.0 * (u_old[i] - u_new[i_upw]) / (1.0 + abs(cfl)),
+            slope[i_upw]
+            - np.sign(cfl) * 2.0 * (u_old[i] - u_new[i_upw]) / (1.0 + abs(cfl)),
             slope[i_upw] + 2.0 * (u_old[i] - u_new[i_upw]) / (cfl * (1.0 + abs(cfl))),
             slope_i,
         ]
     )
 
     slope_i_lim = np.median(
-        [0.0, slope_i_1, np.sign(cfl) * 2.0 * (u_old[i_dwn] - u_new_i) / (1.0 + abs(cfl))]
+        [
+            0.0,
+            slope_i_1,
+            np.sign(cfl) * 2.0 * (u_old[i_dwn] - u_new_i) / (1.0 + abs(cfl)),
+        ]
     )
 
     return slope_i_lim
@@ -67,8 +72,8 @@ def _limit_slope_tvd_suff(
     u_new = state.u_new
     cfl = state.cfl
 
-    i_upw = i-1 if cfl > 0 else i+1
-    i_dwn = i+1 if cfl > 0 else i-1
+    i_upw = i - 1 if cfl > 0 else i + 1
+    i_dwn = i + 1 if cfl > 0 else i - 1
 
     slope_i_1 = np.median(
         [
@@ -139,7 +144,7 @@ def _compute_guess_box(state: SolverState, i: int) -> float:
     cfl = state.cfl
 
     coeff = (1 - abs(cfl)) / (1 + abs(cfl))
-    i_upw = i-1 if cfl > 0 else i+1
+    i_upw = i - 1 if cfl > 0 else i + 1
     u_new_i_guess = coeff * u_old[i] + u_old[i_upw] - coeff * u_new[i_upw]
 
     return u_new_i_guess
@@ -151,7 +156,7 @@ def _compute_guess_implicit_upwind(state: SolverState, i: int) -> float:
     u_new = state.u_new
     cfl = state.cfl
 
-    i_upw = i-1 if state.cfl > 0 else i+1
+    i_upw = i - 1 if state.cfl > 0 else i + 1
     u_new_i_guess = (u_old[i] + abs(cfl) * u_new[i_upw]) / (1.0 + abs(cfl))
 
     return u_new_i_guess
@@ -173,7 +178,7 @@ def compute_guess(state: SolverState, i: int, reconst_config: ReconstConfig) -> 
     u_guess = compute_guess_func(state, i)
 
     if reconst_config.limiter_type != LimiterType.NONE:
-        i_upw = i-1 if state.cfl > 0 else i+1
+        i_upw = i - 1 if state.cfl > 0 else i + 1
         u_guess = np.median([u_guess, state.u_old[i], state.u_new[i_upw]])
 
     return u_guess

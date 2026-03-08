@@ -109,7 +109,7 @@ class SecondOrderImplicit(Scheme):
         return u_new_i_next
 
     # sweep() {{{2
-    def sweep(self, state: SolverState, reverse: bool=False):
+    def sweep(self, state: SolverState, reverse: bool = False):
         if state.niter is None:
             state.niter = np.zeros_like(state.u_old, dtype=int)
 
@@ -127,8 +127,7 @@ class SecondOrderImplicit(Scheme):
             )
             if result.success:
                 state.u_new[i] = result.x
-                state.slope[i] = compute_slope(state, i, result.x,
-                                               self.config.reconst)
+                state.slope[i] = compute_slope(state, i, result.x, self.config.reconst)
                 state.niter[i] = result.nit
 
                 # print(f"Cell {i} converged in {state.niter[i]} number of iterations.")

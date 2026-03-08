@@ -109,10 +109,7 @@ def test_SecondOrderImplicit_equals_other_scheme_for_given_limiter(
 @pytest.mark.parametrize("cfl", [1.2, -1.2])
 @pytest.mark.parametrize(
     ("limiter_type", "guess_type"),
-    [
-        (LimiterType.NONE, GuessType.BOX),
-        (LimiterType.FULL, GuessType.IMPLICIT_UPWIND)
-    ],
+    [(LimiterType.NONE, GuessType.BOX), (LimiterType.FULL, GuessType.IMPLICIT_UPWIND)],
 )
 def test_iteration_count_for_exact_guess(limiter_type, guess_type, cfl):
     """
@@ -176,6 +173,7 @@ def test_cell_indices():
     )
     assert len(rev_indices) == ninner
 
+
 # test_mirroring() {{{2
 @pytest.mark.parametrize(
     ("limiter_type", "guess_type"),
@@ -192,7 +190,7 @@ def test_mirroring(limiter_type, guess_type):
     limiter) produces mirrored results for mirrored initial conditions and
     opposite CFL.
     """
-    ncells=20
+    ncells = 20
     config = SolverConfig(
         mesh=MeshConfig(ncells=ncells),
         reconst=ReconstConfig(
