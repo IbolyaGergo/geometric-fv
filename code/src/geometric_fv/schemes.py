@@ -136,3 +136,71 @@ class SecondOrderImplicit(Scheme):
                 print(f"Message: {result.message}")
 
                 state.u_new[i] = u_new_i_guess
+
+# BurgersImplicit() {{{1
+@dataclass(frozen=True)
+class BurgersImplicit(Scheme):
+    nghost: int = 2
+    config: SolverConfig = SolverConfig()
+
+    # _update_cell_iter() {{{2
+    def _update_cell_iter(
+        self,
+        u_new_i_current: float,
+        state: SolverState,
+        i: int,
+    ) -> float:
+        u_old = state.u_old
+        u_new = state.u_new
+        slope = state.slope
+
+        cfl = state.cfl
+
+        slope_i_current = compute_slope(
+            state, i=i, u_new_i=u_new_i_current, reconst_config=self.config.reconst
+        )
+
+        a_im1 = (u_old[i - 1] + u_new[i - 1]) / 2.0
+        a_i = (u_old[i] + u_new_i_current) / 2.0
+
+        mu_im1 = cfl * a_im1
+        c_im1 = mu_im1 * (1 + mu_im1) * 0.5*slope[i-1] 
+
+        mu_i = cfl * a_i
+        c_i = mu_i * (1 + mu_i) * 0.5*slope_i_current 
+
+        u_new_i_next = \
+            (-1 + np.sqrt(1 + 2 * cfl * \
+            (u_old[i] + (cfl / 2.0) * (u_new[i - 1])**2 \
+            - c_i + c_im1))) / cfl
+        return u_new_i_next
+
+    # sweep() {{{2
+    def sweep(self, state: SolverState):
+        for i in self.cell_indices(state):
+            u_old = state.u_old
+            u_new = state.u_new
+            cfl = state.cfl
+
+            u_new_i_guess = \
+            (-1 + np.sqrt(1 + 2 * cfl * u_old[i] + (cfl * u_new[i - 1])**2)) / cfl
+
+            result = simple_fixed_point(
+                self._update_cell_iter,
+                u_new_i_guess,
+                args=(state, i),
+                tol=self.config.iteration.tol,
+                maxiter=self.config.iteration.maxiter,
+            )
+
+            if result.success:
+                state.u_new[i] = result.x
+                state.slope[i] = compute_slope(state, i, result.x, self.config.reconst)
+                state.niter[i] = result.nit
+
+                # print(f"Cell {i} converged in {state.niter[i]} number of iterations.")
+            else:
+                print(f"Warning: Solver failed to converge at cell {i}.")
+                print(f"Message: {result.message}")
+
+                state.u_new[i] = u_new_i_guess
