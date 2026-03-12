@@ -109,7 +109,7 @@ class SecondOrderImplicit(Scheme):
         return u_new_i_next
 
     # sweep() {{{2
-    def sweep(self, state: SolverState, reverse: bool = False):
+    def sweep(self, state: SolverState):
         if state.niter is None:
             state.niter = np.zeros_like(state.u_old, dtype=int)
 
