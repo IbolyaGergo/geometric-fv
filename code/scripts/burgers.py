@@ -18,7 +18,7 @@ ncells = 100
 
 bc_type = BCType.CONSTANT_EXTEND
 slope_type = SlopeType.BOX
-limiter_type = LimiterType.FULL
+limiter_type = LimiterType.NONE
 guess_type = GuessType.BOX
 
 config = SolverConfig(
@@ -39,7 +39,7 @@ ncells = mesh.ncells
 
 # u0 = np.sin(2 * np.pi * x_c)
 # u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 1, 0])
-u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [1, 1, 0])
+u0 = np.piecewise(x_c, [x_c < 0.5, x_c >= 0.5], [1, 0])
 # u0 = np.e**(-(x_c - 0.25)**2*100)
 
 cfl = 1.8
