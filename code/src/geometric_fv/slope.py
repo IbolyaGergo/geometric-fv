@@ -162,6 +162,7 @@ def _compute_guess_implicit_upwind(state: SolverState, i: int) -> float:
     return u_new_i_guess
 
 
+# _compute_guess_types {{{2
 _compute_guess_types = {
     GuessType.IMPLICIT_UPWIND: _compute_guess_implicit_upwind,
     GuessType.BOX: _compute_guess_box,

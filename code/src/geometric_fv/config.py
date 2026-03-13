@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from geometric_fv.mesh import Mesh1D
 
 
+# MeshConfig {{{1
 @dataclass(frozen=True)
 class MeshConfig:
     """
@@ -41,6 +42,7 @@ class MeshConfig:
         return Mesh1D.uniform(self.x_min, self.x_max, self.ncells)
 
 
+# ReconstConfig {{{1
 @dataclass(frozen=True)
 class ReconstConfig:
     slope_type: SlopeType = SlopeType.BOX
@@ -48,17 +50,20 @@ class ReconstConfig:
     guess_type: GuessType = GuessType.BOX
 
 
+# BoundaryConfig {{{1
 @dataclass(frozen=True)
 class BoundaryConfig:
     bc_type: BCType = BCType.QUASI_PERIODIC
 
 
+# IterationConfig {{{1
 @dataclass(frozen=True)
 class IterationConfig:
     tol: float = 1e-6
     maxiter: int = 50
 
 
+# SolverConfig {{{1
 @dataclass(frozen=True)
 class SolverConfig:
     mesh: MeshConfig = MeshConfig()
