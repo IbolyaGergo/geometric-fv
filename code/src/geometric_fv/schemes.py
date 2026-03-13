@@ -5,7 +5,7 @@ from typing import Callable
 import numpy as np
 
 from geometric_fv.config import SolverConfig
-from geometric_fv.slope import compute_guess, compute_slope
+from geometric_fv.slope import compute_guess, compute_slope, compute_speed
 from geometric_fv.solver import SolverState
 from geometric_fv.utils import simple_fixed_point
 
@@ -23,6 +23,7 @@ class Scheme(ABC):
             u_old=u_padded.copy(),
             u_new=u_padded.copy(),
             slope=np.zeros_like(u_padded),
+            speed=np.ones_like(u_padded),
             niter=np.zeros_like(u_padded, dtype=int),
             cfl=cfl,
         )
@@ -143,6 +144,10 @@ class BurgersImplicit(Scheme):
     nghost: int = 2
     config: SolverConfig = SolverConfig()
 
+    # _compute_flux() {{{2
+    def _compute_flux(self, u: float):
+        return 0.5 * (u * u)
+
     # _update_cell_iter() {{{2
     def _update_cell_iter(
         self,
@@ -161,7 +166,9 @@ class BurgersImplicit(Scheme):
         )
 
         a_im1 = (u_old[i - 1] + u_new[i - 1]) / 2.0
-        a_i = (u_old[i] + u_new_i_current) / 2.0
+        a_i = compute_speed(state, i=i, u_new_i=u_new_i_current,
+                            flux=self._compute_flux,
+                            reconst_config=self.config.reconst)
 
         mu_im1 = cfl * a_im1
         c_im1 = mu_im1 * (1 + mu_im1) * 0.5*slope[i-1] 
@@ -171,7 +178,7 @@ class BurgersImplicit(Scheme):
 
         u_new_i_next = \
             (-1 + np.sqrt(1 + 2 * cfl * \
-            (u_old[i] + (cfl / 2.0) * (u_new[i - 1])**2 \
+            (u_old[i] + cfl * self._compute_flux(u_new[i - 1]) \
             - c_i + c_im1))) / cfl
         return u_new_i_next
 

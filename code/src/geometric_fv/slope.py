@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Callable
 
 from geometric_fv.config import ReconstConfig
 from geometric_fv.enums import GuessType, LimiterType, SlopeType
@@ -183,3 +184,32 @@ def compute_guess(state: SolverState, i: int, reconst_config: ReconstConfig) -> 
         u_guess = np.median([u_guess, state.u_old[i], state.u_new[i_upw]])
 
     return u_guess
+
+# SPEED {{{1
+# _compute_speed_box() {{{2
+def _compute_speed_box(state: SolverState, i: int, u_new_i: float, flux: Callable[[float], float]):
+    u_old = state.u_old
+    u_new = state.u_new
+    cfl = state.cfl
+
+    df = flux(u_old[i]) - flux(u_new_i)
+    du = u_old[i] - u_new_i
+    if np.equal(du, 0.0):
+        return u_old[i] # TODO: only works for Burgers'
+    else:
+        return df / du
+
+# _compute_guess_types {{{2
+_compute_speed_types = {
+    SlopeType.BOX: _compute_speed_box,
+}
+
+
+# compute_speed() {{{1
+def compute_speed(state: SolverState, i: int, u_new_i: float, flux: Callable[[float], float],
+                  reconst_config: ReconstConfig) -> float:
+    slope_type = reconst_config.slope_type
+    compute_speed_func = _compute_speed_types.get(slope_type)
+    if compute_speed_func is None:
+        raise ValueError(f"Unsupported slope type: {slope_type}")
+    return compute_speed_func(state, i, u_new_i, flux)

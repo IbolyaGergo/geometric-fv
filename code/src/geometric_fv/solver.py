@@ -12,3 +12,4 @@ class SolverState:
     slope: np.ndarray
     cfl: float
     niter: np.ndarray | None = None
+    speed: np.ndarray | None = None
