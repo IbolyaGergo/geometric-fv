@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
+from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType, FluxType
 
 if TYPE_CHECKING:
     from geometric_fv.mesh import Mesh1D
@@ -48,6 +48,7 @@ class ReconstConfig:
     slope_type: SlopeType = SlopeType.BOX
     limiter_type: LimiterType = LimiterType.NONE
     guess_type: GuessType = GuessType.BOX
+    flux_type: FluxType = FluxType.BURGERS
 
 
 # BoundaryConfig {{{1

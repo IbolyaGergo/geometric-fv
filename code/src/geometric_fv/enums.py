@@ -20,3 +20,8 @@ class LimiterType(Enum):
 class GuessType(Enum):
     IMPLICIT_UPWIND = 0
     BOX = 1
+
+
+class FluxType(Enum):
+    BURGERS = 0
+    LINEAR_ADVECTION = 0
