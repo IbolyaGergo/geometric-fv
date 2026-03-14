@@ -60,7 +60,7 @@ class BoundaryConfig:
 # IterationConfig {{{1
 @dataclass(frozen=True)
 class IterationConfig:
-    tol: float = 1e-6
+    tol: float = 1e-9
     maxiter: int = 50
 
 

@@ -5,8 +5,9 @@ import pytest
 
 from geometric_fv.config import BoundaryConfig, MeshConfig, ReconstConfig, SolverConfig
 from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
-from geometric_fv.schemes import Scheme, SecondOrderImplicit
+from geometric_fv.schemes import Scheme, SecondOrderImplicit, HighResImplicit
 from geometric_fv.solver import SolverState
+from geometric_fv.equations import Burgers, LinearAdvection
 
 
 # SETUP {{{1
@@ -21,15 +22,16 @@ class ImplicitUpwind(Scheme):
     config: SolverConfig = SolverConfig()
 
     def sweep(self, state: SolverState):
-        cfl = state.cfl
+        eq = self.config.equation
+
         u_old = state.u_old
         u_new = state.u_new
-        nghost = self.nghost
+        cfl = state.cfl
 
-        coeff = 1.0 / (1.0 + cfl)
-        for i in range(nghost, len(u_old) - nghost):
-            u_new[i] = coeff * (u_old[i] + cfl * u_new[i - 1])
-
+        for i in self.cell_indices(state):
+            # For positive CFL: u_i + cfl*f(u_i) = u_old_i + cfl*f(u_im1)
+            rhs = u_old[i] + cfl * eq.flux(u_new[i-1])
+            u_new[i] = eq.solve_for_u(rhs, cfl)
 
 # Box(Scheme) {{{2
 @dataclass(frozen=True)
@@ -52,8 +54,11 @@ class Box(Scheme):
             u_new[i] = coeff * (u_old[i] - u_new[i - 1]) + u_old[i - 1]
 
 
+# functions {{{2
 def sine_wave(x):
     return np.sin(2 * np.pi * x)
+def abs_sine_wave(x):
+    return abs(np.sin(2 * np.pi * x))
 
 
 # TESTs {{{1
@@ -78,31 +83,42 @@ def test_constant_solution(val):
     np.testing.assert_allclose(inner_solution, val, err_msg=f"Failed for val={val}")
 
 
-# test_SecondOrderImplicit_equals_other_scheme_for_given_limiter() {{{2
+# test_HighResImplicit_equals_other_scheme_for_given_limiter() {{{2
+@pytest.mark.parametrize("equation", [LinearAdvection(a=1.0), Burgers()])
 @pytest.mark.parametrize(
     ("scheme_other", "limiter_type"),
     [(ImplicitUpwind, LimiterType.FULL), (Box, LimiterType.NONE)],
 )
-def test_SecondOrderImplicit_equals_other_scheme_for_given_limiter(
-    scheme_other, limiter_type
+def test_HighResImplicit_equals_other_scheme_for_given_limiter(
+    equation, scheme_other, limiter_type
 ):
+    """
+    Verifies that HighResImplicit correctly collapses to 1st-order, or Box
+    scheme (in case of LinearAdvection) when limiter is FULL or NONE
+    respectively.
+    """
+    if scheme_other == Box and not isinstance(equation, LinearAdvection):
+        pytest.skip("Box reference is only implemented for Linear Advection")
+
     config = SolverConfig(
+        equation=equation,
         mesh=MeshConfig(ncells=20),
-        reconst=ReconstConfig(slope_type=SlopeType.BOX, limiter_type=limiter_type),
+        reconst=ReconstConfig(limiter_type=limiter_type),
     )
     cfl = 1.6
 
-    scheme_2ndo = SecondOrderImplicit(config=config)
-    state_2ndo = scheme_2ndo.init_state(sine_wave, cfl=cfl)
+    # abs_sine_wave, because Burgers works only for a > 0 yet
+    scheme_hr = HighResImplicit(config=config)
+    state_hr = scheme_hr.init_state(abs_sine_wave, cfl=cfl)
 
     scheme_other = scheme_other(config=config)
-    state_other = scheme_other.init_state(sine_wave, cfl=cfl)
+    state_other = scheme_other.init_state(abs_sine_wave, cfl=cfl)
 
-    for s, st in [(scheme_2ndo, state_2ndo), (scheme_other, state_other)]:
+    for s, st in [(scheme_hr, state_hr), (scheme_other, state_other)]:
         s.apply_bc(st)
         s.sweep(st)
 
-    np.testing.assert_allclose(state_2ndo.u_new, state_other.u_new)
+    np.testing.assert_allclose(state_hr.u_new, state_other.u_new)
 
 
 # test_iteration_count_for_exact_guess() {{{2
