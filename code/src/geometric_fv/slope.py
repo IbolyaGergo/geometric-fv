@@ -2,7 +2,7 @@ import numpy as np
 from typing import Callable
 
 from geometric_fv.config import ReconstConfig
-from geometric_fv.enums import GuessType, LimiterType, SlopeType, FluxType
+from geometric_fv.enums import GuessType, LimiterType, SlopeType
 from geometric_fv.solver import SolverState
 
 
@@ -186,56 +186,3 @@ def compute_guess(state: SolverState, i: int, reconst_config: ReconstConfig) -> 
         u_guess = np.median([u_guess, state.u_old[i], state.u_new[i_upw]])
 
     return u_guess
-
-# FLUX {{{1
-def _flux_burgers(u: float) -> float:
-    return 0.5 * u * u
-def _dfdu_burgers(u: float) -> float:
-    return u
-# def _flux_linear(u: float) -> float:
-#     return u
-# def _dfdu_linear(u: float) -> float:
-#     return 1
-
-_flux_types = {
-        FluxType.BURGERS: _flux_burgers,
-        # FluxType.LINEAR_ADVECTION: _flux_linear,
-        }
-
-def compute_flux(u: float, flux_type: FluxType) -> float:
-    flux_func = _flux_types.get(flux_type)
-    if flux_func is None:
-        raise ValueError(f"Unsupported flux type: {flux_type}")
-    return flux_func(u)
-
-# SPEED {{{1
-# _compute_speed_box() {{{2
-def _compute_speed_box(state: SolverState, i: int, u_new_i: float, compute_flux: Callable[[float], float]):
-    u_old = state.u_old
-    u_new = state.u_new
-    cfl = state.cfl
-
-    dfdu_exact = _dfdu_burgers
-
-    df = compute_flux(u_old[i]) - compute_flux(u_new_i)
-    du = u_old[i] - u_new_i
-    if np.equal(du, 0.0):
-        return dfdu_exact(u_old[i]) # TODO: only works for Burgers'
-    else:
-        return df / du
-
-# _compute_speed_types {{{2
-_compute_speed_types = {
-    SlopeType.BOX: _compute_speed_box,
-}
-
-
-# compute_speed() {{{1
-def compute_speed(state: SolverState, i: int, u_new_i: float,
-                  reconst_config: ReconstConfig) -> float:
-    slope_type = reconst_config.slope_type
-    compute_speed_func = _compute_speed_types.get(slope_type)
-    if compute_speed_func is None:
-        raise ValueError(f"Unsupported slope type: {slope_type}")
-    flux = _flux_burgers
-    return compute_speed_func(state, i, u_new_i, flux)

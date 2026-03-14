@@ -5,7 +5,7 @@ from typing import Callable
 import numpy as np
 
 from geometric_fv.config import SolverConfig
-from geometric_fv.slope import compute_guess, compute_slope, compute_speed, compute_flux
+from geometric_fv.slope import compute_guess, compute_slope
 from geometric_fv.solver import SolverState
 from geometric_fv.utils import simple_fixed_point
 
@@ -52,10 +52,6 @@ class Scheme(ABC):
             config=self.config.boundary,
             reconst_config=self.config.reconst,
         )
-
-    # flux() {{{2
-    def flux(self, u: float) -> float:
-        return compute_flux(u, self.config.reconst.flux_type)
 
     # cell_indices() {{{2
     def cell_indices(self, state: SolverState) -> range | reversed[int]:
@@ -142,9 +138,9 @@ class SecondOrderImplicit(Scheme):
 
                 state.u_new[i] = u_new_i_guess
 
-# BurgersImplicit() {{{1
+# HighResImplicit() {{{1
 @dataclass(frozen=True)
-class BurgersImplicit(Scheme):
+class HighResImplicit(Scheme):
     nghost: int = 2
     config: SolverConfig = SolverConfig()
 
@@ -158,6 +154,7 @@ class BurgersImplicit(Scheme):
         u_old = state.u_old
         u_new = state.u_new
         slope = state.slope
+        eq = self.config.equation
 
         cfl = state.cfl
 
@@ -165,9 +162,8 @@ class BurgersImplicit(Scheme):
             state, i=i, u_new_i=u_new_i_current, reconst_config=self.config.reconst
         )
 
-        a_im1 = (u_old[i - 1] + u_new[i - 1]) / 2.0
-        a_i = compute_speed(state, i=i, u_new_i=u_new_i_current,
-                            reconst_config=self.config.reconst)
+        a_im1 = eq.speed(u_old[i - 1], u_new[i-1])
+        a_i = eq.speed(u_old[i], u_new_i_current)
 
         mu_im1 = cfl * a_im1
         c_im1 = mu_im1 * (1 + mu_im1) * 0.5*slope[i-1] 
@@ -175,11 +171,8 @@ class BurgersImplicit(Scheme):
         mu_i = cfl * a_i
         c_i = mu_i * (1 + mu_i) * 0.5*slope_i_current 
 
-        u_new_i_next = \
-            (-1 + np.sqrt(1 + 2 * cfl * \
-            (u_old[i] + cfl * self.flux(u_new[i - 1]) \
-            - c_i + c_im1))) / cfl
-        return u_new_i_next
+        rhs = u_old[i] + cfl * eq.flux(u_new[i - 1]) - c_i + c_im1
+        return eq.solve_for_u(rhs, cfl)
 
     # sweep() {{{2
     def sweep(self, state: SolverState):
@@ -187,9 +180,9 @@ class BurgersImplicit(Scheme):
             u_old = state.u_old
             u_new = state.u_new
             cfl = state.cfl
+            eq = self.config.equation
 
-            u_new_i_guess = \
-            (-1 + np.sqrt(1 + 2 * cfl * u_old[i] + (cfl * u_new[i - 1])**2)) / cfl
+            u_new_i_guess = eq.initial_guess(u_old[i], u_new[i-1], cfl)
 
             result = simple_fixed_point(
                 self._update_cell_iter,

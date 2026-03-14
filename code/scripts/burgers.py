@@ -9,7 +9,8 @@ from geometric_fv.config import (
     SolverConfig,
 )
 from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
-from geometric_fv.schemes import BurgersImplicit, SecondOrderImplicit
+from geometric_fv.schemes import HighResImplicit, SecondOrderImplicit
+from geometric_fv.equations import Burgers, LinearAdvection
 
 # Mesh
 x_min = 0.0
@@ -28,9 +29,10 @@ config = SolverConfig(
         slope_type=slope_type, limiter_type=limiter_type, guess_type=guess_type
     ),
     iteration=IterationConfig(tol=1e-6, maxiter=50),
+    equation=Burgers(),
 )
 
-scheme = BurgersImplicit(config=config)
+scheme = HighResImplicit(config=config)
 nghost = scheme.nghost
 
 mesh = config.mesh.create_mesh()
@@ -38,11 +40,11 @@ x_c = mesh.centers
 ncells = mesh.ncells
 
 # u0 = np.sin(2 * np.pi * x_c)
-# u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 1, 0])
-u0 = np.piecewise(x_c, [x_c < 0.5, x_c >= 0.5], [1, 0])
+u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 1, 0])
+# u0 = np.piecewise(x_c, [x_c < 0.5, x_c >= 0.5], [1, 0])
 # u0 = np.e**(-(x_c - 0.25)**2*100)
 
-cfl = 1.8
+cfl = 0.8
 
 state = scheme.allocate_state(u0, cfl=cfl)
 
