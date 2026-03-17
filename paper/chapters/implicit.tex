@@ -682,3 +682,54 @@ Assuming \(r_i>0\)(monotone section), a sufficient condition for the limiter is
 While the sufficient condition guarantees monotonicity, it is often overly restrictive, leading to excessive numerical diffusion.
 As in \cite{frolkovic2023high}, we will solve the resulting system of equations by sweeping.
 This way we can utilize the necessary condition, in which the limiter from the neighbor cell \(\Psi_{i-1}\) relaxes the condition on the limiter so that we can have a sharper solution.
+
+\subsection{General Limiters}%
+\label{sub:implicit_limiter_general}
+
+To construct high-resolution schemes that remain monotonic, we often use slope limiters.
+Many limiters are constructed to mimic the behavior of keeping the solution within the bounds of its neighbors, a property that can be elegantly enforced using a median function.
+Before discussing specific limiters, we define the \texttt{minmod} and \texttt{median} functions.
+The \texttt{minmod} function is defined as:
+\[
+    \text{minmod}(a, b) = \frac{1}{2}(\text{sgn}(a) + \text{sgn}(b))\min(|a|, |b|).
+\]
+It selects the argument with the smallest absolute value if both have the same sign, and returns zero otherwise.
+The median of three values can be expressed using the \texttt{minmod} function as:
+\[
+    \text{median}(x, y, z) = x + \text{minmod}(y-x, z-x).
+\]
+
+Now, let's consider a general high-order implicit flux written as a correction to the first-order implicit upwind flux:
+\[
+    F_{i+1/2}^{\text{lim}} = a \left[ u_{i}^{n+1} + \delta_{i+1/2}^{\text{lim}} \right].
+\]
+Here, \(a \delta_{i+1/2}^{\text{lim}}\) is the limited high-order correction term. Substituting this into the finite volume update formula, \(u_i^{n+1} = u_i^n - (\Delta t/\Delta x)(F_{i+1/2} - F_{i-1/2})\), yields:
+\[
+    u_i^{n+1} = u_i^n - \nu \left( (u_{i}^{n+1} - u_{i-1}^{n+1}) + (\delta_{i+1/2}^{\text{lim}} - \delta_{i-1/2}^{\text{lim}}) \right).
+\]
+To satisfy the IURC, we derive a general constraint on the corrections.
+Rearranging the equation gives:
+\begin{equation*}
+    \left( u_{i}^{n+1}-u_{i}^{n} \right) (1+\nu)
+    = \nu \left( u_{i-1}^{n+1}-u_{i}^{n} \right) -\nu \left( \delta_{i+1/2}^{\text{lim}} - \delta_{i-1/2}^{\text{lim}} \right).
+\end{equation*}
+Provided \(u_{i-1}^{n+1}-u_{i}^{n} \neq 0\), we can write the IURC ratio as:
+\begin{equation*}
+    \frac{u_{i}^{n+1}-u_{i}^{n}}{u_{i-1}^{n+1}-u_{i}^{n}}
+    = \frac{\nu}{1+\nu} - \frac{\nu}{1+\nu} \frac{ \delta_{i+1/2}^{\text{lim}} - \delta_{i-1/2}^{\text{lim}} }{u_{i-1}^{n+1}-u_{i}^{n}}.
+\end{equation*}
+The IURC requires this ratio to be in \([0, 1]\).
+While both bounds are necessary to guarantee strict monotonicity, the lower bound, \(0 \le \frac{u_{i}^{n+1}-u_{i}^{n}}{u_{i-1}^{n+1}-u_{i}^{n}}\), is considered the primary constraint for several reasons.
+First, it directly prevents the formation of new local minima (undershoots), which is a common failure mode for many unlimited high-order schemes, particularly near sharp gradients.
+The condition derived from this bound,
+\[
+    \delta_{i+1/2}^{\text{lim}} - \delta_{i-1/2}^{\text{lim}} \le u_{i-1}^{n+1} - u_i^n,
+\]
+has a clear physical interpretation: the net anti-diffusive correction across a cell cannot exceed the available "room" for the update, defined by the difference between the upwind state and the cell's current state.
+In contrast, the upper bound, \(\frac{u_{i}^{n+1}-u_{i}^{n}}{u_{i-1}^{n+1}-u_{i}^{n}} \le 1\), which prevents overshoots, leads to the condition \(-1/\nu \le \frac{\delta_{i+1/2}^{\text{lim}} - \delta_{i-1/2}^{\text{lim}}}{u_{i-1}^{n+1}-u_{i}^{n}}\).
+This second constraint is dependent on the Courant number and is often automatically satisfied by standard limiter formulations once the more restrictive lower bound is met.
+Thus, ensuring the lower-bound condition is the crucial step in suppressing the most prominent oscillations of the underlying high-order scheme.
+This primary condition is analogous to the constraints for explicit limiters, but relates the correction terms to the solution at the new time level.
+Specific limiter functions, such as van Leer's, can be adapted to this implicit framework to define the correction \(\delta_{i+1/2}^{\text{lim}}\) in a way that satisfies this condition.
+
+While the limiters are expressed via the median function for theoretical clarity, they are implemented using hardware-optimized min/max operations to avoid branching and floating-point divisions, ensuring high computational efficiency.
