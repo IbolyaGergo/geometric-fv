@@ -45,17 +45,23 @@ PYTHON_DIRS := src test scripts
 .PHONY: test
 test: ## Run tests using pytest.
 	@echo "Running tests..."
-	@pytest
+	@pytest --tb=short --quiet
 
 .PHONY: lint
 lint:
-	@echo "Linting..."
-	@ruff check $(PYTHON_DIRS)
+	@ruff check --output-format=concise $(PYTHON_DIRS)
+
+.PHONY: lint-file
+lint-file:
+	@ruff check --output-format=concise $(FILE)
 
 .PHONY: format
 format:
-	@echo "Formatting..."
 	@ruff format $(PYTHON_DIRS)
+
+.PHONY: format-file
+format-file:
+	@ruff format $(FILE)
 
 .PHONY: type
 type:

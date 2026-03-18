@@ -8,9 +8,8 @@ name = "geometric_fv"
 version = "0.1.0"
 
 [tool.pytest]
-# -ra : short test summary
 # --showlocals : traceback local variables
-addopts = ["-ra", "--showlocals"]
+addopts = ["--showlocals"]
 strict = true
 # all warnings will cause tests to fail
 filterwarnings = ["error"]
