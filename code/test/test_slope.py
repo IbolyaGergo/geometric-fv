@@ -13,20 +13,20 @@ from geometric_fv.solver import SolverState
 # TESTs {{{1
 # test_compute_slope_Box() {{{2
 def test_compute_slope_Box():
-    # slope = (u_old[i] - u_new[i]) / cfl
+    # slope = (u_old[i] - u_new[i]) / dt_dx
 
     u_old = np.array([4])
     u_new = np.array([1])
     slope = np.zeros(len(u_old))
 
-    cfl = 1.5
+    dt_dx = 1.5
     i = 0
 
     slope_type = SlopeType.BOX
     limiter_type = LimiterType.NONE
     reconst_config = ReconstConfig(slope_type=slope_type, limiter_type=limiter_type)
 
-    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, dt_dx=dt_dx)
     slope_i = compute_slope(state, i, u_new_i=u_new[i], reconst_config=reconst_config)
     assert pytest.approx(slope_i) == 2.0
 
@@ -36,7 +36,7 @@ def test_compute_slope_Box():
 
 # test_compute_slope_Box_indexing() {{{2
 def test_compute_slope_Box_indexing():
-    # slope = (u_old[i] - u_new[i]) / cfl
+    # slope = (u_old[i] - u_new[i]) / dt_dx
     ncells = 20
     u_old = np.zeros(ncells)
     u_new = np.zeros(ncells)
@@ -46,26 +46,26 @@ def test_compute_slope_Box_indexing():
     u_new[i] = 6
     slope = np.array([0.0])
 
-    cfl = 1.2
+    dt_dx = 1.2
 
     slope_type = SlopeType.BOX
     limiter_type = LimiterType.NONE
     reconst_config = ReconstConfig(slope_type=slope_type, limiter_type=limiter_type)
 
-    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, dt_dx=dt_dx)
     slope_i = compute_slope(state, i, u_new_i=u_new[i], reconst_config=reconst_config)
 
     assert pytest.approx(slope_i) == 3.0
 
 
 # test_tvd_suff_properties_hypothesis() {{{2
-# We want arrays of length 3 (i-1, i, i+1) and positive CFL values
+# We want arrays of length 3 (i-1, i, i+1) and positive dt_dx values
 u_st = hnp(np.float64, 3, elements=st.floats(-1e6, 1e6))
-cfl_st = st.floats(0.1, 2.0)
+dt_dx_st = st.floats(0.1, 2.0)
 
 
-@given(u_old=u_st, u_new=u_st, cfl=cfl_st)
-def test_limit_slope_tvd_suff_properties_hypothesis(u_old, u_new, cfl):
+@given(u_old=u_st, u_new=u_st, dt_dx=dt_dx_st)
+def test_limit_slope_tvd_suff_properties_hypothesis(u_old, u_new, dt_dx):
     """
     Hypothesis will automatically try edge cases: 0.0, NaN, Inf, very
     small/large differences, etc.
@@ -73,13 +73,13 @@ def test_limit_slope_tvd_suff_properties_hypothesis(u_old, u_new, cfl):
     reconst_config = ReconstConfig(
         slope_type=SlopeType.BOX, limiter_type=LimiterType.TVD_SUFF
     )
-    state = SolverState(u_old=u_old, u_new=u_new, slope=np.zeros(3), cfl=cfl)
+    state = SolverState(u_old=u_old, u_new=u_new, slope=np.zeros(3), dt_dx=dt_dx)
 
     # Calculate theoretical bounds (The "Oracle")
     i = 1
-    slope_box = (u_old[i] - u_new[i]) / cfl
-    A = 2.0 * (u_old[i + 1] - u_new[i]) / (1.0 + cfl)
-    B = (2.0 / cfl) * (u_old[i] - u_new[i - 1]) / (1.0 + cfl)
+    slope_box = (u_old[i] - u_new[i]) / dt_dx
+    A = 2.0 * (u_old[i + 1] - u_new[i]) / (1.0 + dt_dx)
+    B = (2.0 / dt_dx) * (u_old[i] - u_new[i - 1]) / (1.0 + dt_dx)
 
     # Act
     slope_lim = compute_slope(state, i, u_new[i], reconst_config)
@@ -102,16 +102,16 @@ def test_limit_slope_tvd_suff_properties_hypothesis(u_old, u_new, cfl):
 ncells = 4
 u_st = hnp(np.float64, ncells, elements=st.floats(-10, 10))
 slope_st = hnp(np.float64, ncells, elements=st.floats(-10, 10))
-cfl_st = st.floats(0.1, 2.0)
+dt_dx_st = st.floats(0.1, 2.0)
 
 
-@given(u_old=u_st, u_new=u_st, slope=slope_st, cfl=cfl_st)
-def test_limit_slope_tvd_necessary_properties_hypothesis(u_old, u_new, slope, cfl):
+@given(u_old=u_st, u_new=u_st, slope=slope_st, dt_dx=dt_dx_st)
+def test_limit_slope_tvd_necessary_properties_hypothesis(u_old, u_new, slope, dt_dx):
     config_suff = ReconstConfig(
         slope_type=SlopeType.BOX, limiter_type=LimiterType.TVD_SUFF
     )
     config_nec = ReconstConfig(slope_type=SlopeType.BOX, limiter_type=LimiterType.TVD)
-    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, cfl=cfl)
+    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, dt_dx=dt_dx)
 
     # Make sure slope[i-1] is properly bounded
     i = 2
@@ -120,8 +120,8 @@ def test_limit_slope_tvd_necessary_properties_hypothesis(u_old, u_new, slope, cf
     slope_suff = compute_slope(state, i, u_new[i], config_suff)
     slope_nec = compute_slope(state, i, u_new[i], config_nec)
 
-    A = 2.0 * (u_old[i + 1] - u_new[i]) / (1.0 + cfl)
-    B = (2.0 / cfl) * (u_old[i] - u_new[i - 1]) / (1.0 + cfl)
+    A = 2.0 * (u_old[i + 1] - u_new[i]) / (1.0 + dt_dx)
+    B = (2.0 / dt_dx) * (u_old[i] - u_new[i - 1]) / (1.0 + dt_dx)
 
     # Downwind limit
     assert abs(slope_nec) <= abs(A) + 1e-12
@@ -129,5 +129,5 @@ def test_limit_slope_tvd_necessary_properties_hypothesis(u_old, u_new, slope, cf
     # Necessary should be less restrictive
     assert abs(slope_nec) >= abs(slope_suff) - 1e-12
 
-    assert np.sign(B) * (-cfl * B + slope[i - 1]) <= np.sign(B) * slope_nec + 1e-12
+    assert np.sign(B) * (-dt_dx * B + slope[i - 1]) <= np.sign(B) * slope_nec + 1e-12
     assert np.sign(B) * (B + slope[i - 1]) >= np.sign(B) * slope_nec - 1e-12

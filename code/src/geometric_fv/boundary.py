@@ -36,7 +36,7 @@ def _apply_bc_constant_extend(state: SolverState, nghost: int) -> None:
 def _apply_bc_quasi_periodic(state: SolverState, nghost: int) -> None:
     u_old = state.u_old
     u_new = state.u_new
-    cfl = state.cfl
+    dt_dx = state.dt_dx
 
     # first/last idx of the physical domain
     first = nghost
@@ -48,14 +48,14 @@ def _apply_bc_quasi_periodic(state: SolverState, nghost: int) -> None:
 
         # New values
         # fmt: off
-        if cfl > 0.0 or np.isclose(cfl, 0.0):
-            cfl_frac = np.mod(cfl, 1)
-            u_new[first - 1 - i] = (1 - cfl_frac) * u_old[last - i - int(cfl)] \
-                           + cfl_frac * u_old[last - i - 1 - int(cfl)]
+        if dt_dx > 0.0 or np.isclose(dt_dx, 0.0):
+            dt_dx_frac = np.mod(dt_dx, 1)
+            u_new[first - 1 - i] = (1 - dt_dx_frac) * u_old[last - i - int(dt_dx)] \
+                           + dt_dx_frac * u_old[last - i - 1 - int(dt_dx)]
         else:
-            cfl_frac = np.mod(-cfl, 1)
-            u_new[last + 1 + i] = (1 - cfl_frac) * u_old[first + i + int(-cfl)] \
-                                      + cfl_frac * u_old[first + i + 1 + int(-cfl)]
+            dt_dx_frac = np.mod(-dt_dx, 1)
+            u_new[last + 1 + i] = (1 - dt_dx_frac) * u_old[first + i + int(-dt_dx)] \
+                                      + dt_dx_frac * u_old[first + i + 1 + int(-dt_dx)]
         # fmt: on
 
 
@@ -79,12 +79,12 @@ def apply_bc(
 
     u_new = state.u_new
     slope = state.slope
-    cfl = state.cfl
+    dt_dx = state.dt_dx
 
     # first/last idx of the physical domain
     first = nghost
     last = -nghost - 1
-    if cfl > 0.0:
+    if dt_dx > 0.0:
         i = first - 1
     else:
         i = last + 1

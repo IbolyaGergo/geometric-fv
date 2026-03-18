@@ -26,12 +26,12 @@ class ImplicitUpwind(Scheme):
 
         u_old = state.u_old
         u_new = state.u_new
-        cfl = state.cfl
+        dt_dx = state.dt_dx
 
         for i in self.cell_indices(state):
-            # For positive CFL: u_i + cfl*f(u_i) = u_old_i + cfl*f(u_im1)
-            rhs = u_old[i] + cfl * eq.flux(u_new[i-1])
-            u_new[i] = eq.solve_for_u(rhs, cfl)
+            # For positive dt_dx: u_i + dt_dx*f(u_i) = u_old_i + dt_dx*f(u_im1)
+            rhs = u_old[i] + dt_dx * eq.flux(u_new[i-1])
+            u_new[i] = eq.solve_for_u(rhs, dt_dx)
 
 # Box(Scheme) {{{2
 @dataclass(frozen=True)
@@ -44,12 +44,12 @@ class Box(Scheme):
     config: SolverConfig = SolverConfig()
 
     def sweep(self, state: SolverState):
-        cfl = state.cfl
+        dt_dx = state.dt_dx
         u_old = state.u_old
         u_new = state.u_new
         nghost = self.nghost
 
-        coeff = (1 - cfl) / (1 + cfl)
+        coeff = (1 - dt_dx) / (1 + dt_dx)
         for i in range(nghost, len(u_old) - nghost):
             u_new[i] = coeff * (u_old[i] - u_new[i - 1]) + u_old[i - 1]
 
@@ -71,7 +71,7 @@ def test_constant_solution(val):
     )
     scheme = SecondOrderImplicit(config=config)
 
-    state = scheme.init_state(lambda x: np.full_like(x, val), cfl=1.6)
+    state = scheme.init_state(lambda x: np.full_like(x, val), dt_dx=1.6)
 
     scheme.apply_bc(state)
     scheme.sweep(state)
@@ -105,14 +105,14 @@ def test_HighResImplicit_equals_other_scheme_for_given_limiter(
         mesh=MeshConfig(ncells=20),
         reconst=ReconstConfig(limiter_type=limiter_type),
     )
-    cfl = 1.6
+    dt_dx = 1.6
 
     # abs_sine_wave, because Burgers works only for a > 0 yet
     scheme_hr = HighResImplicit(config=config)
-    state_hr = scheme_hr.init_state(abs_sine_wave, cfl=cfl)
+    state_hr = scheme_hr.init_state(abs_sine_wave, dt_dx=dt_dx)
 
     scheme_other = scheme_other(config=config)
-    state_other = scheme_other.init_state(abs_sine_wave, cfl=cfl)
+    state_other = scheme_other.init_state(abs_sine_wave, dt_dx=dt_dx)
 
     for s, st in [(scheme_hr, state_hr), (scheme_other, state_other)]:
         s.apply_bc(st)
@@ -122,12 +122,12 @@ def test_HighResImplicit_equals_other_scheme_for_given_limiter(
 
 
 # test_iteration_count_for_exact_guess() {{{2
-@pytest.mark.parametrize("cfl", [1.2, -1.2])
+@pytest.mark.parametrize("dt_dx", [1.2, -1.2])
 @pytest.mark.parametrize(
     ("limiter_type", "guess_type"),
     [(LimiterType.NONE, GuessType.BOX), (LimiterType.FULL, GuessType.IMPLICIT_UPWIND)],
 )
-def test_iteration_count_for_exact_guess(limiter_type, guess_type, cfl):
+def test_iteration_count_for_exact_guess(limiter_type, guess_type, dt_dx):
     """
     For SlopeType.BOX and LimiterType.NONE, the initial guess corresponds to the
     solution of the BOX scheme, thus should converge in exactly 1 iteration.
@@ -144,7 +144,7 @@ def test_iteration_count_for_exact_guess(limiter_type, guess_type, cfl):
     scheme = SecondOrderImplicit(config=config)
 
     # Initialize state with some non-trivial data
-    state = scheme.init_state(sine_wave, cfl=cfl)
+    state = scheme.init_state(sine_wave, dt_dx=dt_dx)
     state.niter = np.zeros_like(state.u_new, dtype=int)
 
     scheme.apply_bc(state)
@@ -169,7 +169,7 @@ def test_cell_indices():
 
     ninner = 20
     u0 = np.zeros(ninner)
-    state = scheme.allocate_state(u0, cfl=1.0)
+    state = scheme.allocate_state(u0, dt_dx=1.0)
 
     assert len(state.u_old) == 24
 
@@ -179,7 +179,7 @@ def test_cell_indices():
     assert indices == expected_forward, f"Expected {expected_forward}, got {indices}"
     assert len(indices) == ninner
 
-    state_neg = scheme.allocate_state(u0, cfl=-1.0)
+    state_neg = scheme.allocate_state(u0, dt_dx=-1.0)
 
     rev_indices = list(scheme.cell_indices(state_neg))
     expected_reverse = list(reversed(expected_forward))
@@ -204,7 +204,7 @@ def test_mirroring(limiter_type, guess_type):
     """
     Verifies that the Implicit Upwind scheme (SecondOrderImplicit with FULL
     limiter) produces mirrored results for mirrored initial conditions and
-    opposite CFL.
+    opposite dt_dx.
     """
     ncells = 20
     config = SolverConfig(
@@ -216,18 +216,18 @@ def test_mirroring(limiter_type, guess_type):
         ),
         boundary=BoundaryConfig(bc_type=BCType.QUASI_PERIODIC),
     )
-    cfl = 1.5
+    dt_dx = 1.5
 
-    # Positive CFL
+    # Positive dt_dx
     scheme_pos = SecondOrderImplicit(config=config)
-    state_pos = scheme_pos.init_state(sine_wave, cfl=cfl)
+    state_pos = scheme_pos.init_state(sine_wave, dt_dx=dt_dx)
 
     scheme_pos.apply_bc(state_pos)
     scheme_pos.sweep(state_pos)
 
-    # Negative CFL
+    # Negative dt_dx
     scheme_neg = SecondOrderImplicit(config=config)
-    state_neg = scheme_neg.init_state(sine_wave, cfl=-cfl)
+    state_neg = scheme_neg.init_state(sine_wave, dt_dx=-dt_dx)
 
     # Manually mirror u_old from the positive case
     nghost = scheme_neg.nghost

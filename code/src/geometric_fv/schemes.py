@@ -16,7 +16,7 @@ class Scheme(ABC):
     config: SolverConfig
 
     # allocate_state() {{{2
-    def allocate_state(self, u0: np.ndarray, cfl: float) -> SolverState:
+    def allocate_state(self, u0: np.ndarray, dt_dx: float) -> SolverState:
         """Creates a SolverState from an existing array."""
         u_padded = np.pad(u0, (self.nghost, self.nghost), mode="constant")
         return SolverState(
@@ -25,12 +25,12 @@ class Scheme(ABC):
             slope=np.zeros_like(u_padded),
             speed=np.ones_like(u_padded),
             niter=np.zeros_like(u_padded, dtype=int),
-            cfl=cfl,
+            dt_dx=dt_dx,
         )
 
     # init_state() {{{2
     def init_state(
-        self, func: Callable[[np.ndarray], np.ndarray], cfl: float
+        self, func: Callable[[np.ndarray], np.ndarray], dt_dx: float
     ) -> SolverState:
         """
         Generates u0 using func and the mesh defined in the scheme's config.
@@ -39,7 +39,7 @@ class Scheme(ABC):
 
         u0 = func(mesh.centers)
 
-        return self.allocate_state(u0, cfl)
+        return self.allocate_state(u0, dt_dx)
 
     # apply_bc() {{{2
     def apply_bc(self, state: SolverState) -> None:
@@ -68,7 +68,7 @@ class Scheme(ABC):
         # Define the range of physical (non-ghost) cells
         idx_range = range(nghost, ntotal - nghost)
 
-        if state.cfl < 0:
+        if state.dt_dx < 0:
             return reversed(idx_range)
         return idx_range
 
@@ -95,17 +95,17 @@ class SecondOrderImplicit(Scheme):
         u_new = state.u_new
         slope = state.slope
 
-        cfl = state.cfl
+        dt_dx = state.dt_dx
 
         slope_i_current = compute_slope(
             state, i=i, u_new_i=u_new_i_current, reconst_config=self.config.reconst
         )
 
         # fmt: off
-        i_upw = i-1 if state.cfl > 0 else i+1
+        i_upw = i-1 if state.dt_dx > 0 else i+1
         u_new_i_next = \
-                (u_old[i] + abs(cfl) * u_new[i_upw]) / (1.0 + abs(cfl)) \
-                - 0.5 * cfl * (slope_i_current - slope[i_upw])
+                (u_old[i] + abs(dt_dx) * u_new[i_upw]) / (1.0 + abs(dt_dx)) \
+                - 0.5 * dt_dx * (slope_i_current - slope[i_upw])
         # fmt: on
         return u_new_i_next
 
@@ -156,7 +156,7 @@ class HighResImplicit(Scheme):
         slope = state.slope
         eq = self.config.equation
 
-        cfl = state.cfl
+        dt_dx = state.dt_dx
 
         slope_i_current = compute_slope(
             state, i=i, u_new_i=u_new_i_current, reconst_config=self.config.reconst
@@ -165,24 +165,24 @@ class HighResImplicit(Scheme):
         a_im1 = eq.speed(u_old[i - 1], u_new[i-1])
         a_i = eq.speed(u_old[i], u_new_i_current)
 
-        mu_im1 = cfl * a_im1
+        mu_im1 = dt_dx * a_im1
         c_im1 = mu_im1 * (1 + mu_im1) * 0.5*slope[i-1] 
 
-        mu_i = cfl * a_i
+        mu_i = dt_dx * a_i
         c_i = mu_i * (1 + mu_i) * 0.5*slope_i_current 
 
-        rhs = u_old[i] + cfl * eq.flux(u_new[i - 1]) - c_i + c_im1
-        return eq.solve_for_u(rhs, cfl)
+        rhs = u_old[i] + dt_dx * eq.flux(u_new[i - 1]) - c_i + c_im1
+        return eq.solve_for_u(rhs, dt_dx)
 
     # sweep() {{{2
     def sweep(self, state: SolverState):
         for i in self.cell_indices(state):
             u_old = state.u_old
             u_new = state.u_new
-            cfl = state.cfl
+            dt_dx = state.dt_dx
             eq = self.config.equation
 
-            u_new_i_guess = eq.initial_guess(u_old[i], u_new[i-1], cfl)
+            u_new_i_guess = eq.initial_guess(u_old[i], u_new[i-1], dt_dx)
 
             result = simple_fixed_point(
                 self._update_cell_iter,

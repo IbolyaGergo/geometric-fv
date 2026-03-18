@@ -37,16 +37,16 @@ def _limit_slope_tvd(
     u_old = state.u_old
     u_new = state.u_new
     slope = state.slope
-    cfl = state.cfl
+    dt_dx = state.dt_dx
 
-    i_upw = i - 1 if cfl > 0 else i + 1
-    i_dwn = i + 1 if cfl > 0 else i - 1
+    i_upw = i - 1 if dt_dx > 0 else i + 1
+    i_dwn = i + 1 if dt_dx > 0 else i - 1
 
     slope_i_1 = np.median(
         [
             slope[i_upw]
-            - np.sign(cfl) * 2.0 * (u_old[i] - u_new[i_upw]) / (1.0 + abs(cfl)),
-            slope[i_upw] + 2.0 * (u_old[i] - u_new[i_upw]) / (cfl * (1.0 + abs(cfl))),
+            - np.sign(dt_dx) * 2.0 * (u_old[i] - u_new[i_upw]) / (1.0 + abs(dt_dx)),
+            slope[i_upw] + 2.0 * (u_old[i] - u_new[i_upw]) / (dt_dx * (1.0 + abs(dt_dx))),
             slope_i,
         ]
     )
@@ -55,7 +55,7 @@ def _limit_slope_tvd(
         [
             0.0,
             slope_i_1,
-            np.sign(cfl) * 2.0 * (u_old[i_dwn] - u_new_i) / (1.0 + abs(cfl)),
+            np.sign(dt_dx) * 2.0 * (u_old[i_dwn] - u_new_i) / (1.0 + abs(dt_dx)),
         ]
     )
 
@@ -71,16 +71,16 @@ def _limit_slope_tvd_suff(
 ) -> float:
     u_old = state.u_old
     u_new = state.u_new
-    cfl = state.cfl
+    dt_dx = state.dt_dx
 
-    i_upw = i - 1 if cfl > 0 else i + 1
-    i_dwn = i + 1 if cfl > 0 else i - 1
+    i_upw = i - 1 if dt_dx > 0 else i + 1
+    i_dwn = i + 1 if dt_dx > 0 else i - 1
 
     slope_i_1 = np.median(
         [
             0.0,
-            np.sign(cfl) * 2.0 * (u_old[i_dwn] - u_new_i) / (1.0 + abs(cfl)),
-            (2.0 / cfl) * (u_old[i] - u_new[i_upw]) / (1.0 + abs(cfl)),
+            np.sign(dt_dx) * 2.0 * (u_old[i_dwn] - u_new_i) / (1.0 + abs(dt_dx)),
+            (2.0 / dt_dx) * (u_old[i] - u_new[i_upw]) / (1.0 + abs(dt_dx)),
         ]
     )
 
@@ -102,10 +102,10 @@ _limit_slope_types = {
 # _compute_slope_box() {{{2
 def _compute_slope_box(state: SolverState, i: int, u_new_i: float) -> float:
     u_old = state.u_old
-    cfl = state.cfl
+    dt_dx = state.dt_dx
 
-    if np.not_equal(cfl, 0.0):
-        slope_i = (u_old[i] - u_new_i) / cfl
+    if np.not_equal(dt_dx, 0.0):
+        slope_i = (u_old[i] - u_new_i) / dt_dx
     else:
         slope_i = 0.0
 
@@ -144,10 +144,10 @@ def compute_slope(
 def _compute_guess_box(state: SolverState, i: int) -> float:
     u_old = state.u_old
     u_new = state.u_new
-    cfl = state.cfl
+    dt_dx = state.dt_dx
 
-    coeff = (1 - abs(cfl)) / (1 + abs(cfl))
-    i_upw = i - 1 if cfl > 0 else i + 1
+    coeff = (1 - abs(dt_dx)) / (1 + abs(dt_dx))
+    i_upw = i - 1 if dt_dx > 0 else i + 1
     u_new_i_guess = coeff * u_old[i] + u_old[i_upw] - coeff * u_new[i_upw]
 
     return u_new_i_guess
@@ -157,10 +157,10 @@ def _compute_guess_box(state: SolverState, i: int) -> float:
 def _compute_guess_implicit_upwind(state: SolverState, i: int) -> float:
     u_old = state.u_old
     u_new = state.u_new
-    cfl = state.cfl
+    dt_dx = state.dt_dx
 
-    i_upw = i - 1 if state.cfl > 0 else i + 1
-    u_new_i_guess = (u_old[i] + abs(cfl) * u_new[i_upw]) / (1.0 + abs(cfl))
+    i_upw = i - 1 if state.dt_dx > 0 else i + 1
+    u_new_i_guess = (u_old[i] + abs(dt_dx) * u_new[i_upw]) / (1.0 + abs(dt_dx))
 
     return u_new_i_guess
 
@@ -182,7 +182,7 @@ def compute_guess(state: SolverState, i: int, reconst_config: ReconstConfig) -> 
     u_guess = compute_guess_func(state, i)
 
     if reconst_config.limiter_type != LimiterType.NONE:
-        i_upw = i - 1 if state.cfl > 0 else i + 1
+        i_upw = i - 1 if state.dt_dx > 0 else i + 1
         u_guess = np.median([u_guess, state.u_old[i], state.u_new[i_upw]])
 
     return u_guess
