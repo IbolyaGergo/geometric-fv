@@ -26,7 +26,8 @@ class ImplicitUpwind(Scheme):
 
         u_old = state.u_old
         u_new = state.u_new
-        dt_dx = state.dt_dx
+        # dt_dx = state.dt_dx
+        dt_dx = self.config.dt_dx
 
         for i in self.cell_indices(state):
             # For positive dt_dx: u_i + dt_dx*f(u_i) = u_old_i + dt_dx*f(u_im1)
@@ -44,7 +45,8 @@ class Box(Scheme):
     config: SolverConfig = SolverConfig()
 
     def sweep(self, state: SolverState):
-        dt_dx = state.dt_dx
+        # dt_dx = state.dt_dx
+        dt_dx = self.config.dt_dx
         u_old = state.u_old
         u_new = state.u_new
         nghost = self.nghost
@@ -68,6 +70,7 @@ def test_constant_solution(val):
     config = SolverConfig(
         mesh=MeshConfig(ncells=20),
         boundary=BoundaryConfig(bc_type=BCType.CONSTANT_EXTEND),
+        dt_dx=1.6,
     )
     scheme = SecondOrderImplicit(config=config)
 
@@ -100,12 +103,13 @@ def test_HighResImplicit_equals_other_scheme_for_given_limiter(
     if scheme_other == Box and not isinstance(equation, LinearAdvection):
         pytest.skip("Box reference is only implemented for Linear Advection")
 
+    dt_dx = 1.6
     config = SolverConfig(
         equation=equation,
         mesh=MeshConfig(ncells=20),
         reconst=ReconstConfig(limiter_type=limiter_type),
+        dt_dx=dt_dx,
     )
-    dt_dx = 1.6
 
     # abs_sine_wave, because Burgers works only for a > 0 yet
     scheme_hr = HighResImplicit(config=config)
@@ -140,6 +144,7 @@ def test_iteration_count_for_exact_guess(limiter_type, guess_type, dt_dx):
             guess_type=guess_type,
         ),
         boundary=BoundaryConfig(bc_type=BCType.QUASI_PERIODIC),
+        dt_dx=dt_dx,
     )
     scheme = SecondOrderImplicit(config=config)
 
@@ -163,9 +168,11 @@ def test_cell_indices():
     Verifies that the cell_indices method correctly identifies the internal
     cells (excluding ghost cells) for both forward and reverse traversals.
     """
-
     nghost = 2
-    scheme = SecondOrderImplicit(nghost=nghost)
+    scheme = SecondOrderImplicit(
+        nghost=nghost,
+        config=SolverConfig(dt_dx=1.0)
+    )
 
     ninner = 20
     u0 = np.zeros(ninner)
@@ -179,6 +186,10 @@ def test_cell_indices():
     assert indices == expected_forward, f"Expected {expected_forward}, got {indices}"
     assert len(indices) == ninner
 
+    scheme = SecondOrderImplicit(
+        nghost=nghost,
+        config=SolverConfig(dt_dx=-1.0)
+    )
     state_neg = scheme.allocate_state(u0, dt_dx=-1.0)
 
     rev_indices = list(scheme.cell_indices(state_neg))
@@ -207,7 +218,8 @@ def test_mirroring(limiter_type, guess_type):
     opposite dt_dx.
     """
     ncells = 20
-    config = SolverConfig(
+    dt_dx = 1.5
+    config_pos = SolverConfig(
         mesh=MeshConfig(ncells=ncells),
         reconst=ReconstConfig(
             slope_type=SlopeType.BOX,
@@ -215,18 +227,28 @@ def test_mirroring(limiter_type, guess_type):
             guess_type=guess_type,
         ),
         boundary=BoundaryConfig(bc_type=BCType.QUASI_PERIODIC),
+        dt_dx=dt_dx,
     )
-    dt_dx = 1.5
 
     # Positive dt_dx
-    scheme_pos = SecondOrderImplicit(config=config)
+    scheme_pos = SecondOrderImplicit(config=config_pos)
     state_pos = scheme_pos.init_state(sine_wave, dt_dx=dt_dx)
 
     scheme_pos.apply_bc(state_pos)
     scheme_pos.sweep(state_pos)
 
     # Negative dt_dx
-    scheme_neg = SecondOrderImplicit(config=config)
+    config_neg = SolverConfig(
+        mesh=MeshConfig(ncells=ncells),
+        reconst=ReconstConfig(
+            slope_type=SlopeType.BOX,
+            limiter_type=limiter_type,
+            guess_type=guess_type,
+        ),
+        boundary=BoundaryConfig(bc_type=BCType.QUASI_PERIODIC),
+        dt_dx=-dt_dx,
+    )
+    scheme_neg = SecondOrderImplicit(config=config_neg)
     state_neg = scheme_neg.init_state(sine_wave, dt_dx=-dt_dx)
 
     # Manually mirror u_old from the positive case

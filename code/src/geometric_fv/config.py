@@ -72,3 +72,4 @@ class SolverConfig:
     reconst: ReconstConfig = ReconstConfig()
     iteration: IterationConfig = IterationConfig()
     equation: Equation = LinearAdvection()
+    dt_dx: float = 1.0

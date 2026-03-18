@@ -68,7 +68,7 @@ class Scheme(ABC):
         # Define the range of physical (non-ghost) cells
         idx_range = range(nghost, ntotal - nghost)
 
-        if state.dt_dx < 0:
+        if self.config.dt_dx < 0:
             return reversed(idx_range)
         return idx_range
 
@@ -95,14 +95,14 @@ class SecondOrderImplicit(Scheme):
         u_new = state.u_new
         slope = state.slope
 
-        dt_dx = state.dt_dx
+        dt_dx = self.config.dt_dx
 
         slope_i_current = compute_slope(
             state, i=i, u_new_i=u_new_i_current, reconst_config=self.config.reconst
         )
 
         # fmt: off
-        i_upw = i-1 if state.dt_dx > 0 else i+1
+        i_upw = i-1 if dt_dx > 0 else i+1
         u_new_i_next = \
                 (u_old[i] + abs(dt_dx) * u_new[i_upw]) / (1.0 + abs(dt_dx)) \
                 - 0.5 * dt_dx * (slope_i_current - slope[i_upw])
@@ -156,7 +156,7 @@ class HighResImplicit(Scheme):
         slope = state.slope
         eq = self.config.equation
 
-        dt_dx = state.dt_dx
+        dt_dx = self.config.dt_dx
 
         slope_i_current = compute_slope(
             state, i=i, u_new_i=u_new_i_current, reconst_config=self.config.reconst
@@ -179,7 +179,7 @@ class HighResImplicit(Scheme):
         for i in self.cell_indices(state):
             u_old = state.u_old
             u_new = state.u_new
-            dt_dx = state.dt_dx
+            dt_dx = self.config.dt_dx
             eq = self.config.equation
 
             u_new_i_guess = eq.initial_guess(u_old[i], u_new[i-1], dt_dx)

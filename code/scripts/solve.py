@@ -21,6 +21,8 @@ slope_type = SlopeType.BOX
 limiter_type = LimiterType.TVD_SUFF
 guess_type = GuessType.BOX
 
+dt_dx = 1.8
+
 config = SolverConfig(
     mesh=MeshConfig(x_min=x_min, x_max=x_max, ncells=ncells),
     boundary=BoundaryConfig(bc_type=bc_type),
@@ -28,6 +30,7 @@ config = SolverConfig(
         slope_type=slope_type, limiter_type=limiter_type, guess_type=guess_type
     ),
     iteration=IterationConfig(tol=1e-6, maxiter=50),
+    dt_dx=dt_dx,
 )
 
 scheme = SecondOrderImplicit(config=config)
@@ -39,8 +42,6 @@ ncells = mesh.ncells
 
 # u0 = np.sin(2 * np.pi * x_c)
 u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 1, 0])
-
-dt_dx = 1.8
 
 state = scheme.allocate_state(u0, dt_dx=dt_dx)
 

@@ -22,6 +22,8 @@ slope_type = SlopeType.BOX
 limiter_type = LimiterType.NONE
 guess_type = GuessType.BOX
 
+dt_dx = 0.8
+
 config = SolverConfig(
     mesh=MeshConfig(x_min=x_min, x_max=x_max, ncells=ncells),
     boundary=BoundaryConfig(bc_type=bc_type),
@@ -30,6 +32,7 @@ config = SolverConfig(
     ),
     iteration=IterationConfig(tol=1e-6, maxiter=50),
     equation=Burgers(),
+    dt_dx=dt_dx,
 )
 
 scheme = HighResImplicit(config=config)
@@ -43,8 +46,6 @@ ncells = mesh.ncells
 u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 1, 0])
 # u0 = np.piecewise(x_c, [x_c < 0.5, x_c >= 0.5], [1, 0])
 # u0 = np.e**(-(x_c - 0.25)**2*100)
-
-dt_dx = 0.8
 
 state = scheme.allocate_state(u0, dt_dx=dt_dx)
 
