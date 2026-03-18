@@ -1,3 +1,6 @@
 package-lock.json
 **/tmp
 **/GEMINI.md
+# vim swap files
+*.swp
+*.swo
