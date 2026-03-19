@@ -74,7 +74,7 @@ def test_constant_solution(val):
     )
     scheme = SecondOrderImplicit(config=config)
 
-    state = scheme.init_state(lambda x: np.full_like(x, val), dt_dx=1.6)
+    state = scheme.init_state(lambda x: np.full_like(x, val))
 
     scheme.apply_bc(state)
     scheme.sweep(state)
@@ -113,10 +113,10 @@ def test_HighResImplicit_equals_other_scheme_for_given_limiter(
 
     # abs_sine_wave, because Burgers works only for a > 0 yet
     scheme_hr = HighResImplicit(config=config)
-    state_hr = scheme_hr.init_state(abs_sine_wave, dt_dx=dt_dx)
+    state_hr = scheme_hr.init_state(abs_sine_wave)
 
     scheme_other = scheme_other(config=config)
-    state_other = scheme_other.init_state(abs_sine_wave, dt_dx=dt_dx)
+    state_other = scheme_other.init_state(abs_sine_wave)
 
     for s, st in [(scheme_hr, state_hr), (scheme_other, state_other)]:
         s.apply_bc(st)
@@ -149,7 +149,7 @@ def test_iteration_count_for_exact_guess(limiter_type, guess_type, dt_dx):
     scheme = SecondOrderImplicit(config=config)
 
     # Initialize state with some non-trivial data
-    state = scheme.init_state(sine_wave, dt_dx=dt_dx)
+    state = scheme.init_state(sine_wave)
     state.niter = np.zeros_like(state.u_new, dtype=int)
 
     scheme.apply_bc(state)
@@ -176,7 +176,7 @@ def test_cell_indices():
 
     ninner = 20
     u0 = np.zeros(ninner)
-    state = scheme.allocate_state(u0, dt_dx=1.0)
+    state = scheme.allocate_state(u0)
 
     assert len(state.u_old) == 24
 
@@ -190,7 +190,7 @@ def test_cell_indices():
         nghost=nghost,
         config=SolverConfig(dt_dx=-1.0)
     )
-    state_neg = scheme.allocate_state(u0, dt_dx=-1.0)
+    state_neg = scheme.allocate_state(u0)
 
     rev_indices = list(scheme.cell_indices(state_neg))
     expected_reverse = list(reversed(expected_forward))
@@ -232,7 +232,7 @@ def test_mirroring(limiter_type, guess_type):
 
     # Positive dt_dx
     scheme_pos = SecondOrderImplicit(config=config_pos)
-    state_pos = scheme_pos.init_state(sine_wave, dt_dx=dt_dx)
+    state_pos = scheme_pos.init_state(sine_wave)
 
     scheme_pos.apply_bc(state_pos)
     scheme_pos.sweep(state_pos)
@@ -249,7 +249,7 @@ def test_mirroring(limiter_type, guess_type):
         dt_dx=-dt_dx,
     )
     scheme_neg = SecondOrderImplicit(config=config_neg)
-    state_neg = scheme_neg.init_state(sine_wave, dt_dx=-dt_dx)
+    state_neg = scheme_neg.init_state(sine_wave)
 
     # Manually mirror u_old from the positive case
     nghost = scheme_neg.nghost

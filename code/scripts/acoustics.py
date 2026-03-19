@@ -44,8 +44,8 @@ u0 = np.sin(2 * np.pi * x_c)
 # u0 = np.e**(-(x_c - 0.5)**2*100)
 # u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 1, 0])
 
-state = scheme.allocate_state(u0, dt_dx=dt_dx)
-state_neg = scheme.allocate_state(u0, dt_dx=-dt_dx)
+state = scheme.allocate_state(u0)
+state_neg = scheme.allocate_state(u0)
 
 for _t in range(100):
     scheme.apply_bc(state)

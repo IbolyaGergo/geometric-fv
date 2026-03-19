@@ -47,7 +47,7 @@ u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 
 # u0 = np.piecewise(x_c, [x_c < 0.5, x_c >= 0.5], [1, 0])
 # u0 = np.e**(-(x_c - 0.25)**2*100)
 
-state = scheme.allocate_state(u0, dt_dx=dt_dx)
+state = scheme.allocate_state(u0)
 
 for _t in range(50):
     scheme.apply_bc(state)

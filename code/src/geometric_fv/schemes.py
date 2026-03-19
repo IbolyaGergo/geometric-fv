@@ -16,7 +16,7 @@ class Scheme(ABC):
     config: SolverConfig
 
     # allocate_state() {{{2
-    def allocate_state(self, u0: np.ndarray, dt_dx: float) -> SolverState:
+    def allocate_state(self, u0: np.ndarray) -> SolverState:
         """Creates a SolverState from an existing array."""
         u_padded = np.pad(u0, (self.nghost, self.nghost), mode="constant")
         return SolverState(
@@ -25,12 +25,12 @@ class Scheme(ABC):
             slope=np.zeros_like(u_padded),
             speed=np.ones_like(u_padded),
             niter=np.zeros_like(u_padded, dtype=int),
-            dt_dx=dt_dx,
+            dt_dx=self.config.dt_dx,
         )
 
     # init_state() {{{2
     def init_state(
-        self, func: Callable[[np.ndarray], np.ndarray], dt_dx: float
+        self, func: Callable[[np.ndarray], np.ndarray]
     ) -> SolverState:
         """
         Generates u0 using func and the mesh defined in the scheme's config.
@@ -39,7 +39,7 @@ class Scheme(ABC):
 
         u0 = func(mesh.centers)
 
-        return self.allocate_state(u0, dt_dx)
+        return self.allocate_state(u0)
 
     # apply_bc() {{{2
     def apply_bc(self, state: SolverState) -> None:
