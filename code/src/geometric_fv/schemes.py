@@ -48,8 +48,6 @@ class Scheme(ABC):
         _apply_bc_kernel(
             state=state,
             nghost=self.nghost,
-            config=self.config.boundary,
-            reconst_config=self.config.reconst,
             solver_config=self.config,
         )
 

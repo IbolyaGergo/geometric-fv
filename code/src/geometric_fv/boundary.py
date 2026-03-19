@@ -67,11 +67,9 @@ _apply_bc_types = {
 def apply_bc(
     state: SolverState,
     nghost: int,
-    config: BoundaryConfig,
-    reconst_config: ReconstConfig,
     solver_config: SolverConfig = None,
 ) -> None:
-    bc_type = config.bc_type
+    bc_type = solver_config.boundary.bc_type
     apply_bc_func = _apply_bc_types.get(bc_type)
     if apply_bc_func is None:
         raise ValueError(f"Unsupported BC type: {bc_type}")
@@ -93,6 +91,6 @@ def apply_bc(
         state=state,
         i=i,
         u_new_i=u_new[i],
-        reconst_config=reconst_config,
+        reconst_config=solver_config.reconst,
         config=solver_config,
     )
