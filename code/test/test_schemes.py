@@ -26,7 +26,6 @@ class ImplicitUpwind(Scheme):
 
         u_old = state.u_old
         u_new = state.u_new
-        # dt_dx = state.dt_dx
         dt_dx = self.config.dt_dx
 
         for i in self.cell_indices(state):
@@ -45,7 +44,6 @@ class Box(Scheme):
     config: SolverConfig = SolverConfig()
 
     def sweep(self, state: SolverState):
-        # dt_dx = state.dt_dx
         dt_dx = self.config.dt_dx
         u_old = state.u_old
         u_new = state.u_new

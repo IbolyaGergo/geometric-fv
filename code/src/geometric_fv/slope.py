@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Callable
 
-from geometric_fv.config import ReconstConfig
+from geometric_fv.config import ReconstConfig, SolverConfig
 from geometric_fv.enums import GuessType, LimiterType, SlopeType
 from geometric_fv.solver import SolverState
 
@@ -13,6 +13,7 @@ def _limit_slope_full(
     i: int,
     u_new_i: float,
     slope_i: float,
+    dt_dx: float,
 ) -> float:
     return 0.0
 
@@ -23,6 +24,7 @@ def _limit_slope_none(
     i: int,
     u_new_i: float,
     slope_i: float,
+    dt_dx: float,
 ) -> float:
     return slope_i
 
@@ -33,11 +35,11 @@ def _limit_slope_tvd(
     i: int,
     u_new_i: float,
     slope_i: float,
+    dt_dx: float,
 ) -> float:
     u_old = state.u_old
     u_new = state.u_new
     slope = state.slope
-    dt_dx = state.dt_dx
 
     i_upw = i - 1 if dt_dx > 0 else i + 1
     i_dwn = i + 1 if dt_dx > 0 else i - 1
@@ -68,10 +70,10 @@ def _limit_slope_tvd_suff(
     i: int,
     u_new_i: float,
     slope_i: float,
+    dt_dx: float,
 ) -> float:
     u_old = state.u_old
     u_new = state.u_new
-    dt_dx = state.dt_dx
 
     i_upw = i - 1 if dt_dx > 0 else i + 1
     i_dwn = i + 1 if dt_dx > 0 else i - 1
@@ -100,9 +102,8 @@ _limit_slope_types = {
 
 # SLOPE {{{1
 # _compute_slope_box() {{{2
-def _compute_slope_box(state: SolverState, i: int, u_new_i: float) -> float:
+def _compute_slope_box(state: SolverState, i: int, u_new_i: float, dt_dx: float) -> float:
     u_old = state.u_old
-    dt_dx = state.dt_dx
 
     if np.not_equal(dt_dx, 0.0):
         slope_i = (u_old[i] - u_new_i) / dt_dx
@@ -120,31 +121,32 @@ _compute_slope_types = {
 
 # compute_slope() {{{2
 def compute_slope(
-    state: SolverState, i: int, u_new_i: float, reconst_config: ReconstConfig
+    state: SolverState, i: int, u_new_i: float, reconst_config: ReconstConfig,
+    config: SolverConfig
 ) -> float:
     slope_type = reconst_config.slope_type
     compute_slope_func = _compute_slope_types.get(slope_type)
     if compute_slope_func is None:
         raise ValueError(f"Unsupported slope type: {slope_type}")
 
-    slope_i = compute_slope_func(state, i, u_new_i)
+    dt_dx = config.dt_dx
+    slope_i = compute_slope_func(state, i, u_new_i, dt_dx)
 
     limiter_type = reconst_config.limiter_type
     limit_slope_func = _limit_slope_types.get(limiter_type)
     if limit_slope_func is None:
         raise ValueError(f"Unsupported limiter type: {limiter_type}")
 
-    slope_i_lim = limit_slope_func(state, i, u_new_i, slope_i)
+    slope_i_lim = limit_slope_func(state, i, u_new_i, slope_i, dt_dx)
 
     return slope_i_lim
 
 
 # GUESS {{{1
 # _compute_guess_box() {{{2
-def _compute_guess_box(state: SolverState, i: int) -> float:
+def _compute_guess_box(state: SolverState, i: int, dt_dx: float) -> float:
     u_old = state.u_old
     u_new = state.u_new
-    dt_dx = state.dt_dx
 
     coeff = (1 - abs(dt_dx)) / (1 + abs(dt_dx))
     i_upw = i - 1 if dt_dx > 0 else i + 1
@@ -154,12 +156,11 @@ def _compute_guess_box(state: SolverState, i: int) -> float:
 
 
 # _compute_guess_implicit_upwind() {{{2
-def _compute_guess_implicit_upwind(state: SolverState, i: int) -> float:
+def _compute_guess_implicit_upwind(state: SolverState, i: int, dt_dx: float) -> float:
     u_old = state.u_old
     u_new = state.u_new
-    dt_dx = state.dt_dx
 
-    i_upw = i - 1 if state.dt_dx > 0 else i + 1
+    i_upw = i - 1 if dt_dx > 0 else i + 1
     u_new_i_guess = (u_old[i] + abs(dt_dx) * u_new[i_upw]) / (1.0 + abs(dt_dx))
 
     return u_new_i_guess
@@ -173,16 +174,18 @@ _compute_guess_types = {
 
 
 # compute_guess() {{{2
-def compute_guess(state: SolverState, i: int, reconst_config: ReconstConfig) -> float:
+def compute_guess(state: SolverState, i: int, reconst_config: ReconstConfig,
+                  config: SolverConfig) -> float:
     guess_type = reconst_config.guess_type
     compute_guess_func = _compute_guess_types.get(guess_type)
     if compute_guess_func is None:
         raise ValueError(f"Unsupported guess type: {guess_type}")
 
-    u_guess = compute_guess_func(state, i)
+    dt_dx = config.dt_dx
+    u_guess = compute_guess_func(state, i, dt_dx)
 
     if reconst_config.limiter_type != LimiterType.NONE:
-        i_upw = i - 1 if state.dt_dx > 0 else i + 1
+        i_upw = i - 1 if dt_dx > 0 else i + 1
         u_guess = np.median([u_guess, state.u_old[i], state.u_new[i_upw]])
 
     return u_guess

@@ -25,7 +25,6 @@ class Scheme(ABC):
             slope=np.zeros_like(u_padded),
             speed=np.ones_like(u_padded),
             niter=np.zeros_like(u_padded, dtype=int),
-            dt_dx=self.config.dt_dx,
         )
 
     # init_state() {{{2
@@ -51,6 +50,7 @@ class Scheme(ABC):
             nghost=self.nghost,
             config=self.config.boundary,
             reconst_config=self.config.reconst,
+            solver_config=self.config,
         )
 
     # cell_indices() {{{2
@@ -98,7 +98,8 @@ class SecondOrderImplicit(Scheme):
         dt_dx = self.config.dt_dx
 
         slope_i_current = compute_slope(
-            state, i=i, u_new_i=u_new_i_current, reconst_config=self.config.reconst
+            state, i=i, u_new_i=u_new_i_current,
+            reconst_config=self.config.reconst, config=self.config
         )
 
         # fmt: off
@@ -116,7 +117,8 @@ class SecondOrderImplicit(Scheme):
 
         for i in self.cell_indices(state):
             u_new_i_guess = compute_guess(
-                state, i=i, reconst_config=self.config.reconst
+                state, i=i, reconst_config=self.config.reconst,
+                config=self.config
             )
 
             result = simple_fixed_point(
@@ -128,7 +130,8 @@ class SecondOrderImplicit(Scheme):
             )
             if result.success:
                 state.u_new[i] = result.x
-                state.slope[i] = compute_slope(state, i, result.x, self.config.reconst)
+                state.slope[i] = compute_slope(state, i, result.x,
+                                               self.config.reconst, self.config)
                 state.niter[i] = result.nit
 
                 # print(f"Cell {i} converged in {state.niter[i]} number of iterations.")
@@ -159,7 +162,8 @@ class HighResImplicit(Scheme):
         dt_dx = self.config.dt_dx
 
         slope_i_current = compute_slope(
-            state, i=i, u_new_i=u_new_i_current, reconst_config=self.config.reconst
+            state, i=i, u_new_i=u_new_i_current,
+            reconst_config=self.config.reconst, config=self.config
         )
 
         a_im1 = eq.speed(u_old[i - 1], u_new[i-1])
@@ -194,7 +198,8 @@ class HighResImplicit(Scheme):
 
             if result.success:
                 state.u_new[i] = result.x
-                state.slope[i] = compute_slope(state, i, result.x, self.config.reconst)
+                state.slope[i] = compute_slope(state, i, result.x,
+                                               self.config.reconst, self.config)
                 state.niter[i] = result.nit
 
                 # print(f"Cell {i} converged in {state.niter[i]} number of iterations.")

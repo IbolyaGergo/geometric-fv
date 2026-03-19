@@ -6,7 +6,7 @@ from geometric_fv.slope import compute_slope
 from geometric_fv.solver import SolverState
 
 
-def _apply_bc_constant_extend(state: SolverState, nghost: int) -> None:
+def _apply_bc_constant_extend(state: SolverState, nghost: int, dt_dx: float) -> None:
     u_old = state.u_old
     u_new = state.u_new
 
@@ -33,10 +33,9 @@ def _apply_bc_constant_extend(state: SolverState, nghost: int) -> None:
 #     u_old[1] = u_old[-3]
 #     u_old[-1] = u_old[3]
 #     u_old[-2] = u_old[2]
-def _apply_bc_quasi_periodic(state: SolverState, nghost: int) -> None:
+def _apply_bc_quasi_periodic(state: SolverState, nghost: int, dt_dx: float) -> None:
     u_old = state.u_old
     u_new = state.u_new
-    dt_dx = state.dt_dx
 
     # first/last idx of the physical domain
     first = nghost
@@ -70,16 +69,18 @@ def apply_bc(
     nghost: int,
     config: BoundaryConfig,
     reconst_config: ReconstConfig,
+    solver_config: SolverConfig = None,
 ) -> None:
     bc_type = config.bc_type
     apply_bc_func = _apply_bc_types.get(bc_type)
     if apply_bc_func is None:
         raise ValueError(f"Unsupported BC type: {bc_type}")
-    apply_bc_func(state, nghost)
+    dt_dx = solver_config.dt_dx
+    apply_bc_func(state, nghost, dt_dx)
 
     u_new = state.u_new
     slope = state.slope
-    dt_dx = state.dt_dx
+    dt_dx = solver_config.dt_dx
 
     # first/last idx of the physical domain
     first = nghost
@@ -93,4 +94,5 @@ def apply_bc(
         i=i,
         u_new_i=u_new[i],
         reconst_config=reconst_config,
+        config=solver_config,
     )

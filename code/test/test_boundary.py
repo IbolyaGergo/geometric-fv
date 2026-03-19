@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from geometric_fv.boundary import apply_bc
-from geometric_fv.config import BoundaryConfig, ReconstConfig
+from geometric_fv.config import BoundaryConfig, ReconstConfig, SolverConfig
 from geometric_fv.enums import BCType
 from geometric_fv.mesh import Mesh1D
 from geometric_fv.solver import SolverState
@@ -24,7 +24,7 @@ def create_solver_state(u0, nghost, dt_dx=0.0):
     u_new = np.copy(u_old)
     slope = np.zeros_like(u_old)
 
-    return SolverState(u_old=u_old, u_new=u_new, slope=slope, dt_dx=dt_dx)
+    return SolverState(u_old=u_old, u_new=u_new, slope=slope)
 
 
 # TESTs {{{1
@@ -36,9 +36,15 @@ def test_constant_extend_bc(mesh, u0, nghost):
 
     config = BoundaryConfig(bc_type=bc_type)
     reconst_config = ReconstConfig()
-    state = create_solver_state(u0, nghost, dt_dx=dt_dx)
+    solver_config = SolverConfig(
+        boundary=config,
+        reconst=reconst_config,
+        dt_dx=dt_dx,
+    )
+    state = create_solver_state(u0, nghost)
 
-    apply_bc(state=state, nghost=nghost, config=config, reconst_config=reconst_config)
+    apply_bc(state=state, nghost=nghost, config=config,
+             reconst_config=reconst_config, solver_config=solver_config)
 
     # Left boundary: all ghost cells should match the first physical cell
     assert np.all(state.u_old[:nghost] == u0[0])
@@ -56,9 +62,15 @@ def test_apply_bc_quasi_periodic_u_old(mesh, u0, nghost):
 
     config = BoundaryConfig(bc_type=bc_type)
     reconst_config = ReconstConfig()
+    solver_config = SolverConfig(
+        boundary=config,
+        reconst=reconst_config,
+        dt_dx=0.0,
+    )
     state = create_solver_state(u0, nghost, dt_dx=0.0)
 
-    apply_bc(state=state, nghost=nghost, config=config, reconst_config=reconst_config)
+    apply_bc(state=state, nghost=nghost, config=config,
+             reconst_config=reconst_config, solver_config=solver_config)
 
     if nghost == 1:
         # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
@@ -80,10 +92,16 @@ def test_apply_bc_quasi_periodic_u_new_dt_dx_is_whole_positive(mesh, u0, nghost)
     reconst_config = ReconstConfig()
 
     for dt_dx in [0.0, 1.0, 2.0]:
+        solver_config = SolverConfig(
+            boundary=config,
+            reconst=reconst_config,
+            dt_dx=dt_dx,
+        )
         state = create_solver_state(u0, nghost, dt_dx=dt_dx)
 
         apply_bc(
-            state=state, nghost=nghost, config=config, reconst_config=reconst_config
+            state=state, nghost=nghost, config=config,
+            reconst_config=reconst_config, solver_config=solver_config,
         )
         if nghost == 1:
             # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
@@ -103,8 +121,14 @@ def test_apply_bc_quasi_periodic_u_new_general_dt_dx_positive(mesh, u0, nghost):
 
     # fmt: off
     for dt_dx in [0.6, 1.5, 2.7]:
+        solver_config = SolverConfig(
+            boundary=config,
+            reconst=reconst_config,
+            dt_dx=dt_dx,
+        )
         state = create_solver_state(u0, nghost, dt_dx=dt_dx)
-        apply_bc(state=state, nghost=nghost, config=config, reconst_config=reconst_config)
+        apply_bc(state=state, nghost=nghost, config=config,
+                 reconst_config=reconst_config, solver_config=solver_config)
 
         dt_dx_frac = np.mod(dt_dx, 1)
         if nghost == 1:
@@ -134,9 +158,15 @@ def test_apply_bc_quasi_periodic_u_new_dt_dx_is_whole_negative(mesh, u0, nghost)
     reconst_config = ReconstConfig()
 
     for dt_dx in [-1.0, -2.0, -3.0]:
+        solver_config = SolverConfig(
+            boundary=config,
+            reconst=reconst_config,
+            dt_dx=dt_dx,
+        )
         state = create_solver_state(u0, nghost, dt_dx=dt_dx)
         apply_bc(
-            state=state, nghost=nghost, config=config, reconst_config=reconst_config
+            state=state, nghost=nghost, config=config,
+            reconst_config=reconst_config,solver_config=solver_config
         )
         if nghost == 1:
             # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
@@ -169,9 +199,15 @@ def test_apply_bc_quasi_periodic_u_new_dt_dx_is_general_negative(mesh, u0, nghos
     reconst_config = ReconstConfig()
 
     for dt_dx in [-0.6, -1.6, -2.7]:
+        solver_config = SolverConfig(
+            boundary=config,
+            reconst=reconst_config,
+            dt_dx=dt_dx,
+        )
         state = create_solver_state(u0, nghost, dt_dx=dt_dx)
         apply_bc(
-            state=state, nghost=nghost, config=config, reconst_config=reconst_config
+            state=state, nghost=nghost, config=config,
+            reconst_config=reconst_config, solver_config=solver_config
         )
 
         dt_dx_frac = np.mod(-dt_dx, 1)
