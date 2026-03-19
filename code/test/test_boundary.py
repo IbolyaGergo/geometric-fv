@@ -43,8 +43,7 @@ def test_constant_extend_bc(mesh, u0, nghost):
     )
     state = create_solver_state(u0, nghost)
 
-    apply_bc(state=state, nghost=nghost,
-             config=config)
+    apply_bc(state=state, nghost=nghost, config=config)
 
     # Left boundary: all ghost cells should match the first physical cell
     assert np.all(state.u_old[:nghost] == u0[0])
@@ -99,7 +98,9 @@ def test_apply_bc_quasi_periodic_u_new_dt_dx_is_whole_positive(mesh, u0, nghost)
         state = create_solver_state(u0, nghost, dt_dx=dt_dx)
 
         apply_bc(
-            state=state, nghost=nghost, config=config,
+            state=state,
+            nghost=nghost,
+            config=config,
         )
         if nghost == 1:
             # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
@@ -161,9 +162,7 @@ def test_apply_bc_quasi_periodic_u_new_dt_dx_is_whole_negative(mesh, u0, nghost)
             dt_dx=dt_dx,
         )
         state = create_solver_state(u0, nghost, dt_dx=dt_dx)
-        apply_bc(
-            state=state, nghost=nghost, config=config
-        )
+        apply_bc(state=state, nghost=nghost, config=config)
         if nghost == 1:
             # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
             assert state.u_new[-1] == pytest.approx(state.u_old[1 + int(-dt_dx)])
@@ -201,9 +200,7 @@ def test_apply_bc_quasi_periodic_u_new_dt_dx_is_general_negative(mesh, u0, nghos
             dt_dx=dt_dx,
         )
         state = create_solver_state(u0, nghost, dt_dx=dt_dx)
-        apply_bc(
-            state=state, nghost=nghost, config=config
-        )
+        apply_bc(state=state, nghost=nghost, config=config)
 
         dt_dx_frac = np.mod(-dt_dx, 1)
         if nghost == 1:

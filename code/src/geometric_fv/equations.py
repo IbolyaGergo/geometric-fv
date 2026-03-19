@@ -39,6 +39,8 @@ class Equation(ABC):
         """
         rhs = u_old_i + dt_dx * self.flux(u_upw)
         return self.solve_for_u(rhs, dt_dx)
+
+
 # Burgers {{{1
 class Burgers(Equation):
     def flux(self, u: float) -> float:
@@ -52,6 +54,7 @@ class Burgers(Equation):
         if abs(dt_dx) < 1e-14:
             return rhs
         return (-1.0 + np.sqrt(1.0 + 2.0 * dt_dx * rhs)) / dt_dx
+
 
 # LinearAdvection {{{1
 class LinearAdvection(Equation):

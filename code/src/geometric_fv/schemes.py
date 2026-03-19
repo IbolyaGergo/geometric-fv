@@ -28,9 +28,7 @@ class Scheme(ABC):
         )
 
     # init_state() {{{2
-    def init_state(
-        self, func: Callable[[np.ndarray], np.ndarray]
-    ) -> SolverState:
+    def init_state(self, func: Callable[[np.ndarray], np.ndarray]) -> SolverState:
         """
         Generates u0 using func and the mesh defined in the scheme's config.
         """
@@ -96,8 +94,7 @@ class SecondOrderImplicit(Scheme):
         dt_dx = self.config.dt_dx
 
         slope_i_current = compute_slope(
-            state, i=i, u_new_i=u_new_i_current,
-            config=self.config
+            state, i=i, u_new_i=u_new_i_current, config=self.config
         )
 
         # fmt: off
@@ -114,10 +111,7 @@ class SecondOrderImplicit(Scheme):
             state.niter = np.zeros_like(state.u_old, dtype=int)
 
         for i in self.cell_indices(state):
-            u_new_i_guess = compute_guess(
-                state, i=i, 
-                config=self.config
-            )
+            u_new_i_guess = compute_guess(state, i=i, config=self.config)
 
             result = simple_fixed_point(
                 self._update_cell_iter,
@@ -128,8 +122,7 @@ class SecondOrderImplicit(Scheme):
             )
             if result.success:
                 state.u_new[i] = result.x
-                state.slope[i] = compute_slope(state, i, result.x,
-                                               self.config)
+                state.slope[i] = compute_slope(state, i, result.x, self.config)
                 state.niter[i] = result.nit
 
                 # print(f"Cell {i} converged in {state.niter[i]} number of iterations.")
@@ -138,6 +131,7 @@ class SecondOrderImplicit(Scheme):
                 print(f"Message: {result.message}")
 
                 state.u_new[i] = u_new_i_guess
+
 
 # HighResImplicit() {{{1
 @dataclass(frozen=True)
@@ -160,18 +154,17 @@ class HighResImplicit(Scheme):
         dt_dx = self.config.dt_dx
 
         slope_i_current = compute_slope(
-            state, i=i, u_new_i=u_new_i_current,
-            config=self.config
+            state, i=i, u_new_i=u_new_i_current, config=self.config
         )
 
-        a_im1 = eq.speed(u_old[i - 1], u_new[i-1])
+        a_im1 = eq.speed(u_old[i - 1], u_new[i - 1])
         a_i = eq.speed(u_old[i], u_new_i_current)
 
         mu_im1 = dt_dx * a_im1
-        c_im1 = mu_im1 * (1 + mu_im1) * 0.5*slope[i-1] 
+        c_im1 = mu_im1 * (1 + mu_im1) * 0.5 * slope[i - 1]
 
         mu_i = dt_dx * a_i
-        c_i = mu_i * (1 + mu_i) * 0.5*slope_i_current 
+        c_i = mu_i * (1 + mu_i) * 0.5 * slope_i_current
 
         rhs = u_old[i] + dt_dx * eq.flux(u_new[i - 1]) - c_i + c_im1
         return eq.solve_for_u(rhs, dt_dx)
@@ -184,7 +177,7 @@ class HighResImplicit(Scheme):
             dt_dx = self.config.dt_dx
             eq = self.config.equation
 
-            u_new_i_guess = eq.initial_guess(u_old[i], u_new[i-1], dt_dx)
+            u_new_i_guess = eq.initial_guess(u_old[i], u_new[i - 1], dt_dx)
 
             result = simple_fixed_point(
                 self._update_cell_iter,
@@ -196,8 +189,7 @@ class HighResImplicit(Scheme):
 
             if result.success:
                 state.u_new[i] = result.x
-                state.slope[i] = compute_slope(state, i, result.x,
-                                               self.config)
+                state.slope[i] = compute_slope(state, i, result.x, self.config)
                 state.niter[i] = result.nit
 
                 # print(f"Cell {i} converged in {state.niter[i]} number of iterations.")

@@ -58,7 +58,14 @@ for _t in range(100):
     state_neg.u_old[:] = state_neg.u_new[:]
 
     plt.figure()
-    plt.plot(x_c, 2 * u0, "-o", x_c, state.u_new[nghost:-nghost] + state_neg.u_new[nghost:-nghost], "-o")
+    plt.plot(
+        x_c,
+        2 * u0,
+        "-o",
+        x_c,
+        state.u_new[nghost:-nghost] + state_neg.u_new[nghost:-nghost],
+        "-o",
+    )
     plt.savefig(f"tvd_box_{str(_t).zfill(3)}.png")
     plt.close()
 

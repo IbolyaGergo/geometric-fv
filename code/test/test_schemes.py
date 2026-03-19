@@ -30,8 +30,9 @@ class ImplicitUpwind(Scheme):
 
         for i in self.cell_indices(state):
             # For positive dt_dx: u_i + dt_dx*f(u_i) = u_old_i + dt_dx*f(u_im1)
-            rhs = u_old[i] + dt_dx * eq.flux(u_new[i-1])
+            rhs = u_old[i] + dt_dx * eq.flux(u_new[i - 1])
             u_new[i] = eq.solve_for_u(rhs, dt_dx)
+
 
 # Box(Scheme) {{{2
 @dataclass(frozen=True)
@@ -57,6 +58,8 @@ class Box(Scheme):
 # functions {{{2
 def sine_wave(x):
     return np.sin(2 * np.pi * x)
+
+
 def abs_sine_wave(x):
     return abs(np.sin(2 * np.pi * x))
 
@@ -167,10 +170,7 @@ def test_cell_indices():
     cells (excluding ghost cells) for both forward and reverse traversals.
     """
     nghost = 2
-    scheme = SecondOrderImplicit(
-        nghost=nghost,
-        config=SolverConfig(dt_dx=1.0)
-    )
+    scheme = SecondOrderImplicit(nghost=nghost, config=SolverConfig(dt_dx=1.0))
 
     ninner = 20
     u0 = np.zeros(ninner)
@@ -184,10 +184,7 @@ def test_cell_indices():
     assert indices == expected_forward, f"Expected {expected_forward}, got {indices}"
     assert len(indices) == ninner
 
-    scheme = SecondOrderImplicit(
-        nghost=nghost,
-        config=SolverConfig(dt_dx=-1.0)
-    )
+    scheme = SecondOrderImplicit(nghost=nghost, config=SolverConfig(dt_dx=-1.0))
     state_neg = scheme.allocate_state(u0)
 
     rev_indices = list(scheme.cell_indices(state_neg))

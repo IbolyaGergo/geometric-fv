@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from geometric_fv.config import SolverConfig
@@ -48,7 +47,8 @@ def _limit_slope_tvd(
         [
             slope[i_upw]
             - np.sign(dt_dx) * 2.0 * (u_old[i] - u_new[i_upw]) / (1.0 + abs(dt_dx)),
-            slope[i_upw] + 2.0 * (u_old[i] - u_new[i_upw]) / (dt_dx * (1.0 + abs(dt_dx))),
+            slope[i_upw]
+            + 2.0 * (u_old[i] - u_new[i_upw]) / (dt_dx * (1.0 + abs(dt_dx))),
             slope_i,
         ]
     )
@@ -102,7 +102,9 @@ _limit_slope_types = {
 
 # SLOPE {{{1
 # _compute_slope_box() {{{2
-def _compute_slope_box(state: SolverState, i: int, u_new_i: float, dt_dx: float) -> float:
+def _compute_slope_box(
+    state: SolverState, i: int, u_new_i: float, dt_dx: float
+) -> float:
     u_old = state.u_old
 
     if np.not_equal(dt_dx, 0.0):
@@ -121,8 +123,7 @@ _compute_slope_types = {
 
 # compute_slope() {{{2
 def compute_slope(
-    state: SolverState, i: int, u_new_i: float, 
-    config: SolverConfig
+    state: SolverState, i: int, u_new_i: float, config: SolverConfig
 ) -> float:
     slope_type = config.reconst.slope_type
     compute_slope_func = _compute_slope_types.get(slope_type)
@@ -174,8 +175,7 @@ _compute_guess_types = {
 
 
 # compute_guess() {{{2
-def compute_guess(state: SolverState, i: int, 
-                  config: SolverConfig) -> float:
+def compute_guess(state: SolverState, i: int, config: SolverConfig) -> float:
     guess_type = config.reconst.guess_type
     compute_guess_func = _compute_guess_types.get(guess_type)
     if compute_guess_func is None:

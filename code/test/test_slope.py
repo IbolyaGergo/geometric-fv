@@ -28,12 +28,10 @@ def test_compute_slope_Box():
     config = SolverConfig(reconst=reconst_config, dt_dx=dt_dx)
 
     state = SolverState(u_old=u_old, u_new=u_new, slope=slope)
-    slope_i = compute_slope(state, i, u_new_i=u_new[i],
-                            config=config)
+    slope_i = compute_slope(state, i, u_new_i=u_new[i], config=config)
     assert pytest.approx(slope_i) == 2.0
 
-    slope_i = compute_slope(state, i, u_new_i=2.5,
-                            config=config)
+    slope_i = compute_slope(state, i, u_new_i=2.5, config=config)
     assert pytest.approx(slope_i) == 1.0
 
 
@@ -57,8 +55,7 @@ def test_compute_slope_Box_indexing():
     config = SolverConfig(reconst=reconst_config, dt_dx=dt_dx)
 
     state = SolverState(u_old=u_old, u_new=u_new, slope=slope)
-    slope_i = compute_slope(state, i, u_new_i=u_new[i],
-                            config=config)
+    slope_i = compute_slope(state, i, u_new_i=u_new[i], config=config)
 
     assert pytest.approx(slope_i) == 3.0
 
@@ -116,7 +113,9 @@ def test_limit_slope_tvd_necessary_properties_hypothesis(u_old, u_new, slope, dt
     reconst_config_suff = ReconstConfig(
         slope_type=SlopeType.BOX, limiter_type=LimiterType.TVD_SUFF
     )
-    reconst_config_nec = ReconstConfig(slope_type=SlopeType.BOX, limiter_type=LimiterType.TVD)
+    reconst_config_nec = ReconstConfig(
+        slope_type=SlopeType.BOX, limiter_type=LimiterType.TVD
+    )
     config_nec = SolverConfig(reconst=reconst_config_nec, dt_dx=dt_dx)
     config_suff = SolverConfig(reconst=reconst_config_suff, dt_dx=dt_dx)
 
@@ -124,11 +123,9 @@ def test_limit_slope_tvd_necessary_properties_hypothesis(u_old, u_new, slope, dt
 
     # Make sure slope[i-1] is properly bounded
     i = 2
-    slope[i - 1] = compute_slope(state, i - 1, u_new[i - 1],
-                                 config_suff)
+    slope[i - 1] = compute_slope(state, i - 1, u_new[i - 1], config_suff)
 
-    slope_suff = compute_slope(state, i, u_new[i], 
-                               config_suff)
+    slope_suff = compute_slope(state, i, u_new[i], config_suff)
     slope_nec = compute_slope(state, i, u_new[i], config_nec)
 
     A = 2.0 * (u_old[i + 1] - u_new[i]) / (1.0 + dt_dx)
