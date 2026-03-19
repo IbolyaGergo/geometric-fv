@@ -48,7 +48,7 @@ class Scheme(ABC):
         _apply_bc_kernel(
             state=state,
             nghost=self.nghost,
-            solver_config=self.config,
+            config=self.config,
         )
 
     # cell_indices() {{{2
@@ -97,7 +97,7 @@ class SecondOrderImplicit(Scheme):
 
         slope_i_current = compute_slope(
             state, i=i, u_new_i=u_new_i_current,
-            reconst_config=self.config.reconst, config=self.config
+            config=self.config
         )
 
         # fmt: off
@@ -115,7 +115,7 @@ class SecondOrderImplicit(Scheme):
 
         for i in self.cell_indices(state):
             u_new_i_guess = compute_guess(
-                state, i=i, reconst_config=self.config.reconst,
+                state, i=i, 
                 config=self.config
             )
 
@@ -129,7 +129,7 @@ class SecondOrderImplicit(Scheme):
             if result.success:
                 state.u_new[i] = result.x
                 state.slope[i] = compute_slope(state, i, result.x,
-                                               self.config.reconst, self.config)
+                                               self.config)
                 state.niter[i] = result.nit
 
                 # print(f"Cell {i} converged in {state.niter[i]} number of iterations.")
@@ -161,7 +161,7 @@ class HighResImplicit(Scheme):
 
         slope_i_current = compute_slope(
             state, i=i, u_new_i=u_new_i_current,
-            reconst_config=self.config.reconst, config=self.config
+            config=self.config
         )
 
         a_im1 = eq.speed(u_old[i - 1], u_new[i-1])
@@ -197,7 +197,7 @@ class HighResImplicit(Scheme):
             if result.success:
                 state.u_new[i] = result.x
                 state.slope[i] = compute_slope(state, i, result.x,
-                                               self.config.reconst, self.config)
+                                               self.config)
                 state.niter[i] = result.nit
 
                 # print(f"Cell {i} converged in {state.niter[i]} number of iterations.")

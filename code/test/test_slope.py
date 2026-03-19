@@ -29,11 +29,11 @@ def test_compute_slope_Box():
 
     state = SolverState(u_old=u_old, u_new=u_new, slope=slope)
     slope_i = compute_slope(state, i, u_new_i=u_new[i],
-                            reconst_config=reconst_config, config=config)
+                            config=config)
     assert pytest.approx(slope_i) == 2.0
 
     slope_i = compute_slope(state, i, u_new_i=2.5,
-                            reconst_config=reconst_config, config=config)
+                            config=config)
     assert pytest.approx(slope_i) == 1.0
 
 
@@ -58,7 +58,7 @@ def test_compute_slope_Box_indexing():
 
     state = SolverState(u_old=u_old, u_new=u_new, slope=slope)
     slope_i = compute_slope(state, i, u_new_i=u_new[i],
-                            reconst_config=reconst_config, config=config)
+                            config=config)
 
     assert pytest.approx(slope_i) == 3.0
 
@@ -88,7 +88,7 @@ def test_limit_slope_tvd_suff_properties_hypothesis(u_old, u_new, dt_dx):
     B = (2.0 / dt_dx) * (u_old[i] - u_new[i - 1]) / (1.0 + dt_dx)
 
     # Act
-    slope_lim = compute_slope(state, i, u_new[i], reconst_config, config=config)
+    slope_lim = compute_slope(state, i, u_new[i], config=config)
 
     # Assert Invariants
     # 1. The Sign Invariant: slope must have the same sign as the box slope or be zero
@@ -125,11 +125,11 @@ def test_limit_slope_tvd_necessary_properties_hypothesis(u_old, u_new, slope, dt
     # Make sure slope[i-1] is properly bounded
     i = 2
     slope[i - 1] = compute_slope(state, i - 1, u_new[i - 1],
-                                 reconst_config_suff, config_suff)
+                                 config_suff)
 
-    slope_suff = compute_slope(state, i, u_new[i], reconst_config_suff,
+    slope_suff = compute_slope(state, i, u_new[i], 
                                config_suff)
-    slope_nec = compute_slope(state, i, u_new[i], reconst_config_nec, config_nec)
+    slope_nec = compute_slope(state, i, u_new[i], config_nec)
 
     A = 2.0 * (u_old[i + 1] - u_new[i]) / (1.0 + dt_dx)
     B = (2.0 / dt_dx) * (u_old[i] - u_new[i - 1]) / (1.0 + dt_dx)

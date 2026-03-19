@@ -34,17 +34,17 @@ def test_constant_extend_bc(mesh, u0, nghost):
     bc_type = BCType.CONSTANT_EXTEND
     dt_dx = 0.0
 
-    config = BoundaryConfig(bc_type=bc_type)
+    bc_config = BoundaryConfig(bc_type=bc_type)
     reconst_config = ReconstConfig()
-    solver_config = SolverConfig(
-        boundary=config,
+    config = SolverConfig(
+        boundary=bc_config,
         reconst=reconst_config,
         dt_dx=dt_dx,
     )
     state = create_solver_state(u0, nghost)
 
     apply_bc(state=state, nghost=nghost,
-             solver_config=solver_config)
+             config=config)
 
     # Left boundary: all ghost cells should match the first physical cell
     assert np.all(state.u_old[:nghost] == u0[0])
@@ -60,16 +60,16 @@ def test_constant_extend_bc(mesh, u0, nghost):
 def test_apply_bc_quasi_periodic_u_old(mesh, u0, nghost):
     bc_type = BCType.QUASI_PERIODIC
 
-    config = BoundaryConfig(bc_type=bc_type)
+    bc_config = BoundaryConfig(bc_type=bc_type)
     reconst_config = ReconstConfig()
-    solver_config = SolverConfig(
-        boundary=config,
+    config = SolverConfig(
+        boundary=bc_config,
         reconst=reconst_config,
         dt_dx=0.0,
     )
     state = create_solver_state(u0, nghost, dt_dx=0.0)
 
-    apply_bc(state=state, nghost=nghost, solver_config=solver_config)
+    apply_bc(state=state, nghost=nghost, config=config)
 
     if nghost == 1:
         # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
@@ -87,19 +87,19 @@ def test_apply_bc_quasi_periodic_u_old(mesh, u0, nghost):
 @pytest.mark.parametrize("nghost", [1, 2])
 def test_apply_bc_quasi_periodic_u_new_dt_dx_is_whole_positive(mesh, u0, nghost):
     bc_type = BCType.QUASI_PERIODIC
-    config = BoundaryConfig(bc_type=bc_type)
+    bc_config = BoundaryConfig(bc_type=bc_type)
     reconst_config = ReconstConfig()
 
     for dt_dx in [0.0, 1.0, 2.0]:
-        solver_config = SolverConfig(
-            boundary=config,
+        config = SolverConfig(
+            boundary=bc_config,
             reconst=reconst_config,
             dt_dx=dt_dx,
         )
         state = create_solver_state(u0, nghost, dt_dx=dt_dx)
 
         apply_bc(
-            state=state, nghost=nghost, solver_config=solver_config,
+            state=state, nghost=nghost, config=config,
         )
         if nghost == 1:
             # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
@@ -114,18 +114,18 @@ def test_apply_bc_quasi_periodic_u_new_dt_dx_is_whole_positive(mesh, u0, nghost)
 @pytest.mark.parametrize("nghost", [1, 2])
 def test_apply_bc_quasi_periodic_u_new_general_dt_dx_positive(mesh, u0, nghost):
     bc_type = BCType.QUASI_PERIODIC
-    config = BoundaryConfig(bc_type=bc_type)
+    bc_config = BoundaryConfig(bc_type=bc_type)
     reconst_config = ReconstConfig()
 
     # fmt: off
     for dt_dx in [0.6, 1.5, 2.7]:
-        solver_config = SolverConfig(
-            boundary=config,
+        config = SolverConfig(
+            boundary=bc_config,
             reconst=reconst_config,
             dt_dx=dt_dx,
         )
         state = create_solver_state(u0, nghost, dt_dx=dt_dx)
-        apply_bc(state=state, nghost=nghost, solver_config=solver_config)
+        apply_bc(state=state, nghost=nghost, config=config)
 
         dt_dx_frac = np.mod(dt_dx, 1)
         if nghost == 1:
@@ -151,18 +151,18 @@ def test_apply_bc_quasi_periodic_u_new_general_dt_dx_positive(mesh, u0, nghost):
 @pytest.mark.parametrize("nghost", [1, 2])
 def test_apply_bc_quasi_periodic_u_new_dt_dx_is_whole_negative(mesh, u0, nghost):
     bc_type = BCType.QUASI_PERIODIC
-    config = BoundaryConfig(bc_type=bc_type)
+    bc_config = BoundaryConfig(bc_type=bc_type)
     reconst_config = ReconstConfig()
 
     for dt_dx in [-1.0, -2.0, -3.0]:
-        solver_config = SolverConfig(
-            boundary=config,
+        config = SolverConfig(
+            boundary=bc_config,
             reconst=reconst_config,
             dt_dx=dt_dx,
         )
         state = create_solver_state(u0, nghost, dt_dx=dt_dx)
         apply_bc(
-            state=state, nghost=nghost, solver_config=solver_config
+            state=state, nghost=nghost, config=config
         )
         if nghost == 1:
             # 0 \\ 1 \ 2 \ ... \ -2 \\ -1
@@ -191,18 +191,18 @@ def test_apply_bc_quasi_periodic_u_new_dt_dx_is_whole_negative(mesh, u0, nghost)
 @pytest.mark.parametrize("nghost", [1, 2])
 def test_apply_bc_quasi_periodic_u_new_dt_dx_is_general_negative(mesh, u0, nghost):
     bc_type = BCType.QUASI_PERIODIC
-    config = BoundaryConfig(bc_type=bc_type)
+    bc_config = BoundaryConfig(bc_type=bc_type)
     reconst_config = ReconstConfig()
 
     for dt_dx in [-0.6, -1.6, -2.7]:
-        solver_config = SolverConfig(
-            boundary=config,
+        config = SolverConfig(
+            boundary=bc_config,
             reconst=reconst_config,
             dt_dx=dt_dx,
         )
         state = create_solver_state(u0, nghost, dt_dx=dt_dx)
         apply_bc(
-            state=state, nghost=nghost, solver_config=solver_config
+            state=state, nghost=nghost, config=config
         )
 
         dt_dx_frac = np.mod(-dt_dx, 1)

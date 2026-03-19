@@ -121,10 +121,10 @@ _compute_slope_types = {
 
 # compute_slope() {{{2
 def compute_slope(
-    state: SolverState, i: int, u_new_i: float, reconst_config: ReconstConfig,
+    state: SolverState, i: int, u_new_i: float, 
     config: SolverConfig
 ) -> float:
-    slope_type = reconst_config.slope_type
+    slope_type = config.reconst.slope_type
     compute_slope_func = _compute_slope_types.get(slope_type)
     if compute_slope_func is None:
         raise ValueError(f"Unsupported slope type: {slope_type}")
@@ -132,7 +132,7 @@ def compute_slope(
     dt_dx = config.dt_dx
     slope_i = compute_slope_func(state, i, u_new_i, dt_dx)
 
-    limiter_type = reconst_config.limiter_type
+    limiter_type = config.reconst.limiter_type
     limit_slope_func = _limit_slope_types.get(limiter_type)
     if limit_slope_func is None:
         raise ValueError(f"Unsupported limiter type: {limiter_type}")
@@ -174,9 +174,9 @@ _compute_guess_types = {
 
 
 # compute_guess() {{{2
-def compute_guess(state: SolverState, i: int, reconst_config: ReconstConfig,
+def compute_guess(state: SolverState, i: int, 
                   config: SolverConfig) -> float:
-    guess_type = reconst_config.guess_type
+    guess_type = config.reconst.guess_type
     compute_guess_func = _compute_guess_types.get(guess_type)
     if compute_guess_func is None:
         raise ValueError(f"Unsupported guess type: {guess_type}")
@@ -184,7 +184,7 @@ def compute_guess(state: SolverState, i: int, reconst_config: ReconstConfig,
     dt_dx = config.dt_dx
     u_guess = compute_guess_func(state, i, dt_dx)
 
-    if reconst_config.limiter_type != LimiterType.NONE:
+    if config.reconst.limiter_type != LimiterType.NONE:
         i_upw = i - 1 if dt_dx > 0 else i + 1
         u_guess = np.median([u_guess, state.u_old[i], state.u_new[i_upw]])
 

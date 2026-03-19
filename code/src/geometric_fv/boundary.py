@@ -67,18 +67,18 @@ _apply_bc_types = {
 def apply_bc(
     state: SolverState,
     nghost: int,
-    solver_config: SolverConfig = None,
+    config: SolverConfig = None,
 ) -> None:
-    bc_type = solver_config.boundary.bc_type
+    bc_type = config.boundary.bc_type
     apply_bc_func = _apply_bc_types.get(bc_type)
     if apply_bc_func is None:
         raise ValueError(f"Unsupported BC type: {bc_type}")
-    dt_dx = solver_config.dt_dx
+    dt_dx = config.dt_dx
     apply_bc_func(state, nghost, dt_dx)
 
     u_new = state.u_new
     slope = state.slope
-    dt_dx = solver_config.dt_dx
+    dt_dx = config.dt_dx
 
     # first/last idx of the physical domain
     first = nghost
@@ -91,6 +91,5 @@ def apply_bc(
         state=state,
         i=i,
         u_new_i=u_new[i],
-        reconst_config=solver_config.reconst,
-        config=solver_config,
+        config=config,
     )
