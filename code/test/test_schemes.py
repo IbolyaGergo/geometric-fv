@@ -5,9 +5,9 @@ import pytest
 
 from geometric_fv.config import BoundaryConfig, MeshConfig, ReconstConfig, SolverConfig
 from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
-from geometric_fv.schemes import Scheme, SecondOrderImplicit, HighResImplicit
-from geometric_fv.solver import SolverState
 from geometric_fv.equations import Burgers, LinearAdvection
+from geometric_fv.schemes import HighResImplicit, Scheme, SecondOrderImplicit
+from geometric_fv.solver import SolverState
 
 
 # SETUP {{{1

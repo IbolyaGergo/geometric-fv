@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from geometric_fv.solver import SolverState
+
 import numpy as np
+
 
 # Equation {{{1
 class Equation(ABC):

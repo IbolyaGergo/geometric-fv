@@ -1,7 +1,7 @@
-import numpy as np
-from typing import Callable
 
-from geometric_fv.config import ReconstConfig, SolverConfig
+import numpy as np
+
+from geometric_fv.config import SolverConfig
 from geometric_fv.enums import GuessType, LimiterType, SlopeType
 from geometric_fv.solver import SolverState
 

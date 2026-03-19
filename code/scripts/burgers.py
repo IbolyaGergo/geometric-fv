@@ -9,8 +9,8 @@ from geometric_fv.config import (
     SolverConfig,
 )
 from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
-from geometric_fv.schemes import HighResImplicit, SecondOrderImplicit
-from geometric_fv.equations import Burgers, LinearAdvection
+from geometric_fv.equations import Burgers
+from geometric_fv.schemes import HighResImplicit
 
 # Mesh
 x_min = 0.0

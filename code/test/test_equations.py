@@ -1,6 +1,7 @@
-import numpy as np
 import pytest
-from geometric_fv.equations import LinearAdvection, Burgers
+
+from geometric_fv.equations import Burgers, LinearAdvection
+
 
 # TEST_LINEAR_ADVECTION {{{1
 # test_linear_advection_flux_and_dfdu() {{{2
@@ -38,7 +39,7 @@ def test_burgers_flux_and_dfdu(u):
     assert eq.dfdu(u) == pytest.approx(u)
 
 # test_burgers_speed() {{{2
-@pytest.mark.parametrize("u1, u2", [(0.0, 1.0), (1.0, 2.0), (1.0, 1.0), (-1.0, 1.0)])
+@pytest.mark.parametrize(("u1", "u2"), [(0.0, 1.0), (1.0, 2.0), (1.0, 1.0), (-1.0, 1.0)])
 def test_burgers_speed(u1, u2):
     eq = Burgers()
     if u1 == u2:
