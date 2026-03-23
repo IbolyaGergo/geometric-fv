@@ -6,7 +6,7 @@ import numpy as np
 
 from geometric_fv.config import SolverConfig
 from geometric_fv.slope import compute_guess, compute_slope
-from geometric_fv.solver import SolverState
+from geometric_fv.solver import SolverState, solve_for_u
 from geometric_fv.utils import simple_fixed_point
 
 
@@ -23,7 +23,7 @@ class Scheme(ABC):
             u_old=u_padded.copy(),
             u_new=u_padded.copy(),
             slope=np.zeros_like(u_padded),
-            speed=np.ones_like(u_padded),
+            speed=np.zeros_like(u_padded),
             niter=np.zeros_like(u_padded, dtype=int),
         )
 
@@ -139,6 +139,19 @@ class HighResImplicit(Scheme):
     nghost: int = 2
     config: SolverConfig = SolverConfig()
 
+    def _initial_guess(self, state: SolverState, i: int) -> float:
+        """
+        Provides a first-order implicit upwind guess.
+        Solves: u + dt/dx * f(u) = u_old + dt/dx * f(u_upw)
+        """
+        u_old = state.u_old
+        u_new = state.u_new
+        dt_dx = self.config.dt_dx
+        eq = self.config.equation
+
+        rhs = u_old[i] + dt_dx * eq.flux(u_new[i-1])
+        return solve_for_u(eq, rhs, dt_dx)
+
     # _update_cell_iter() {{{2
     def _update_cell_iter(
         self,
@@ -167,7 +180,7 @@ class HighResImplicit(Scheme):
         c_i = mu_i * (1 + mu_i) * 0.5 * slope_i_current
 
         rhs = u_old[i] + dt_dx * eq.flux(u_new[i - 1]) - c_i + c_im1
-        return eq.solve_for_u(rhs, dt_dx)
+        return solve_for_u(eq, rhs, dt_dx)
 
     # sweep() {{{2
     def sweep(self, state: SolverState):
@@ -177,7 +190,8 @@ class HighResImplicit(Scheme):
             dt_dx = self.config.dt_dx
             eq = self.config.equation
 
-            u_new_i_guess = eq.initial_guess(u_old[i], u_new[i - 1], dt_dx)
+            # u_new_i_guess = eq.initial_guess(u_old[i], u_new[i - 1], dt_dx)
+            u_new_i_guess = self._initial_guess(state, i)
 
             result = simple_fixed_point(
                 self._update_cell_iter,
