@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from geometric_fv.equations import Equation, LinearAdvection, Burgers
+from geometric_fv.equations import Burgers, Equation, LinearAdvection
 
 
 @dataclass

@@ -10,7 +10,7 @@ from geometric_fv.config import (
 )
 from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
 from geometric_fv.equations import Burgers
-from geometric_fv.schemes import HighResImplicit
+from geometric_fv.schemes import Lozano
 
 # Mesh
 x_min = 0.0
@@ -35,7 +35,7 @@ config = SolverConfig(
     dt_dx=dt_dx,
 )
 
-scheme = HighResImplicit(config=config)
+scheme = Lozano(config=config)
 nghost = scheme.nghost
 
 mesh = config.mesh.create_mesh()
@@ -43,7 +43,12 @@ x_c = mesh.centers
 ncells = mesh.ncells
 
 # u0 = np.sin(2 * np.pi * x_c)
-u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 1, 0])
+u0 = np.piecewise(
+    x_c,
+    [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5],
+    [-0.5, 1, -0.5]
+)
+# u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5], [0, 1, 0])
 # u0 = np.piecewise(x_c, [x_c < 0.5, x_c >= 0.5], [1, 0])
 # u0 = np.e**(-(x_c - 0.25)**2*100)
 
@@ -57,7 +62,7 @@ for _t in range(50):
 
     plt.figure()
     plt.plot(x_c, u0, "-o", x_c, state.u_new[nghost:-nghost], "-o")
-    plt.savefig(f"tvd_box_{str(_t).zfill(3)}.png")
+    plt.savefig(f"{str(_t).zfill(3)}.png")
     plt.close()
 
 # plt.plot(x_c, u0, "-o", x_c, u_new[1:-1], "-o")

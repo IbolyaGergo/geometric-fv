@@ -2,11 +2,14 @@ from dataclasses import dataclass
 
 import numpy as np
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
+from hypothesis.extra.numpy import arrays as hnp
 
 from geometric_fv.config import BoundaryConfig, MeshConfig, ReconstConfig, SolverConfig
 from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
 from geometric_fv.equations import Burgers, LinearAdvection
-from geometric_fv.schemes import HighResImplicit, Scheme, SecondOrderImplicit
+from geometric_fv.schemes import HighResImplicit, Lozano, Scheme, SecondOrderImplicit
 from geometric_fv.solver import SolverState
 
 
@@ -119,9 +122,9 @@ def test_HighResImplicit_equals_other_scheme_for_given_limiter(
     scheme_other = scheme_other(config=config)
     state_other = scheme_other.init_state(abs_sine_wave)
 
-    for s, st in [(scheme_hr, state_hr), (scheme_other, state_other)]:
-        s.apply_bc(st)
-        s.sweep(st)
+    for s, state in [(scheme_hr, state_hr), (scheme_other, state_other)]:
+        s.apply_bc(state)
+        s.sweep(state)
 
     np.testing.assert_allclose(state_hr.u_new, state_other.u_new)
 
@@ -258,3 +261,30 @@ def test_mirroring(limiter_type, guess_type):
     neg_inner = state_neg.u_new[nghost:-nghost]
 
     np.testing.assert_allclose(pos_inner, neg_inner[::-1], atol=1e-12)
+
+
+# test_Lozano_boundedness() {{{2
+ncells = 20
+u_st = hnp(np.float64, ncells, elements=st.floats(0, 10))
+dt_dx_st = st.floats(0.1, 5.0)
+
+
+@given(u0=u_st, dt_dx=dt_dx_st)
+def test_Lozano_boundedness(u0, dt_dx):
+    config = SolverConfig(
+        mesh=MeshConfig(ncells=ncells),
+        boundary=BoundaryConfig(bc_type=BCType.CONSTANT_EXTEND),
+        dt_dx=dt_dx,
+    )
+
+    scheme = Lozano(config=config)
+    state = scheme.allocate_state(u0)
+
+    scheme.apply_bc(state)
+    scheme.sweep(state)
+
+    u_old = state.u_old
+    u_new = state.u_new
+    for i in range(1, ncells):
+        assert min(u_new[i - 1], u_old[i]) - 1e-12 <= u_new[i]
+        assert u_new[i] <= max(u_new[i - 1], u_old[i]) + 1e12

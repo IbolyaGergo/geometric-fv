@@ -149,7 +149,7 @@ class HighResImplicit(Scheme):
         dt_dx = self.config.dt_dx
         eq = self.config.equation
 
-        rhs = u_old[i] + dt_dx * eq.flux(u_new[i-1])
+        rhs = u_old[i] + dt_dx * eq.flux(u_new[i - 1])
         return solve_for_u(eq, rhs, dt_dx)
 
     # _update_cell_iter() {{{2
@@ -212,3 +212,43 @@ class HighResImplicit(Scheme):
                 print(f"Message: {result.message}")
 
                 state.u_new[i] = u_new_i_guess
+
+
+# Lozano() {{{1
+@dataclass(frozen=True)
+class Lozano(Scheme):
+    nghost: int = 2
+    config: SolverConfig = SolverConfig()
+
+    # _flux_pos() {{{2
+    def _flux_pos(self, u: float) -> float:
+        if u > 0.0:
+            return 0.5 * u**2
+        return 0.0
+
+    # _flux_neg() {{{2
+    def _flux_neg(self, u: float) -> float:
+        if u > 0.0:
+            return 0.0
+        return 0.5 * u**2
+
+    # sweep() {{{2
+    def sweep(self, state: SolverState):
+        u_old = state.u_old
+        u_new = state.u_new
+        dt_dx = self.config.dt_dx
+
+        for i in self.cell_indices(state):
+            u_i_pos = u_old[i] + dt_dx * self._flux_pos(u_new[i - 1])
+
+            if u_i_pos > 0.0:
+                u_new[i] = 1.0 / dt_dx * (-1 + np.sqrt(1 + 2 * dt_dx * u_i_pos))
+            else:
+                u_new[i] = u_i_pos
+        for i in reversed(self.cell_indices(state)):
+            u_i_neg = u_new[i] - dt_dx * self._flux_neg(u_new[i + 1])
+
+            if u_i_neg > 0.0:
+                u_new[i] = u_i_neg
+            else:
+                u_new[i] = 1.0 / dt_dx * (1 - np.sqrt(1 - 2 * dt_dx * u_i_neg))
