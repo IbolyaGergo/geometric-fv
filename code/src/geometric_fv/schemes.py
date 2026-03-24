@@ -186,12 +186,6 @@ class HighResImplicit(Scheme):
     # sweep() {{{2
     def sweep(self, state: SolverState):
         for i in self.cell_indices(state):
-            u_old = state.u_old
-            u_new = state.u_new
-            dt_dx = self.config.dt_dx
-            eq = self.config.equation
-
-            # u_new_i_guess = eq.initial_guess(u_old[i], u_new[i - 1], dt_dx)
             u_new_i_guess = self._initial_guess(state, i)
 
             result = simple_fixed_point(
@@ -223,33 +217,42 @@ class Lozano(Scheme):
 
     # _flux_pos() {{{2
     def _flux_pos(self, u: float) -> float:
+        eq = self.config.equation
         if u > 0.0:
-            return 0.5 * u**2
+            return eq.flux(u)
         return 0.0
 
     # _flux_neg() {{{2
     def _flux_neg(self, u: float) -> float:
+        eq = self.config.equation
         if u > 0.0:
             return 0.0
-        return 0.5 * u**2
+        return eq.flux(u)
 
-    # sweep() {{{2
-    def sweep(self, state: SolverState):
+    # _update_cell() {{{2
+    def _update_cell(self, state: SolverState, i: int, direction: str) -> float:
         u_old = state.u_old
         u_new = state.u_new
         dt_dx = self.config.dt_dx
+        eq = self.config.equation
 
+        if direction == "pos":
+            rhs = u_old[i] + dt_dx * self._flux_pos(u_new[i - 1])
+            if rhs > 0.0:
+                return solve_for_u(eq, rhs, dt_dx, direction=direction)
+            else:
+                return rhs
+
+        rhs = u_new[i] - dt_dx * self._flux_neg(u_new[i + 1])
+        if rhs > 0.0:
+            return rhs
+        else:
+            return solve_for_u(eq, rhs, dt_dx, direction=direction)
+
+
+    # sweep() {{{2
+    def sweep(self, state: SolverState):
         for i in self.cell_indices(state):
-            u_i_pos = u_old[i] + dt_dx * self._flux_pos(u_new[i - 1])
-
-            if u_i_pos > 0.0:
-                u_new[i] = 1.0 / dt_dx * (-1 + np.sqrt(1 + 2 * dt_dx * u_i_pos))
-            else:
-                u_new[i] = u_i_pos
+            state.u_new[i] = self._update_cell(state, i, direction="pos")
         for i in reversed(self.cell_indices(state)):
-            u_i_neg = u_new[i] - dt_dx * self._flux_neg(u_new[i + 1])
-
-            if u_i_neg > 0.0:
-                u_new[i] = u_i_neg
-            else:
-                u_new[i] = 1.0 / dt_dx * (1 - np.sqrt(1 - 2 * dt_dx * u_i_neg))
+            state.u_new[i] = self._update_cell(state, i, direction="neg")
