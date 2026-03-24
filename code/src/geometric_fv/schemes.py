@@ -139,6 +139,7 @@ class HighResImplicit(Scheme):
     nghost: int = 2
     config: SolverConfig = SolverConfig()
 
+    # _initial_guess() {{{2
     def _initial_guess(self, state: SolverState, i: int) -> float:
         """
         Provides a first-order implicit upwind guess.

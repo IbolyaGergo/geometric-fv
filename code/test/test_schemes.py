@@ -10,7 +10,7 @@ from geometric_fv.config import BoundaryConfig, MeshConfig, ReconstConfig, Solve
 from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
 from geometric_fv.equations import Burgers, LinearAdvection
 from geometric_fv.schemes import HighResImplicit, Lozano, Scheme, SecondOrderImplicit
-from geometric_fv.solver import SolverState
+from geometric_fv.solver import SolverState, solve_for_u
 
 
 # SETUP {{{1
@@ -34,7 +34,7 @@ class ImplicitUpwind(Scheme):
         for i in self.cell_indices(state):
             # For positive dt_dx: u_i + dt_dx*f(u_i) = u_old_i + dt_dx*f(u_im1)
             rhs = u_old[i] + dt_dx * eq.flux(u_new[i - 1])
-            u_new[i] = eq.solve_for_u(rhs, dt_dx)
+            u_new[i] = solve_for_u(eq, rhs, dt_dx)
 
 
 # Box(Scheme) {{{2
@@ -275,6 +275,7 @@ def test_Lozano_boundedness(u0, dt_dx):
         mesh=MeshConfig(ncells=ncells),
         boundary=BoundaryConfig(bc_type=BCType.CONSTANT_EXTEND),
         dt_dx=dt_dx,
+        equation=Burgers(),
     )
 
     scheme = Lozano(config=config)

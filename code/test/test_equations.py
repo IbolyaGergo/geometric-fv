@@ -1,6 +1,7 @@
 import pytest
 
 from geometric_fv.equations import Burgers, LinearAdvection
+from geometric_fv.solver import solve_for_u
 
 
 # TEST_LINEAR_ADVECTION {{{1
@@ -27,7 +28,7 @@ def test_linear_advection_speed(a, u1, u2):
 @pytest.mark.parametrize("dt_dx", [0.1, 0.5, 1.0])
 def test_linear_advection_solve_for_u(a, rhs, dt_dx):
     eq = LinearAdvection(a=a)
-    u_sol = eq.solve_for_u(rhs, dt_dx)
+    u_sol = solve_for_u(eq, rhs, dt_dx)
 
     assert u_sol + dt_dx * eq.flux(u_sol) == pytest.approx(rhs)
 
@@ -59,7 +60,7 @@ def test_burgers_speed(u1, u2):
 @pytest.mark.parametrize("dt_dx", [0.1, 0.5, 1.0])
 def test_burgers_solve_for_u(rhs, dt_dx):
     eq = Burgers()
-    u_sol = eq.solve_for_u(rhs, dt_dx)
+    u_sol = solve_for_u(eq, rhs, dt_dx)
 
     # Note: For Burgers, rhs must be such that 1 + 2*dt_dx*rhs >= 0 for real
     # solution
@@ -69,4 +70,4 @@ def test_burgers_solve_for_u(rhs, dt_dx):
 # test_burgers_solve_for_u_zero_dt_dx() {{{2
 def test_burgers_solve_for_u_zero_dt_dx():
     eq = Burgers()
-    assert eq.solve_for_u(1.5, 0.0) == pytest.approx(1.5)
+    assert solve_for_u(eq, 1.5, 0.0) == pytest.approx(1.5)
