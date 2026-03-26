@@ -139,20 +139,6 @@ class HighResImplicit(Scheme):
     nghost: int = 2
     config: SolverConfig = SolverConfig()
 
-    # _initial_guess() {{{2
-    def _initial_guess(self, state: SolverState, i: int) -> float:
-        """
-        Provides a first-order implicit upwind guess.
-        Solves: u + dt/dx * f(u) = u_old + dt/dx * f(u_upw)
-        """
-        u_old = state.u_old
-        u_new = state.u_new
-        dt_dx = self.config.dt_dx
-        eq = self.config.equation
-
-        rhs = u_old[i] + dt_dx * eq.flux(u_new[i - 1])
-        return solve_for_u(eq, rhs, dt_dx)
-
     # _update_cell_iter() {{{2
     def _update_cell_iter(
         self,
@@ -186,7 +172,7 @@ class HighResImplicit(Scheme):
     # sweep() {{{2
     def sweep(self, state: SolverState):
         for i in self.cell_indices(state):
-            u_new_i_guess = self._initial_guess(state, i)
+            u_new_i_guess = state.u_old[i]
 
             result = simple_fixed_point(
                 self._update_cell_iter,
