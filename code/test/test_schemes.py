@@ -63,10 +63,6 @@ def sine_wave(x):
     return np.sin(2 * np.pi * x)
 
 
-def abs_sine_wave(x):
-    return abs(np.sin(2 * np.pi * x))
-
-
 # TESTs {{{1
 # test_constant_solution() {{{2
 @pytest.mark.parametrize("val", np.linspace(0.0, 2.0, 5))
@@ -90,43 +86,36 @@ def test_constant_solution(val):
     np.testing.assert_allclose(inner_solution, val, err_msg=f"Failed for val={val}")
 
 
-# test_HighResImplicit_equals_other_scheme_for_given_limiter() {{{2
-@pytest.mark.parametrize("equation", [LinearAdvection(a=1.0), Burgers()])
+# test_SecondOrderImplicit_equals_other_scheme_for_given_limiter() {{{2
 @pytest.mark.parametrize(
     ("scheme_other", "limiter_type"),
     [(ImplicitUpwind, LimiterType.FULL), (Box, LimiterType.NONE)],
 )
-def test_HighResImplicit_equals_other_scheme_for_given_limiter(
-    equation, scheme_other, limiter_type
+def test_SecondOrderImplicit_equals_other_scheme_for_given_limiter(
+    scheme_other, limiter_type
 ):
     """
-    Verifies that HighResImplicit correctly collapses to 1st-order, or Box
-    scheme (in case of LinearAdvection) when limiter is FULL or NONE
-    respectively.
+    Verifies that SecondOrderImplicit correctly collapses to 1st-order, or Box
+    scheme when limiter is FULL or NONE respectively.
     """
-    if scheme_other == Box and not isinstance(equation, LinearAdvection):
-        pytest.skip("Box reference is only implemented for Linear Advection")
-
     dt_dx = 1.6
     config = SolverConfig(
-        equation=equation,
         mesh=MeshConfig(ncells=20),
-        reconst=ReconstConfig(limiter_type=limiter_type),
+        reconst=ReconstConfig(slope_type=SlopeType.BOX, limiter_type=limiter_type),
         dt_dx=dt_dx,
     )
 
-    # abs_sine_wave, because Burgers works only for a > 0 yet
-    scheme_hr = HighResImplicit(config=config)
-    state_hr = scheme_hr.init_state(abs_sine_wave)
+    scheme_2ndo = SecondOrderImplicit(config=config)
+    state_2ndo = scheme_2ndo.init_state(sine_wave)
 
     scheme_other = scheme_other(config=config)
-    state_other = scheme_other.init_state(abs_sine_wave)
+    state_other = scheme_other.init_state(sine_wave)
 
-    for s, state in [(scheme_hr, state_hr), (scheme_other, state_other)]:
-        s.apply_bc(state)
-        s.sweep(state)
+    for scheme, state in [(scheme_2ndo, state_2ndo), (scheme_other, state_other)]:
+        scheme.apply_bc(state)
+        scheme.sweep(state)
 
-    np.testing.assert_allclose(state_hr.u_new, state_other.u_new)
+    np.testing.assert_allclose(state_2ndo.u_new, state_other.u_new)
 
 
 # test_iteration_count_for_exact_guess() {{{2
