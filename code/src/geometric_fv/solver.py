@@ -14,6 +14,7 @@ class SolverState:
     slope: np.ndarray
     niter: np.ndarray | None = None
     speed: np.ndarray | None = None
+    flux: np.ndarray | None = None
 
 
 def _solve_linear_advection(eq: Equation, rhs: float, dt_dx: float, direction: str) -> float:
