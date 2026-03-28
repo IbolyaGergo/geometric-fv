@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -62,6 +61,7 @@ class BoundaryConfig:
 class IterationConfig:
     tol: float = 1e-9
     maxiter: int = 50
+    eps: float = 1e-12
 
 
 # SolverConfig {{{1

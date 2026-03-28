@@ -140,10 +140,66 @@ class HighResImplicit(Scheme):
     nghost: int = 2
     config: SolverConfig = SolverConfig()
 
+    # _compute_flux_corr() {{{2
+    def _compute_flux_corr(
+        self,
+        u_new_i: float,
+        state: SolverState,
+        i: int,
+    ) -> float:
+        u_old = state.u_old
+        eq = self.config.equation
+        dt_dx = self.config.dt_dx
+
+        slope_i = compute_slope(
+            state, i=i, u_new_i=u_new_i, config=self.config
+        )
+        speed_i = eq.speed(u_old[i], u_new_i)
+        flux_corr = speed_i * (1 + speed_i * dt_dx) * 0.5 * slope_i
+
+        return flux_corr
+
+
+    # _compute_update() {{{2
+    def _compute_update(self, u_curr: float, state: SolverState, i: int) -> tuple[float, float]:
+        """Solves the local quadratic equation for the next iterate of u_i.
+        Args:
+            u_curr: Current iterate for cell i.
+            state: Full solver state containing old values, slopes, fluxes.
+            i: Index of the cell being updated.
+
+        Returns:
+            A tuple of (u_next, flux_out_next).
+        """
+        u_old = state.u_old
+        flux_in = state.flux[i - 1]
+
+        eq = self.config.equation
+        dt_dx = self.config.dt_dx
+        tol = self.config.iteration.tol
+
+        # predictor step
+        flux_out_corr = self._compute_flux_corr(u_curr, state, i)
+
+        # Solve quadratic:
+        # u + dt/dx * f(u) = u_old + dt/dx * F_in - dt/dx * f_corr(u_k)
+        discriminant =  1 + 2 * dt_dx * (u_old[i] + dt_dx * (flux_in - flux_out_corr))
+        if discriminant > tol:
+            u_next = (-1.0 + np.sqrt(discriminant)) / dt_dx
+            flux_out_corr = self._compute_flux_corr(u_next, state, i)
+            flux_out = eq.flux(u_next) + flux_out_corr
+        else:
+            # Fallback
+            u_next = u_old[i] + dt_dx * flux_in
+            flux_out = 0.0
+
+        return u_next, flux_out
+
+
     # _update_cell_iter() {{{2
     def _update_cell_iter(
         self,
-        u_new_i_current: float,
+        u_curr: float,
         state: SolverState,
         i: int,
     ) -> float:
@@ -151,61 +207,31 @@ class HighResImplicit(Scheme):
         u_new = state.u_new
         slope = state.slope
         flux = state.flux
-        eq = self.config.equation
 
         dt_dx = self.config.dt_dx
+        tol = self.config.iteration.tol
+        maxiter = self.config.iteration.maxiter
+        eps = self.config.iteration.eps
 
-        u_new_i = u_new_i_current
-        slope_i_current = compute_slope(
-            state, i=i, u_new_i=u_new_i, config=self.config
-        )
-        a_i = eq.speed(u_old[i], u_new_i)
-        d_i = a_i * (1 + a_i*dt_dx) * 0.5 * slope_i_current
-
+        flux_in = state.flux[i - 1]
         res = 1.0
         niter = 0
-        while (abs(res) > 1e-12) and (niter < self.config.iteration.maxiter):
-            if a_i >= 0.0:
-                D = 1 + 2 * dt_dx * (u_old[i] + dt_dx * (flux[i - 1] - d_i))
-                if D > 1e-12:
-                    u_new_i = (-1.0 + np.sqrt(D)) / dt_dx
-                    slope_i_current = compute_slope(
-                        state, i=i, u_new_i=u_new_i, config=self.config
-                    )
-                    a_i = eq.speed(u_old[i], u_new_i)
-                    d_i = a_i * (1 + a_i*dt_dx) * 0.5 * slope_i_current
-                    flux_i = eq.flux(u_new_i) + d_i
-                else:
-                    u_new_i = u_old[i] + dt_dx * flux[i-1]
-                    slope_i_current = compute_slope(
-                        state, i=i, u_new_i=u_new_i, config=self.config
-                    )
-                    a_i = eq.speed(u_old[i], u_new_i)
-                    d_i = a_i * (1 + a_i*dt_dx) * 0.5 * slope_i_current
-                    flux_i = 0.0
-            else:
-                u_new_i = u_old[i] + dt_dx * flux[i-1]
-                slope_i_current = compute_slope(
-                    state, i=i, u_new_i=u_new_i, config=self.config
-                )
-                a_i = eq.speed(u_old[i], u_new_i)
-                d_i = a_i * (1 + a_i*dt_dx) * 0.5 * slope_i_current
-                flux_i = 0.0
+        while (abs(res) > tol) and (niter < maxiter):
+            u_next, flux_out = self._compute_update(u_curr, state, i)
 
-            res = (u_new_i - u_old[i] + dt_dx * (flux_i - flux[i-1])) / abs(u_new_i)
+            res = (u_next - u_old[i] + dt_dx * (flux_out - flux_in)) / (abs(u_next) + eps)
+
+            u_curr = u_next
             niter += 1
 
-        if niter == self.config.iteration.maxiter:
-            u_new_i = u_old[i] + dt_dx * flux[i-1]
-            slope_i_current = compute_slope(
-                state, i=i, u_new_i=u_new_i, config=self.config
-            )
-            flux_i = 0.0
+        if niter == maxiter:
             print("nonlinear iters didnt converge")
 
-        u_new[i] = u_new_i
-        flux[i] = flux_i
-        slope[i] = slope_i_current
+        u_new[i] = u_curr
+        flux[i] = flux_out
+        slope[i] = compute_slope(
+            state, i=i, u_new_i=u_curr, config=self.config
+        )
 
     # sweep() {{{2
     def sweep(self, state: SolverState):
