@@ -150,12 +150,13 @@ class HighResImplicit(Scheme):
         u_old = state.u_old
         eq = self.config.equation
         dt_dx = self.config.dt_dx
+        eps = self.config.iteration.eps
 
         slope_i = compute_slope(
             state, i=i, u_new_i=u_new_i, config=self.config
         )
         speed_i = eq.speed(u_old[i], u_new_i)
-        flux_corr = speed_i * (1 + speed_i * dt_dx) * 0.5 * slope_i
+        flux_corr =  speed_i * (slope_i / (u_new_i + eps)) * (1 + speed_i * dt_dx) * 0.5
 
         return flux_corr
 
