@@ -103,12 +103,13 @@ _limit_slope_types = {
 # SLOPE {{{1
 # _compute_slope_box() {{{2
 def _compute_slope_box(
-    state: SolverState, i: int, u_new_i: float, dt_dx: float
+        state: SolverState, i: int, u_new_i: float, dt_dx: float, eq: Equation
 ) -> float:
     u_old = state.u_old
 
-    if np.not_equal(dt_dx, 0.0):
-        slope_i = (u_old[i] - u_new_i) / dt_dx
+    cfl = eq.dfdu(u_new_i) * dt_dx
+    if np.not_equal(cfl, 0.0):
+        slope_i = (u_old[i] - u_new_i) / cfl
     else:
         slope_i = 0.0
 
@@ -131,7 +132,8 @@ def compute_slope(
         raise ValueError(f"Unsupported slope type: {slope_type}")
 
     dt_dx = config.dt_dx
-    slope_i = compute_slope_func(state, i, u_new_i, dt_dx)
+    eq = config.equation
+    slope_i = compute_slope_func(state, i, u_new_i, dt_dx, eq)
 
     limiter_type = config.reconst.limiter_type
     limit_slope_func = _limit_slope_types.get(limiter_type)

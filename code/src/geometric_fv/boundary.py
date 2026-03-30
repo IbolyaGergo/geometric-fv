@@ -2,11 +2,12 @@ import numpy as np
 
 from geometric_fv.config import SolverConfig
 from geometric_fv.enums import BCType
+from geometric_fv.equations import LinearAdvection, Burgers
 from geometric_fv.slope import compute_slope
 from geometric_fv.solver import SolverState
 
 
-def _apply_bc_constant_extend(state: SolverState, nghost: int, dt_dx: float) -> None:
+def _apply_bc_constant_extend(state: SolverState, nghost: int, dt_dx: float, eq: Equation) -> None:
     u_old = state.u_old
     u_new = state.u_new
 
@@ -33,7 +34,7 @@ def _apply_bc_constant_extend(state: SolverState, nghost: int, dt_dx: float) -> 
 #     u_old[1] = u_old[-3]
 #     u_old[-1] = u_old[3]
 #     u_old[-2] = u_old[2]
-def _apply_bc_quasi_periodic(state: SolverState, nghost: int, dt_dx: float) -> None:
+def _apply_bc_quasi_periodic(state: SolverState, nghost: int, dt_dx: float, eq: Equation) -> None:
     u_old = state.u_old
     u_new = state.u_new
 
@@ -46,15 +47,16 @@ def _apply_bc_quasi_periodic(state: SolverState, nghost: int, dt_dx: float) -> N
         u_old[last + 1 + i] = u_old[first + i]
 
         # New values
+        cfl = eq.dfdu(u_new[i]) * dt_dx
         # fmt: off
-        if dt_dx > 0.0 or np.isclose(dt_dx, 0.0):
-            dt_dx_frac = np.mod(dt_dx, 1)
-            u_new[first - 1 - i] = (1 - dt_dx_frac) * u_old[last - i - int(dt_dx)] \
-                           + dt_dx_frac * u_old[last - i - 1 - int(dt_dx)]
+        if cfl > 0.0 or np.isclose(cfl, 0.0):
+            cfl_frac = np.mod(cfl, 1)
+            u_new[first - 1 - i] = (1 - cfl_frac) * u_old[last - i - int(cfl)] \
+                           + cfl_frac * u_old[last - i - 1 - int(cfl)]
         else:
-            dt_dx_frac = np.mod(-dt_dx, 1)
-            u_new[last + 1 + i] = (1 - dt_dx_frac) * u_old[first + i + int(-dt_dx)] \
-                                      + dt_dx_frac * u_old[first + i + 1 + int(-dt_dx)]
+            cfl_frac = np.mod(-cfl, 1)
+            u_new[last + 1 + i] = (1 - cfl_frac) * u_old[first + i + int(-cfl)] \
+                                      + cfl_frac * u_old[first + i + 1 + int(-cfl)]
         # fmt: on
 
 
@@ -74,7 +76,8 @@ def apply_bc(
     if apply_bc_func is None:
         raise ValueError(f"Unsupported BC type: {bc_type}")
     dt_dx = config.dt_dx
-    apply_bc_func(state, nghost, dt_dx)
+    eq = config.equation
+    apply_bc_func(state, nghost, dt_dx, eq)
 
     u_new = state.u_new
     slope = state.slope

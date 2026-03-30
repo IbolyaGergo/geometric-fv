@@ -156,7 +156,7 @@ class HighResImplicit(Scheme):
             state, i=i, u_new_i=u_new_i, config=self.config
         )
         speed_i = eq.speed(u_old[i], u_new_i)
-        flux_corr =  speed_i * (slope_i / (u_new_i + eps)) * (1 + speed_i * dt_dx) * 0.5
+        flux_corr =  speed_i * slope_i * (1 + speed_i * dt_dx) * 0.5
 
         return flux_corr
 
