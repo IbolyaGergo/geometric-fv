@@ -185,7 +185,7 @@ class HighResImplicit(Scheme):
         # Solve quadratic:
         # u + dt/dx * f(u) = u_old + dt/dx * F_in - dt/dx * f_corr(u_k)
         discriminant =  1 + 2 * dt_dx * (u_old[i] + dt_dx * (flux_in - flux_out_corr))
-        if discriminant > tol:
+        if discriminant > 1.0 + tol:
             u_next = (-1.0 + np.sqrt(discriminant)) / dt_dx
             flux_out_corr = self._compute_flux_corr(u_next, state, i)
             flux_out = eq.flux(u_next) + flux_out_corr
