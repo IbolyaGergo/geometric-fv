@@ -147,6 +147,7 @@ class HighResImplicit(Scheme):
         state: SolverState,
         i: int,
     ) -> float:
+        u_new = state.u_new
         u_old = state.u_old
         eq = self.config.equation
         dt_dx = self.config.dt_dx
@@ -157,6 +158,23 @@ class HighResImplicit(Scheme):
         )
         speed_i = eq.speed(u_old[i], u_new_i)
         flux_corr =  speed_i * slope_i * (1 + speed_i * dt_dx) * 0.5
+
+        flux_in = state.flux[i-1]
+        flux_corr = np.median(
+            [
+                flux_corr,
+                flux_in - eq.flux(u_new_i) - (u_new[i-1] - u_old[i]) / dt_dx,
+                flux_in - eq.flux(u_new_i)
+            ]
+        )
+
+        flux_corr = np.median(
+            [
+                flux_corr,
+                0.0,
+                eq.flux(u_old[i+1]) - eq.flux(u_new_i)
+            ]
+        )
 
         return flux_corr
 
@@ -173,6 +191,7 @@ class HighResImplicit(Scheme):
             A tuple of (u_next, flux_out_next).
         """
         u_old = state.u_old
+        u_new = state.u_new
         flux_in = state.flux[i - 1]
 
         eq = self.config.equation
@@ -311,3 +330,4 @@ class Lozano(Scheme):
             state.u_new[i] = self._update_cell(state, i, direction="pos")
         for i in reversed(self.cell_indices(state)):
             state.u_new[i] = self._update_cell(state, i, direction="neg")
+
