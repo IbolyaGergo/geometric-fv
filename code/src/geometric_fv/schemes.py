@@ -172,7 +172,8 @@ class HighResImplicit(Scheme):
             [
                 flux_corr,
                 0.0,
-                eq.flux(u_old[i+1]) - eq.flux(u_new_i)
+                0.5*(eq.flux(u_old[i+1]) - eq.flux(u_new_i)),
+                # eq.flux(u_old[i+1]) - eq.flux(u_new_i),
             ]
         )
 
@@ -206,7 +207,6 @@ class HighResImplicit(Scheme):
         discriminant =  1 + 2 * dt_dx * (u_old[i] + dt_dx * (flux_in - flux_out_corr))
         if discriminant > 1.0 + tol:
             u_next = (-1.0 + np.sqrt(discriminant)) / dt_dx
-            flux_out_corr = self._compute_flux_corr(u_next, state, i)
             flux_out = eq.flux(u_next) + flux_out_corr
         else:
             # Fallback
@@ -216,43 +216,6 @@ class HighResImplicit(Scheme):
         return u_next, flux_out
 
 
-    # _update_cell_iter() {{{2
-    def _update_cell_iter(
-        self,
-        u_curr: float,
-        state: SolverState,
-        i: int,
-    ) -> float:
-        u_old = state.u_old
-        u_new = state.u_new
-        slope = state.slope
-        flux = state.flux
-
-        dt_dx = self.config.dt_dx
-        tol = self.config.iteration.tol
-        maxiter = self.config.iteration.maxiter
-        eps = self.config.iteration.eps
-
-        flux_in = state.flux[i - 1]
-        res = 1.0
-        niter = 0
-        while (abs(res) > tol) and (niter < maxiter):
-            u_next, flux_out = self._compute_update(u_curr, state, i)
-
-            res = (u_next - u_old[i] + dt_dx * (flux_out - flux_in)) / (abs(u_next) + eps)
-
-            u_curr = u_next
-            niter += 1
-
-        if niter == maxiter:
-            print("nonlinear iters didnt converge")
-
-        u_new[i] = u_curr
-        flux[i] = flux_out
-        slope[i] = compute_slope(
-            state, i=i, u_new_i=u_curr, config=self.config
-        )
-
     # sweep() {{{2
     def sweep(self, state: SolverState):
         state.flux[self.nghost - 1] = \
@@ -260,27 +223,35 @@ class HighResImplicit(Scheme):
         for i in self.cell_indices(state):
             u_new_i_guess = state.u_old[i]
 
-            self._update_cell_iter(u_new_i_guess, state, i)
+            flux_i = 0.0
+            def iter_u(u_curr):
+                nonlocal flux_i
+                u_next, flux_out = self._compute_update(u_curr, state, i)
+                flux_i = flux_out
+                return u_next
 
-            # result = simple_fixed_point(
-            #     self._update_cell_iter,
-            #     u_new_i_guess,
-            #     args=(state, i),
-            #     tol=self.config.iteration.tol,
-            #     maxiter=self.config.iteration.maxiter,
-            # )
+            # self._update_cell_iter(u_new_i_guess, state, i)
 
-            # if result.success:
-            #     state.u_new[i] = result.x
-            #     state.slope[i] = compute_slope(state, i, result.x, self.config)
-            #     state.niter[i] = result.nit
+            result = simple_fixed_point(
+                iter_u,
+                u_new_i_guess,
+                tol=self.config.iteration.tol,
+                maxiter=self.config.iteration.maxiter,
+            )
 
-            #     # print(f"Cell {i} converged in {state.niter[i]} number of iterations.")
-            # else:
-            #     print(f"Warning: Solver failed to converge at cell {i}.")
-            #     print(f"Message: {result.message}")
+            if result.success:
+                state.u_new[i] = result.x
+                state.flux[i] = flux_i
+                state.slope[i] = compute_slope(state, i, result.x, self.config)
+                state.niter[i] = result.nit
 
-            #     state.u_new[i] = u_new_i_guess
+                # print(f"Cell {i} converged in {state.niter[i]} number of iterations.")
+            else:
+                print(f"Warning: Solver failed to converge at cell {i}.")
+                print(f"Message: {result.message}")
+
+                state.u_new[i] = u_new_i_guess
+                state.flux[i] = flux_i
 
 
 # Lozano() {{{1
