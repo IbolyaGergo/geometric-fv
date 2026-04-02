@@ -157,7 +157,7 @@ class HighResImplicit(Scheme):
             state, i=i, u_new_i=u_new_i, config=self.config
         )
         speed_i = eq.speed(u_old[i], u_new_i)
-        flux_corr =  speed_i * slope_i * (1 + speed_i * dt_dx) * 0.5
+        flux_corr =  speed_i * slope_i * (1 + (2*u_new_i - speed_i) * dt_dx) * 0.5
 
         flux_in = state.flux[i-1]
         flux_corr = np.median(
