@@ -156,7 +156,9 @@ class HighResImplicit(Scheme):
         slope_i = compute_slope(
             state, i=i, u_new_i=u_new_i, config=self.config
         )
-        speed_i = eq.speed(u_old[i], u_new_i)
+        speed_i = u_new_i
+        # speed_i = eq.speed(u_new_i, u_new_i)
+        # speed_i = eq.speed(u_old[i], u_new_i)
         flux_corr =  speed_i * slope_i * (1 + (2*u_new_i - speed_i) * dt_dx) * 0.5
 
         flux_in = state.flux[i-1]
@@ -172,8 +174,8 @@ class HighResImplicit(Scheme):
             [
                 flux_corr,
                 0.0,
-                0.5*(eq.flux(u_old[i+1]) - eq.flux(u_new_i)),
-                # eq.flux(u_old[i+1]) - eq.flux(u_new_i),
+                # 0.5*(eq.flux(u_old[i+1]) - eq.flux(u_new_i)),
+                eq.flux(u_old[i+1]) - eq.flux(u_new_i),
             ]
         )
 
