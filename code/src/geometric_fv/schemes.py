@@ -223,7 +223,7 @@ class HighResImplicit(Scheme):
         state.flux[self.nghost - 1] = \
         self.config.equation.flux(state.u_old[self.nghost-1])
         for i in self.cell_indices(state):
-            u_new_i_guess = state.u_old[i]
+            u_new_i_guess = state.u_new[i-1]
 
             flux_i = 0.0
             def iter_u(u_curr):
