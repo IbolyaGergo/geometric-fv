@@ -195,7 +195,6 @@ class HighResImplicit(Scheme):
         """
         u_old = state.u_old
         u_new = state.u_new
-        flux_in = state.flux[i - 1]
 
         eq = self.config.equation
         dt_dx = self.config.dt_dx
@@ -206,6 +205,7 @@ class HighResImplicit(Scheme):
 
         # Solve quadratic:
         # u + dt/dx * f(u) = u_old + dt/dx * F_in - dt/dx * f_corr(u_k)
+        flux_in = state.flux[i - 1]
         discriminant =  1 + 2 * dt_dx * (u_old[i] + dt_dx * (flux_in - flux_out_corr))
         if discriminant > 1.0 + tol:
             u_next = (-1.0 + np.sqrt(discriminant)) / dt_dx
@@ -231,8 +231,6 @@ class HighResImplicit(Scheme):
                 u_next, flux_out = self._compute_update(u_curr, state, i)
                 flux_i = flux_out
                 return u_next
-
-            # self._update_cell_iter(u_new_i_guess, state, i)
 
             result = simple_fixed_point(
                 iter_u,
