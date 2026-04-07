@@ -302,3 +302,39 @@ class Lozano(Scheme):
         for i in reversed(self.cell_indices(state)):
             state.u_new[i] = self._update_cell(state, i, direction="neg")
 
+
+# BoxBurgers() {{{1
+@dataclass(frozen=True)
+class BoxBurgers(Scheme):
+    nghost: int = 2
+    config: SolverConfig = SolverConfig()
+
+    # _flux_pos() {{{2
+    def _flux_pos(self, state: SolverState, i: int) -> float:
+        u_old = state.u_old
+        u_new = state.u_new
+        dt_dx = self.config.dt_dx
+
+        if state.u_new[i] > 0.0:
+            return 0.5*(u_new[i] * (u_old[i] - 1/dt_dx) + u_old[i]/dt_dx)
+        else:
+            return 0.0
+
+
+    # _update_cell() {{{2
+    def _update_cell(self, state: SolverState, i: int, direction: str) -> float:
+        u_old = state.u_old
+        u_new = state.u_new
+        dt_dx = self.config.dt_dx
+        eq = self.config.equation
+
+        u_pos = (u_old[i] + 2*dt_dx*self._flux_pos(state, i-1)) / (1 + dt_dx*u_old[i])
+        if u_pos > 0.0:
+            return u_pos
+        else:
+            return u_old[i] + dt_dx * self._flux_pos(state, i-1)
+
+    # sweep() {{{2
+    def sweep(self, state: SolverState):
+        for i in self.cell_indices(state):
+            state.u_new[i] = self._update_cell(state, i, direction="pos")
