@@ -182,8 +182,22 @@ class HighResImplicit(Scheme):
         return flux_corr
 
 
+    # _discriminant() {{{2
+    def _discriminant(self, u_curr: float, state: SolverState, i: int) -> float:
+        u_old = state.u_old
+        u_new = state.u_new
+        dt_dx = self.config.dt_dx
+        tol = self.config.iteration.tol
+
+        flux_out_corr = self._compute_flux_corr(u_curr, state, i)
+
+        # Solve quadratic:
+        # u + dt/dx * f(u) = u_old + dt/dx * F_in - dt/dx * f_corr(u_k)
+        flux_in = state.flux[i - 1]
+        return  1 + 2 * dt_dx * (u_old[i] + dt_dx * (flux_in - flux_out_corr))
+
     # _compute_update() {{{2
-    def _compute_update(self, u_curr: float, state: SolverState, i: int) -> tuple[float, float]:
+    def _compute_update(self, u_curr: float, state: SolverState, i: int) -> float:
         """Solves the local quadratic equation for the next iterate of u_i.
         Args:
             u_curr: Current iterate for cell i.
@@ -191,7 +205,7 @@ class HighResImplicit(Scheme):
             i: Index of the cell being updated.
 
         Returns:
-            A tuple of (u_next, flux_out_next).
+            u_next.
         """
         u_old = state.u_old
         u_new = state.u_new
@@ -200,48 +214,48 @@ class HighResImplicit(Scheme):
         dt_dx = self.config.dt_dx
         tol = self.config.iteration.tol
 
-        # predictor step
-        flux_out_corr = self._compute_flux_corr(u_curr, state, i)
-
         # Solve quadratic:
         # u + dt/dx * f(u) = u_old + dt/dx * F_in - dt/dx * f_corr(u_k)
         flux_in = state.flux[i - 1]
-        discriminant =  1 + 2 * dt_dx * (u_old[i] + dt_dx * (flux_in - flux_out_corr))
+        discriminant = self._discriminant(u_curr, state, i)
         if discriminant > 1.0 + tol:
             u_next = (-1.0 + np.sqrt(discriminant)) / dt_dx
-            flux_out = eq.flux(u_next) + flux_out_corr
         else:
             # Fallback
             u_next = u_old[i] + dt_dx * flux_in
-            flux_out = 0.0
 
-        return u_next, flux_out
+        return u_next
 
 
     # sweep() {{{2
     def sweep(self, state: SolverState):
         state.flux[self.nghost - 1] = \
-        self.config.equation.flux(state.u_old[self.nghost-1])
+        self.config.equation.flux(state.u_new[self.nghost-1])
         for i in self.cell_indices(state):
             u_new_i_guess = state.u_new[i-1]
 
-            flux_i = 0.0
-            def iter_u(u_curr):
-                nonlocal flux_i
-                u_next, flux_out = self._compute_update(u_curr, state, i)
-                flux_i = flux_out
-                return u_next
-
             result = simple_fixed_point(
-                iter_u,
+                self._compute_update,
                 u_new_i_guess,
+                args=(state, i),
                 tol=self.config.iteration.tol,
                 maxiter=self.config.iteration.maxiter,
             )
 
             if result.success:
                 state.u_new[i] = result.x
-                state.flux[i] = flux_i
+
+                eq = self.config.equation
+                dt_dx = self.config.dt_dx
+                tol = self.config.iteration.tol
+
+                discriminant = self._discriminant(state.u_new[i], state, i)
+                if discriminant > 1.0 + tol:
+                    flux_out_corr = self._compute_flux_corr(state.u_new[i], state, i)
+                    state.flux[i] = eq.flux(state.u_new[i]) + flux_out_corr
+                else:
+                    state.flux[i] = 0.0
+
                 state.slope[i] = compute_slope(state, i, result.x, self.config)
                 state.niter[i] = result.nit
 
