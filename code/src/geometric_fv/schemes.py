@@ -182,10 +182,12 @@ class HighResImplicit(Scheme):
         return flux_corr
 
 
-    # _discriminant() {{{2
-    def _discriminant(self, u_curr: float, state: SolverState, i: int) -> float:
+    # _compute_num_flux() {{{2
+    def _compute_num_flux(self, u_curr: float, state: SolverState, i: int) -> float:
         u_old = state.u_old
         u_new = state.u_new
+
+        eq = self.config.equation
         dt_dx = self.config.dt_dx
         tol = self.config.iteration.tol
 
@@ -194,7 +196,15 @@ class HighResImplicit(Scheme):
         # Solve quadratic:
         # u + dt/dx * f(u) = u_old + dt/dx * F_in - dt/dx * f_corr(u_k)
         flux_in = state.flux[i - 1]
-        return  1 + 2 * dt_dx * (u_old[i] + dt_dx * (flux_in - flux_out_corr))
+        discriminant = 1 + 2 * dt_dx * (u_old[i] + dt_dx * (flux_in - flux_out_corr))
+        if discriminant > 1.0 + tol:
+            u_next = (-1.0 + np.sqrt(discriminant)) / dt_dx
+            flux_out = eq.flux(u_next) + flux_out_corr
+        else:
+            # Fallback
+            flux_out = 0.0
+
+        return flux_out
 
     # _compute_update() {{{2
     def _compute_update(self, u_curr: float, state: SolverState, i: int) -> float:
@@ -214,15 +224,10 @@ class HighResImplicit(Scheme):
         dt_dx = self.config.dt_dx
         tol = self.config.iteration.tol
 
-        # Solve quadratic:
-        # u + dt/dx * f(u) = u_old + dt/dx * F_in - dt/dx * f_corr(u_k)
         flux_in = state.flux[i - 1]
-        discriminant = self._discriminant(u_curr, state, i)
-        if discriminant > 1.0 + tol:
-            u_next = (-1.0 + np.sqrt(discriminant)) / dt_dx
-        else:
-            # Fallback
-            u_next = u_old[i] + dt_dx * flux_in
+        flux_out = self._compute_num_flux(u_curr, state, i)
+
+        u_next = u_old[i] - dt_dx * (flux_out - flux_in)
 
         return u_next
 
@@ -244,18 +249,7 @@ class HighResImplicit(Scheme):
 
             if result.success:
                 state.u_new[i] = result.x
-
-                eq = self.config.equation
-                dt_dx = self.config.dt_dx
-                tol = self.config.iteration.tol
-
-                discriminant = self._discriminant(state.u_new[i], state, i)
-                if discriminant > 1.0 + tol:
-                    flux_out_corr = self._compute_flux_corr(state.u_new[i], state, i)
-                    state.flux[i] = eq.flux(state.u_new[i]) + flux_out_corr
-                else:
-                    state.flux[i] = 0.0
-
+                state.flux[i] = self._compute_num_flux(state.u_new[i], state, i)
                 state.slope[i] = compute_slope(state, i, result.x, self.config)
                 state.niter[i] = result.nit
 
@@ -265,7 +259,8 @@ class HighResImplicit(Scheme):
                 print(f"Message: {result.message}")
 
                 state.u_new[i] = u_new_i_guess
-                state.flux[i] = flux_i
+                state.flux[i] = self._compute_num_flux(u_new_i_guess, state, i)
+
 
 
 # Lozano() {{{1
