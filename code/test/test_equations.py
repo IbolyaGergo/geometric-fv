@@ -1,7 +1,6 @@
 import pytest
 
 from geometric_fv.equations import Burgers, LinearAdvection
-from geometric_fv.solver import solve_for_u
 
 
 # TEST_LINEAR_ADVECTION {{{1
@@ -22,13 +21,14 @@ def test_linear_advection_speed(a, u1, u2):
     assert eq.speed(u1, u2) == pytest.approx(a)
 
 
-# test_linear_advection_solve_for_u() {{{2
+# test_linear_advection_invert_implicit() {{{2
 @pytest.mark.parametrize("a", [1.0, 2.0])
 @pytest.mark.parametrize("rhs", [0.5, 1.0, -1.0])
 @pytest.mark.parametrize("dt_dx", [0.1, 0.5, 1.0])
-def test_linear_advection_solve_for_u(a, rhs, dt_dx):
+def test_linear_advection_invert_implicit(a, rhs, dt_dx):
     eq = LinearAdvection(a=a)
-    u_sol = solve_for_u(eq, rhs, dt_dx)
+    res = eq.invert_implicit(rhs, dt_dx, tol=1e-9)
+    u_sol = res.u
 
     assert u_sol + dt_dx * eq.flux(u_sol) == pytest.approx(rhs)
 
@@ -55,19 +55,36 @@ def test_burgers_speed(u1, u2):
     assert eq.speed(u1, u2) == pytest.approx(expected_speed)
 
 
-# test_burgers_solve_for_u() {{{2
+# test_burgers_invert_implicit() {{{2
 @pytest.mark.parametrize("rhs", [0.1, 1.0, 2.0])
 @pytest.mark.parametrize("dt_dx", [0.1, 0.5, 1.0])
-def test_burgers_solve_for_u(rhs, dt_dx):
+def test_burgers_invert_implicit(rhs, dt_dx):
     eq = Burgers()
-    u_sol = solve_for_u(eq, rhs, dt_dx)
+    res = eq.invert_implicit(rhs, dt_dx, tol=1e-9)
+    u_sol = res.u
 
-    # Note: For Burgers, rhs must be such that 1 + 2*dt_dx*rhs >= 0 for real
-    # solution
     assert u_sol + dt_dx * eq.flux(u_sol) == pytest.approx(rhs)
 
 
-# test_burgers_solve_for_u_zero_dt_dx() {{{2
-def test_burgers_solve_for_u_zero_dt_dx():
+# test_burgers_invert_implicit_fallback() {{{2
+def test_burgers_invert_implicit_fallback():
     eq = Burgers()
-    assert solve_for_u(eq, 1.5, 0.0) == pytest.approx(1.5)
+    # rhs small enough to make discriminant < 1
+    # discriminant = 1 + 2 * dt/dx * rhs
+    # if rhs = -1 and dt/dx = 1 => disc = -1 < 1
+    rhs = -1.0
+    dt_dx = 1.0
+    res = eq.invert_implicit(rhs, dt_dx, tol=1e-9)
+
+    assert res.is_invertible is False
+    assert res.u == rhs
+
+
+# test_burgers_invert_implicit_zero_dt_dx() {{{2
+def test_burgers_invert_implicit_zero_dt_dx():
+    eq = Burgers()
+    rhs = 1.5
+    res = eq.invert_implicit(rhs, dt_dx=0.0, tol=1e-9)
+
+    u_sol = res.u
+    assert u_sol == pytest.approx(rhs)

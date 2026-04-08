@@ -1,5 +1,11 @@
 from abc import ABC, abstractmethod
+import numpy as np
+from typing import Callable, NamedTuple
 
+# InversionResult {{{1
+class InversionResult(NamedTuple):
+    u: float
+    is_invertible: bool
 
 # Equation {{{1
 class Equation(ABC):
@@ -23,6 +29,12 @@ class Equation(ABC):
             return self.dfdu(u1)
         return (self.flux(u2) - self.flux(u1)) / du
 
+    # invert_implicit() {{{2
+    @abstractmethod
+    def invert_implicit(self, rhs: float, dt_dx: float, tol: float) -> InversionResult:
+        """Solves u + dt/dx * f(u) = rhs. Returns (u, success)."""
+        pass
+
 # Burgers {{{1
 class Burgers(Equation):
     def flux(self, u: float) -> float:
@@ -30,6 +42,23 @@ class Burgers(Equation):
 
     def dfdu(self, u: float) -> float:
         return u
+
+    def invert_implicit(self, rhs: float, dt_dx: float, tol: float) -> InversionResult:
+        if abs(dt_dx) < tol:
+            return InversionResult(rhs, is_invertible=True)
+
+        # Solve quadratic:
+        # u + dt/dx * (u^2)/2 = rhs
+        discriminant = 1 + 2 * dt_dx * rhs
+        if discriminant > 1.0 + tol:
+            u = (-1.0 + np.sqrt(discriminant)) / dt_dx
+            is_invertible = True
+        else:
+            # Fallback
+            u = rhs
+            is_invertible = False
+
+        return InversionResult(u, is_invertible)
 
 # LinearAdvection {{{1
 class LinearAdvection(Equation):
@@ -41,3 +70,8 @@ class LinearAdvection(Equation):
 
     def dfdu(self, u: float) -> float:
         return self.a
+
+    def invert_implicit(self, rhs: float, dt_dx: float, tol: float) -> InversionResult:
+        # u + dt/dx * a * u = rhs
+        u = rhs / (1.0 + abs(self.a) * dt_dx)
+        return InversionResult(u, is_invertible=True)

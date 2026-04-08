@@ -192,23 +192,21 @@ class HighResImplicit(Scheme):
         tol = self.config.iteration.tol
 
         flux_out_corr = self._compute_flux_corr(u_curr, state, i)
-
-        # Solve quadratic:
-        # u + dt/dx * f(u) = u_old + dt/dx * F_in - dt/dx * f_corr(u_k)
         flux_in = state.flux[i - 1]
-        discriminant = 1 + 2 * dt_dx * (u_old[i] + dt_dx * (flux_in - flux_out_corr))
-        if discriminant > 1.0 + tol:
-            u_next = (-1.0 + np.sqrt(discriminant)) / dt_dx
-            flux_out = eq.flux(u_next) + flux_out_corr
+
+        rhs = u_old[i] + dt_dx * (flux_in - flux_out_corr)
+        res = eq.invert_implicit(rhs, dt_dx, tol)
+
+        if res.is_invertible:
+            flux_out = eq.flux(res.u) + flux_out_corr
         else:
-            # Fallback
             flux_out = 0.0
 
         return flux_out
 
     # _compute_update() {{{2
     def _compute_update(self, u_curr: float, state: SolverState, i: int) -> float:
-        """Solves the local quadratic equation for the next iterate of u_i.
+        """
         Args:
             u_curr: Current iterate for cell i.
             state: Full solver state containing old values, slopes, fluxes.
