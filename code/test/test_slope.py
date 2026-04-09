@@ -6,7 +6,7 @@ from hypothesis.extra.numpy import arrays as hnp
 
 from geometric_fv.config import ReconstConfig, SolverConfig
 from geometric_fv.enums import LimiterType, SlopeType
-from geometric_fv.slope import compute_slope
+from geometric_fv.reconst import compute_slope
 from geometric_fv.solver import SolverState
 
 

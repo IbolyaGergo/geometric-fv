@@ -145,6 +145,70 @@ def compute_slope(
     return slope_i_lim
 
 
+# FLUX LIMITER {{{1
+# _limit_flux_corr_full() {{{2
+def _limit_flux_corr_full(
+    state: SolverState,
+    i: int,
+    u_new_i: float,
+    flux_corr_i: float,
+    dt_dx: float,
+    eq: Equation,
+) -> float:
+    return 0.0
+
+
+# _limit_flux_corr_none() {{{2
+def _limit_flux_corr_none(
+    state: SolverState,
+    i: int,
+    u_new_i: float,
+    flux_corr_i: float,
+    dt_dx: float,
+    eq: Equation,
+) -> float:
+    return flux_corr_i
+
+
+# _limit_flux_corr_tvd() {{{2
+def _limit_flux_corr_tvd(
+    state: SolverState,
+    i: int,
+    u_new_i: float,
+    flux_corr_i: float,
+    dt_dx: float,
+    eq: Equation,
+) -> float:
+    u_new = state.u_new
+    u_old = state.u_old
+
+    flux_in = state.flux[i-1]
+
+    flux_corr_i_1 = np.median(
+        [
+            flux_corr_i,
+            flux_in - eq.flux(u_new_i) - (u_new[i-1] - u_old[i]) / dt_dx,
+            flux_in - eq.flux(u_new_i)
+        ]
+    )
+
+    flux_corr_i_lim = np.median(
+        [
+            flux_corr_i_1,
+            0.0,
+            eq.flux(u_old[i+1]) - eq.flux(u_new_i),
+        ]
+    )
+    return flux_corr_i_lim
+
+
+# _limit_flux_corr_types {{{2
+_limit_flux_corr_types = {
+    LimiterType.FULL: _limit_flux_corr_full,
+    LimiterType.NONE: _limit_flux_corr_none,
+    LimiterType.TVD: _limit_flux_corr_tvd,
+}
+
 # FLUX {{{1
 # compute_flux_corr() {{{2
 def compute_flux_corr(
@@ -165,29 +229,16 @@ def compute_flux_corr(
     avg_speed_i = eq.dfdu(u_new_i)
 
     # Unlimited
-    flux_corr =  avg_speed_i * slope_i * (1 + (2*char_speed_i - avg_speed_i) * dt_dx) * 0.5
+    flux_corr = avg_speed_i * slope_i * (1 + (2*char_speed_i - avg_speed_i) * dt_dx) * 0.5
 
-    flux_in = state.flux[i-1]
+    limiter_type = config.reconst.limiter_type
+    limit_flux_corr_func = _limit_flux_corr_types.get(limiter_type)
+    if limit_flux_corr_func is None:
+        raise ValueError(f"Unsupported limiter type: {limiter_type}")
 
-    # Limited
-    flux_corr = np.median(
-        [
-            flux_corr,
-            flux_in - eq.flux(u_new_i) - (u_new[i-1] - u_old[i]) / dt_dx,
-            flux_in - eq.flux(u_new_i)
-        ]
-    )
+    return limit_flux_corr_func(state, i, u_new_i, flux_corr, dt_dx, eq)
 
-    flux_corr = np.median(
-        [
-            flux_corr,
-            0.0,
-            # 0.5*(eq.flux(u_old[i+1]) - eq.flux(u_new_i)),
-            eq.flux(u_old[i+1]) - eq.flux(u_new_i),
-        ]
-    )
 
-    return flux_corr
 # GUESS {{{1
 # _compute_guess_box() {{{2
 def _compute_guess_box(state: SolverState, i: int, dt_dx: float) -> float:
