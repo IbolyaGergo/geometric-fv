@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import NamedTuple
+
 import numpy as np
-from typing import Callable, NamedTuple
 
 
 # InversionResult {{{1

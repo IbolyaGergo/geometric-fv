@@ -2,6 +2,7 @@ import numpy as np
 
 from geometric_fv.config import SolverConfig
 from geometric_fv.enums import GuessType, LimiterType, SlopeType
+from geometric_fv.equations import Equation
 from geometric_fv.solver import SolverState
 
 

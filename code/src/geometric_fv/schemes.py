@@ -5,7 +5,7 @@ from typing import Callable
 import numpy as np
 
 from geometric_fv.config import SolverConfig
-from geometric_fv.reconst import compute_guess, compute_slope, compute_flux_corr
+from geometric_fv.reconst import compute_flux_corr, compute_guess, compute_slope
 from geometric_fv.solver import SolverState, solve_for_u
 from geometric_fv.utils import simple_fixed_point
 

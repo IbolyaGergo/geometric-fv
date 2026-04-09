@@ -2,7 +2,7 @@ import numpy as np
 
 from geometric_fv.config import SolverConfig
 from geometric_fv.enums import BCType
-from geometric_fv.equations import LinearAdvection, Burgers
+from geometric_fv.equations import Equation
 from geometric_fv.reconst import compute_slope
 from geometric_fv.solver import SolverState
 

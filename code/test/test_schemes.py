@@ -8,8 +8,8 @@ from hypothesis.extra.numpy import arrays as hnp
 
 from geometric_fv.config import BoundaryConfig, MeshConfig, ReconstConfig, SolverConfig
 from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
-from geometric_fv.equations import Burgers, LinearAdvection
-from geometric_fv.schemes import HighResImplicit, Lozano, Scheme, SecondOrderImplicit
+from geometric_fv.equations import Burgers
+from geometric_fv.schemes import Lozano, Scheme, SecondOrderImplicit
 from geometric_fv.solver import SolverState, solve_for_u
 
 
