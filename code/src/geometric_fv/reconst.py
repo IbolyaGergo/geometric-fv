@@ -145,6 +145,49 @@ def compute_slope(
     return slope_i_lim
 
 
+# FLUX {{{1
+# compute_flux_corr() {{{2
+def compute_flux_corr(
+    state: SolverState, i: int, u_new_i: float, config: SolverConfig
+):
+    slope_type = config.reconst.slope_type
+    compute_slope_func = _compute_slope_types.get(slope_type)
+    if compute_slope_func is None:
+        raise ValueError(f"Unsupported slope type: {slope_type}")
+
+    u_new = state.u_new
+    u_old = state.u_old
+    dt_dx = config.dt_dx
+    eq = config.equation
+
+    slope_i = compute_slope_func(state, i, u_new_i, dt_dx, eq)
+    char_speed_i = eq.dfdu(u_new_i)
+    avg_speed_i = eq.dfdu(u_new_i)
+
+    # Unlimited
+    flux_corr =  avg_speed_i * slope_i * (1 + (2*char_speed_i - avg_speed_i) * dt_dx) * 0.5
+
+    flux_in = state.flux[i-1]
+
+    # Limited
+    flux_corr = np.median(
+        [
+            flux_corr,
+            flux_in - eq.flux(u_new_i) - (u_new[i-1] - u_old[i]) / dt_dx,
+            flux_in - eq.flux(u_new_i)
+        ]
+    )
+
+    flux_corr = np.median(
+        [
+            flux_corr,
+            0.0,
+            # 0.5*(eq.flux(u_old[i+1]) - eq.flux(u_new_i)),
+            eq.flux(u_old[i+1]) - eq.flux(u_new_i),
+        ]
+    )
+
+    return flux_corr
 # GUESS {{{1
 # _compute_guess_box() {{{2
 def _compute_guess_box(state: SolverState, i: int, dt_dx: float) -> float:

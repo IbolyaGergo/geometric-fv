@@ -5,7 +5,7 @@ from typing import Callable
 import numpy as np
 
 from geometric_fv.config import SolverConfig
-from geometric_fv.slope import compute_guess, compute_slope
+from geometric_fv.reconst import compute_guess, compute_slope, compute_flux_corr
 from geometric_fv.solver import SolverState, solve_for_u
 from geometric_fv.utils import simple_fixed_point
 
@@ -140,48 +140,6 @@ class HighResImplicit(Scheme):
     nghost: int = 2
     config: SolverConfig = SolverConfig()
 
-    # _compute_flux_corr() {{{2
-    def _compute_flux_corr(
-        self,
-        u_new_i: float,
-        state: SolverState,
-        i: int,
-    ) -> float:
-        u_new = state.u_new
-        u_old = state.u_old
-        eq = self.config.equation
-        dt_dx = self.config.dt_dx
-        eps = self.config.iteration.eps
-
-        slope_i = compute_slope(
-            state, i=i, u_new_i=u_new_i, config=self.config
-        )
-        speed_i = eq.dfdu(u_new_i)
-        # speed_i = eq.speed(u_new_i, u_new_i)
-        # speed_i = eq.speed(u_old[i], u_new_i)
-        flux_corr =  speed_i * slope_i * (1 + (2*eq.dfdu(u_new_i) - speed_i) * dt_dx) * 0.5
-
-        flux_in = state.flux[i-1]
-        flux_corr = np.median(
-            [
-                flux_corr,
-                flux_in - eq.flux(u_new_i) - (u_new[i-1] - u_old[i]) / dt_dx,
-                flux_in - eq.flux(u_new_i)
-            ]
-        )
-
-        flux_corr = np.median(
-            [
-                flux_corr,
-                0.0,
-                # 0.5*(eq.flux(u_old[i+1]) - eq.flux(u_new_i)),
-                eq.flux(u_old[i+1]) - eq.flux(u_new_i),
-            ]
-        )
-
-        return flux_corr
-
-
     # _compute_num_flux() {{{2
     def _compute_num_flux(self, u_curr: float, state: SolverState, i: int) -> float:
         u_old = state.u_old
@@ -191,7 +149,8 @@ class HighResImplicit(Scheme):
         dt_dx = self.config.dt_dx
         tol = self.config.iteration.tol
 
-        flux_out_corr = self._compute_flux_corr(u_curr, state, i)
+        flux_out_corr = compute_flux_corr(state, i, u_curr, self.config)
+        # flux_out_corr = self._compute_flux_corr(u_curr, state, i)
         flux_in = state.flux[i - 1]
 
         rhs = u_old[i] + dt_dx * (flux_in - flux_out_corr)
