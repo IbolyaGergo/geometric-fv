@@ -103,7 +103,7 @@ _limit_slope_types = {
 # SLOPE {{{1
 # _compute_slope_box() {{{2
 def _compute_slope_box(
-        state: SolverState, i: int, u_new_i: float, dt_dx: float, eq: Equation
+    state: SolverState, i: int, u_new_i: float, dt_dx: float, eq: Equation
 ) -> float:
     u_old = state.u_old
 
@@ -182,13 +182,13 @@ def _limit_flux_corr_tvd(
     u_new = state.u_new
     u_old = state.u_old
 
-    flux_in = state.flux[i-1]
+    flux_in = state.flux[i - 1]
 
     flux_corr_i_1 = np.median(
         [
             flux_corr_i,
-            flux_in - eq.flux(u_new_i) - (u_new[i-1] - u_old[i]) / dt_dx,
-            flux_in - eq.flux(u_new_i)
+            flux_in - eq.flux(u_new_i) - (u_new[i - 1] - u_old[i]) / dt_dx,
+            flux_in - eq.flux(u_new_i),
         ]
     )
 
@@ -196,7 +196,7 @@ def _limit_flux_corr_tvd(
         [
             flux_corr_i_1,
             0.0,
-            eq.flux(u_old[i+1]) - eq.flux(u_new_i),
+            eq.flux(u_old[i + 1]) - eq.flux(u_new_i),
         ]
     )
     return flux_corr_i_lim
@@ -209,11 +209,10 @@ _limit_flux_corr_types = {
     LimiterType.TVD: _limit_flux_corr_tvd,
 }
 
+
 # FLUX {{{1
 # compute_flux_corr() {{{2
-def compute_flux_corr(
-    state: SolverState, i: int, u_new_i: float, config: SolverConfig
-):
+def compute_flux_corr(state: SolverState, i: int, u_new_i: float, config: SolverConfig):
     slope_type = config.reconst.slope_type
     compute_slope_func = _compute_slope_types.get(slope_type)
     if compute_slope_func is None:
@@ -229,7 +228,9 @@ def compute_flux_corr(
     avg_speed_i = eq.dfdu(u_new_i)
 
     # Unlimited
-    flux_corr = avg_speed_i * slope_i * (1 + (2*char_speed_i - avg_speed_i) * dt_dx) * 0.5
+    flux_corr = (
+        avg_speed_i * slope_i * (1 + (2 * char_speed_i - avg_speed_i) * dt_dx) * 0.5
+    )
 
     limiter_type = config.reconst.limiter_type
     limit_flux_corr_func = _limit_flux_corr_types.get(limiter_type)

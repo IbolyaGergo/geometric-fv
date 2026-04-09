@@ -2,10 +2,12 @@ from abc import ABC, abstractmethod
 import numpy as np
 from typing import Callable, NamedTuple
 
+
 # InversionResult {{{1
 class InversionResult(NamedTuple):
     u: float
     is_invertible: bool
+
 
 # Equation {{{1
 class Equation(ABC):
@@ -35,6 +37,7 @@ class Equation(ABC):
         """Solves u + dt/dx * f(u) = rhs. Returns (u, success)."""
         pass
 
+
 # Burgers {{{1
 class Burgers(Equation):
     def flux(self, u: float) -> float:
@@ -59,6 +62,7 @@ class Burgers(Equation):
             is_invertible = False
 
         return InversionResult(u, is_invertible)
+
 
 # LinearAdvection {{{1
 class LinearAdvection(Equation):

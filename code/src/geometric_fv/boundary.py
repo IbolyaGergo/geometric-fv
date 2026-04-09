@@ -7,7 +7,9 @@ from geometric_fv.reconst import compute_slope
 from geometric_fv.solver import SolverState
 
 
-def _apply_bc_constant_extend(state: SolverState, nghost: int, dt_dx: float, eq: Equation) -> None:
+def _apply_bc_constant_extend(
+    state: SolverState, nghost: int, dt_dx: float, eq: Equation
+) -> None:
     u_old = state.u_old
     u_new = state.u_new
 
@@ -34,7 +36,9 @@ def _apply_bc_constant_extend(state: SolverState, nghost: int, dt_dx: float, eq:
 #     u_old[1] = u_old[-3]
 #     u_old[-1] = u_old[3]
 #     u_old[-2] = u_old[2]
-def _apply_bc_quasi_periodic(state: SolverState, nghost: int, dt_dx: float, eq: Equation) -> None:
+def _apply_bc_quasi_periodic(
+    state: SolverState, nghost: int, dt_dx: float, eq: Equation
+) -> None:
     u_old = state.u_old
     u_new = state.u_new
 

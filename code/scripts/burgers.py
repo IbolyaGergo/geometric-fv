@@ -9,13 +9,18 @@ from geometric_fv.config import (
     SolverConfig,
 )
 from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
-from geometric_fv.equations import Burgers
-from geometric_fv.schemes import Lozano, HighResImplicit, BoxBurgers
+from geometric_fv.equations import Burgers, LinearAdvection
+from geometric_fv.schemes import (
+    Lozano,
+    HighResImplicit,
+    BoxBurgers,
+    SecondOrderImplicit,
+)
 
 # Mesh
 x_min = 0.0
 x_max = 1.5
-ncells = 50
+ncells = 100
 
 bc_type = BCType.CONSTANT_EXTEND
 slope_type = SlopeType.BOX
@@ -50,10 +55,12 @@ ncells = mesh.ncells
 #     [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5],
 #     [-0.5, 1, -0.5]
 # )
-# u0 = np.piecewise(x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.7), x_c >= 0.7], [0.2, 1, 0.2])
+u0 = np.piecewise(
+    x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.7), x_c >= 0.7], [0.2, 1, 0.2]
+)
 # u0 = np.piecewise(x_c, [x_c < 0.5, x_c >= 0.5], [1, 0])
 # u0 = np.piecewise(x_c, [x_c < 0.5, x_c >= 0.5], [0, 1.0])
-u0 = 0.05 + 0.95 * np.e**(-50*(x_c - 0.5)**2)
+# u0 = 0.05 + 0.95 * np.e**(-50*(x_c - 0.5)**2)
 
 state = scheme.allocate_state(u0)
 
