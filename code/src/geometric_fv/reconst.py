@@ -1,7 +1,7 @@
 import numpy as np
 
 from geometric_fv.config import SolverConfig
-from geometric_fv.enums import GuessType, LimiterType, SlopeType
+from geometric_fv.enums import AvgSpeedType, GuessType, LimiterType, SlopeType
 from geometric_fv.equations import Equation
 from geometric_fv.solver import SolverState
 
@@ -146,6 +146,17 @@ def compute_slope(
     return slope_i_lim
 
 
+# AVG SPEED {{{1
+# _compute_avg_speed_impl_upwind() {{{2
+def _compute_avg_speed_impl_upwind(state: SolverState, i: int, u_new_i: float,
+                                   eq: Equation):
+    return eq.dfdu(u_new_i)
+
+
+# _avg_speed_types {{{2
+_avg_speed_types = {
+    AvgSpeedType.IMPLICIT_UPWIND: _compute_avg_speed_impl_upwind,
+}
 # FLUX LIMITER {{{1
 # _limit_flux_corr_full() {{{2
 def _limit_flux_corr_full(
@@ -214,20 +225,30 @@ _limit_flux_corr_types = {
 # FLUX {{{1
 # compute_flux_corr() {{{2
 def compute_flux_corr(state: SolverState, i: int, u_new_i: float, config: SolverConfig):
-    slope_type = config.reconst.slope_type
-    compute_slope_func = _compute_slope_types.get(slope_type)
-    if compute_slope_func is None:
-        raise ValueError(f"Unsupported slope type: {slope_type}")
-
     u_new = state.u_new
     u_old = state.u_old
     dt_dx = config.dt_dx
     eq = config.equation
 
+    # Slope
+    slope_type = config.reconst.slope_type
+    compute_slope_func = _compute_slope_types.get(slope_type)
+    if compute_slope_func is None:
+        raise ValueError(f"Unsupported slope type: {slope_type}")
     slope_i = compute_slope_func(state, i, u_new_i, dt_dx, eq)
-    char_speed_i = eq.dfdu(u_new_i)
-    avg_speed_i = eq.dfdu(u_new_i)
 
+    # Speed
+    # Avg
+    avg_speed_type = config.reconst.avg_speed_type
+    compute_avg_speed_func = _avg_speed_types.get(avg_speed_type)
+    if compute_avg_speed_func is None:
+        raise ValueError(f"Unsupported avg speed type: {avg_speed_type}")
+    avg_speed_i = compute_avg_speed_func(state, i, u_new_i, eq)
+
+    # Char
+    char_speed_i = eq.dfdu(u_new_i)
+
+    # Flux correction
     # Unlimited
     flux_corr = (
         avg_speed_i * slope_i * (1 + (2 * char_speed_i - avg_speed_i) * dt_dx) * 0.5

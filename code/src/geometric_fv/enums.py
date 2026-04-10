@@ -20,3 +20,7 @@ class LimiterType(Enum):
 class GuessType(Enum):
     IMPLICIT_UPWIND = 0
     BOX = 1
+
+
+class AvgSpeedType(Enum):
+    IMPLICIT_UPWIND = 0
