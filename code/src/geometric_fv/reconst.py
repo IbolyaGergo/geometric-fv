@@ -225,8 +225,6 @@ _limit_flux_corr_types = {
 # FLUX {{{1
 # compute_flux_corr() {{{2
 def compute_flux_corr(state: SolverState, i: int, u_new_i: float, config: SolverConfig):
-    u_new = state.u_new
-    u_old = state.u_old
     dt_dx = config.dt_dx
     eq = config.equation
 
