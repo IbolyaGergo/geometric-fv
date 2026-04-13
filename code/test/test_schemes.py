@@ -6,10 +6,15 @@ from hypothesis import given
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays as hnp
 
-from geometric_fv.config import BoundaryConfig, MeshConfig, ReconstConfig, SolverConfig
+from geometric_fv.config import (
+    BoundaryConfig, IterationConfig, MeshConfig, ReconstConfig, SolverConfig
+)
 from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
 from geometric_fv.equations import Burgers
-from geometric_fv.schemes import Lozano, Scheme, SecondOrderImplicit
+from geometric_fv.problems import BurgersSmooth
+from geometric_fv.schemes import (
+    BoxBurgers, HighResImplicit, Lozano, Scheme, SecondOrderImplicit
+)
 from geometric_fv.solver import SolverState, solve_for_u
 
 
@@ -110,6 +115,46 @@ def test_SecondOrderImplicit_equals_other_scheme_for_given_limiter(
 
     scheme_other = scheme_other(config=config)
     state_other = scheme_other.init_state(sine_wave)
+
+    for scheme, state in [(scheme_2ndo, state_2ndo), (scheme_other, state_other)]:
+        scheme.apply_bc(state)
+        scheme.sweep(state)
+
+    np.testing.assert_allclose(state_2ndo.u_new, state_other.u_new)
+
+
+# test_HighResImplicit_equals_other_scheme_for_given_limiter() {{{2
+@pytest.mark.parametrize(
+    ("scheme_other", "limiter_type"),
+    [(Lozano, LimiterType.FULL), (BoxBurgers, LimiterType.NONE)],
+)
+def test_HighResImplicit_equals_other_scheme_for_given_limiter(
+    scheme_other, limiter_type
+):
+    """
+    Verifies that HighResImplicit correctly collapses to 1st-order, or
+    BoxBurgers scheme when limiter is FULL or NONE respectively.
+    """
+    x_min = 0.0
+    x_max = 1.0
+    ncells = 20
+    prob = BurgersSmooth(x_min=x_min, x_max=x_max)
+
+    dt_dx = 1.6
+    config = SolverConfig(
+        mesh=MeshConfig(x_min=x_min, x_max=x_max, ncells=ncells),
+        boundary=BoundaryConfig(bc_type=BCType.CONSTANT_EXTEND),
+        reconst=ReconstConfig(slope_type=SlopeType.BOX, limiter_type=limiter_type),
+        iteration=IterationConfig(tol=1e-10, maxiter=50),
+        equation=prob.equation,
+        dt_dx=dt_dx,
+    )
+
+    scheme_2ndo = HighResImplicit(config=config)
+    state_2ndo = scheme_2ndo.init_state(prob.u0)
+
+    scheme_other = scheme_other(config=config)
+    state_other = scheme_other.init_state(prob.u0)
 
     for scheme, state in [(scheme_2ndo, state_2ndo), (scheme_other, state_other)]:
         scheme.apply_bc(state)

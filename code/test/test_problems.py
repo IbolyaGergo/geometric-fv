@@ -19,3 +19,11 @@ def test_burgers_smooth_residual():
     # Verify the implicit relation: u = u0(x - ut)
     u0_val = prob.u0(x - u * t)
     assert u == pytest.approx(u0_val)
+
+
+def test_burgers_smooth_raises_after_shock():
+    prob = BurgersSmooth()
+    t_too_late = prob.t_shock + 0.1
+    x = np.array([0.5])
+    with pytest.raises(ValueError, match="greater than shock formation time"):
+        prob.exact(x, t_too_late)
