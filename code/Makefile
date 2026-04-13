@@ -92,6 +92,24 @@ docs: ## Build the documentation.
 tags:
 	@ctags -R --exclude=envs --exclude=docs --exclude=.*/* --exclude=Makefile .
 
+
+# ====================================================================================
+# RESULTS
+# ====================================================================================
+RESULTS_DIR := results
+
+# Default parameters
+SCHEME ?= Lozano
+CFL ?= 0.8
+T ?= 0.2
+
+.PHONY: results
+results:
+	@mkdir -p $(RESULTS_DIR)
+	@echo "Running convergence study..."
+	@python scripts/convergence.py --scheme $(SCHEME) --dt_dx $(CFL) --t_final $(T)
+
+
 # ====================================================================================
 # CLEANUP
 # ====================================================================================
@@ -105,3 +123,4 @@ clean: ## Remove temporary files and directories.
 	@rm -f `find . -type f -name '.*.swp'`
 	@rm -rf .pytest_cache
 	@rm -rf docs/build
+	@rm -rf $(RESULTS_DIR)

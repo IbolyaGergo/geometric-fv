@@ -1,6 +1,10 @@
 from typing import Callable, NamedTuple
 
+import numpy as np
 
+
+# Fixed-Point Iteration {{{1
+# FixedPointResult {{{2
 class FixedPointResult(NamedTuple):
     x: float
     success: bool
@@ -8,6 +12,7 @@ class FixedPointResult(NamedTuple):
     message: str
 
 
+# simple_fixed_point() {{{2
 def simple_fixed_point(
     func: Callable, x0: float, args=(), tol: float = 1e-8, maxiter: int = 50
 ) -> FixedPointResult:
@@ -36,3 +41,18 @@ def simple_fixed_point(
         nit=maxiter,
         message=f"Failed to converge after {maxiter} iterations.",
     )
+
+
+# Error Analysis {{{1
+# calculate_norms() {{{2
+def calculate_norms(
+    numerical: np.ndarray, exact: np.ndarray, dx: float
+) -> dict[str, float]:
+    """Calculates L1, L2 and Linf error norms."""
+    diff = np.abs(numerical - exact)
+
+    l1 = np.sum(diff * dx)
+    l2 = np.sqrt(np.sum(diff**2 * dx))
+    linf = np.max(diff)
+
+    return {"L1": l1, "L2": l2, "Linf": linf}

@@ -10,9 +10,7 @@ from geometric_fv.config import (
 )
 from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
 from geometric_fv.equations import Burgers
-from geometric_fv.schemes import (
-    HighResImplicit,
-)
+from geometric_fv.schemes import HighResImplicit
 
 # Mesh
 x_min = 0.0
@@ -52,16 +50,16 @@ ncells = mesh.ncells
 #     [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.5), x_c >= 0.5],
 #     [-0.5, 1, -0.5]
 # )
-u0 = np.piecewise(
-    x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.7), x_c >= 0.7], [0.2, 1, 0.2]
-)
-# u0 = np.piecewise(x_c, [x_c < 0.5, x_c >= 0.5], [1, 0])
+# u0 = np.piecewise(
+#     x_c, [x_c < 0.2, (x_c >= 0.2) & (x_c < 0.7), x_c >= 0.7], [0.2, 1, 0.2]
+# )
+u0 = np.piecewise(x_c, [x_c < 0.5, x_c >= 0.5], [1, 0])
 # u0 = np.piecewise(x_c, [x_c < 0.5, x_c >= 0.5], [0, 1.0])
 # u0 = 0.05 + 0.95 * np.e**(-50*(x_c - 0.5)**2)
 
 state = scheme.allocate_state(u0)
 
-for _t in range(10):
+for _t in range(50):
     scheme.apply_bc(state)
     scheme.sweep(state)
 
