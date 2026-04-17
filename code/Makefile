@@ -99,15 +99,15 @@ tags:
 RESULTS_DIR := results
 
 # Default parameters
-SCHEME ?= Lozano
-CFL ?= 0.8
+EXPERIMENT ?= burgers-highres-full
+CFL ?= 2.8
 T ?= 0.2
 
 .PHONY: results
 results:
 	@mkdir -p $(RESULTS_DIR)
 	@echo "Running convergence study..."
-	@python scripts/convergence.py --scheme $(SCHEME) --dt_dx $(CFL) --t_final $(T)
+	@python scripts/convergence.py --experiment $(EXPERIMENT) --dt_dx $(CFL) --t_final $(T)
 
 
 # ====================================================================================

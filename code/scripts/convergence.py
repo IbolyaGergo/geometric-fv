@@ -12,6 +12,7 @@ from geometric_fv.config import (
     SolverConfig,
 )
 from geometric_fv.enums import BCType, LimiterType, SlopeType
+from geometric_fv.experiments import STUDY_REGISTRY
 from geometric_fv.problems import BurgersSmooth
 from geometric_fv.utils import calculate_norms
 
@@ -19,21 +20,21 @@ from geometric_fv.utils import calculate_norms
 def run_study():
     parser = argparse.ArgumentParser(description="Run convergence study.")
     parser.add_argument(
-        "--scheme", type=str, default="Lozano", help="Scheme class name"
+        "--experiment",
+        type=str,
+        default="burgers-implup",
+        choices=list(STUDY_REGISTRY.keys()),
+        help="Experiment name from STUDY_REGISTRY",
     )
-    parser.add_argument("--dt_dx", type=float, default=0.8, help="Target dt/dx ratio")
+    parser.add_argument("--dt_dx", type=float, default=None, help="Override dt/dx ratio")
     parser.add_argument(
         "--t_final", type=float, default=0.2, help="Final simulation time"
     )
     args = parser.parse_args()
 
-    # 1. Dynamic Scheme Selection
-    # This looks up the class in the 'schemes' module by its string name
-    try:
-        SchemeClass = getattr(schemes, args.scheme)
-    except AttributeError:
-        available = [s for s in dir(schemes) if not s.startswith("_")]
-        raise ValueError(f"Scheme '{args.scheme}' not found. Available: {available}")
+    # Experiment selection
+    experiment = STUDY_REGISTRY[args.experiment]
+    dt_dx_target = args.dt_dx if args.dt_dx is not None else experiment.default_dt_dx
 
     x_min = 0.0
     x_max = 1.0
@@ -44,7 +45,7 @@ def run_study():
 
     results = []
 
-    print(f"Scheme: {args.scheme} | dt/dx={args.dt_dx} | t={args.t_final}")
+    print(f"Experiment: {args.experiment} | dt/dx={dt_dx_target} | t={args.t_final}")
 
     for ncells in resolutions:
         # Define mesh
@@ -53,7 +54,7 @@ def run_study():
         dx = mesh.dx[0]
 
         # Adjust dt
-        dt_ideal = args.dt_dx * dx
+        dt_ideal = dt_dx_target * dx
         nsteps = int(np.ceil(args.t_final / dt_ideal))
         dt_actual = args.t_final / nsteps
         dt_dx_actual = dt_actual / dx
@@ -61,16 +62,13 @@ def run_study():
         config = SolverConfig(
             mesh=mesh_cfg,
             boundary=BoundaryConfig(bc_type=BCType.CONSTANT_EXTEND),
-            reconst=ReconstConfig(
-                slope_type=SlopeType.BOX,
-                limiter_type=LimiterType.NONE,
-            ),
+            reconst=ReconstConfig(**experiment.reconst_kwargs),
             iteration=IterationConfig(tol=1e-10, maxiter=50),
             equation=prob.equation,
             dt_dx=dt_dx_actual,
         )
 
-        scheme = SchemeClass(config=config)
+        scheme = experiment.scheme_class(config=config)
         state = scheme.init_state(prob.u0)
 
         print(f"Running ncells={ncells:4d}, dt_dx={dt_dx_actual:.4f}, nsteps={nsteps}")
@@ -100,7 +98,7 @@ def run_study():
         order = np.log(err[1:] / err[:-1]) / np.log(dxs[1:] / dxs[:-1])
         df[f"Order_{norm}"] = np.concatenate([[np.nan], order])
 
-    print("\n--- Convergence Results (Burgers Smooth, t=0.2) ---")
+    print(f"\n--- Convergence Results ({args.experiment}, t={args.t_final}) ---")
     cols = ["ncells", "L1", "Order_L1", "L2", "Order_L2", "Linf", "Order_Linf"]
     print(
         df[cols].to_string(
@@ -110,7 +108,7 @@ def run_study():
 
     # --- Save Results ---
     # The 'results/' directory should be created by the Makefile
-    csv_path = f"results/conv_{args.scheme}_cfl{args.dt_dx}.csv"
+    csv_path = f"results/conv_{args.experiment}_cfl{dt_dx_target}.csv"
     df.to_csv(csv_path, index=False)
     print(f"\nCSV results saved to '{csv_path}'")
 
