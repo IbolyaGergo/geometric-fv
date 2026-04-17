@@ -17,43 +17,27 @@ from geometric_fv.problems import BurgersSmooth
 from geometric_fv.utils import calculate_norms
 
 
-def run_study():
-    parser = argparse.ArgumentParser(description="Run convergence study.")
-    parser.add_argument(
-        "--experiment",
-        type=str,
-        default="burgers-implup",
-        choices=list(STUDY_REGISTRY.keys()),
-        help="Experiment name from STUDY_REGISTRY",
-    )
-    parser.add_argument("--dt_dx", type=float, default=None, help="Override dt/dx ratio")
-    parser.add_argument(
-        "--t_final", type=float, default=0.2, help="Final simulation time"
-    )
-    args = parser.parse_args()
-
-    # Experiment selection
-    experiment = STUDY_REGISTRY[args.experiment]
-    dt_dx_target = args.dt_dx if args.dt_dx is not None else experiment.default_dt_dx
+def run_experiment(name: str, dt_dx_override: float = None, t_final: float = 0.2):
+    """Executes the full convergence study for a single named experiment."""
+    experiment = STUDY_REGISTRY[name]
+    dt_dx_target = dt_dx_override if dt_dx_override is not None else experiment.default_dt_dx
 
     x_min = 0.0
     x_max = 1.0
-    resolutions = [50 * 2**n for n in range(6)]
+    resolutions = [50 * 2**n for n in range(4)]
 
     # Calculate synchronized refinement parameters
     ncells_base = resolutions[0]
     dx_base = (x_max - x_min) / ncells_base
-    # Rounding base steps to the nearest integer to get as close as possible to
-    # dt_dx_target
     dt_base = dt_dx_target * dx_base
-    nsteps_base = int(np.round(args.t_final / dt_base))
+    nsteps_base = int(np.round(t_final / dt_base))
 
     prob = BurgersSmooth(x_min=x_min, x_max=x_max)
     print(f"Shock formation time: {prob.t_shock:.4f}")
 
     results = []
 
-    print(f"Experiment: {args.experiment} | dt/dx_target={dt_dx_target} | t={args.t_final}")
+    print(f"Experiment: {name} | dt/dx_target={dt_dx_target} | t={t_final}")
 
     for ncells in resolutions:
         # Calculate refinement factor relative to the base resolution
@@ -66,7 +50,7 @@ def run_study():
         dx = mesh.dx[0]
 
         # Deerive dt to maintain constant dt/dx
-        dt_actual = args.t_final / nsteps
+        dt_actual = t_final / nsteps
         dt_dx_actual = dt_actual / dx
 
         config = SolverConfig(
@@ -91,7 +75,7 @@ def run_study():
 
         # 5. Error Calculation (Outside the loop!)
         u_numerical = state.u_new[scheme.nghost : -scheme.nghost]
-        u_exact = prob.exact(mesh.centers, args.t_final)
+        u_exact = prob.exact(mesh.centers, t_final)
 
         errors = calculate_norms(u_numerical, u_exact, dx)
         errors["ncells"] = ncells
@@ -108,7 +92,7 @@ def run_study():
         order = np.log(err[1:] / err[:-1]) / np.log(dxs[1:] / dxs[:-1])
         df[f"Order_{norm}"] = np.concatenate([[np.nan], order])
 
-    print(f"\n--- Convergence Results ({args.experiment}, t={args.t_final}) ---")
+    print(f"\n--- Convergence Results ({name}, t={t_final}) ---")
     cols = ["ncells", "L1", "Order_L1", "L2", "Order_L2", "Linf", "Order_Linf"]
     print(
         df[cols].to_string(
@@ -118,10 +102,33 @@ def run_study():
 
     # --- Save Results ---
     # The 'results/' directory should be created by the Makefile
-    csv_path = f"results/conv_{args.experiment}_cfl{dt_dx_target}.csv"
+    csv_path = f"results/conv_{name}_cfl{dt_dx_target}.csv"
     df.to_csv(csv_path, index=False)
     print(f"\nCSV results saved to '{csv_path}'")
+    return df
 
+
+def run_study():
+    parser = argparse.ArgumentParser(description="Run convergence study.")
+    parser.add_argument(
+        "--experiment",
+        nargs="+",
+        default="burgers-implup",
+        choices=list(STUDY_REGISTRY.keys()) + ["all"],
+        help="Experiment name(s) from STUDY_REGISTRY or 'all'",
+    )
+    parser.add_argument("--dt_dx", type=float, default=None, help="Override dt/dx ratio")
+    parser.add_argument(
+        "--t_final", type=float, default=0.2, help="Final simulation time"
+    )
+    args = parser.parse_args()
+
+    names = args.experiment
+    if "all" in names:
+        names = list(STUDY_REGISTRY.keys())
+
+    for name in names:
+        run_experiment(name, args.dt_dx, args.t_final)
 
 if __name__ == "__main__":
     run_study()
