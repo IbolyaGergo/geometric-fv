@@ -38,24 +38,34 @@ def run_study():
 
     x_min = 0.0
     x_max = 1.0
-    resolutions = [50 * 2**n for n in range(4)]
+    resolutions = [50 * 2**n for n in range(6)]
+
+    # Calculate synchronized refinement parameters
+    ncells_base = resolutions[0]
+    dx_base = (x_max - x_min) / ncells_base
+    # Rounding base steps to the nearest integer to get as close as possible to
+    # dt_dx_target
+    dt_base = dt_dx_target * dx_base
+    nsteps_base = int(np.round(args.t_final / dt_base))
 
     prob = BurgersSmooth(x_min=x_min, x_max=x_max)
     print(f"Shock formation time: {prob.t_shock:.4f}")
 
     results = []
 
-    print(f"Experiment: {args.experiment} | dt/dx={dt_dx_target} | t={args.t_final}")
+    print(f"Experiment: {args.experiment} | dt/dx_target={dt_dx_target} | t={args.t_final}")
 
     for ncells in resolutions:
+        # Calculate refinement factor relative to the base resolution
+        refine_factor = ncells // ncells_base
+        nsteps = nsteps_base * refine_factor
+
         # Define mesh
         mesh_cfg = MeshConfig(x_min=x_min, x_max=x_max, ncells=ncells)
         mesh = mesh_cfg.create_mesh()
         dx = mesh.dx[0]
 
-        # Adjust dt
-        dt_ideal = dt_dx_target * dx
-        nsteps = int(np.ceil(args.t_final / dt_ideal))
+        # Deerive dt to maintain constant dt/dx
         dt_actual = args.t_final / nsteps
         dt_dx_actual = dt_actual / dx
 

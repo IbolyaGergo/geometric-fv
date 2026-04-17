@@ -99,8 +99,8 @@ tags:
 RESULTS_DIR := results
 
 # Default parameters
-EXPERIMENT ?= burgers-highres-full
-CFL ?= 2.8
+EXPERIMENT ?= burgers-box
+CFL ?= 0.8
 T ?= 0.2
 
 .PHONY: results

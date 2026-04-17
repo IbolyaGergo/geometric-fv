@@ -33,4 +33,11 @@ STUDY_REGISTRY: dict[str, StudyProfile] = {
         scheme_class=HighResImplicit,
         reconst_kwargs={"limiter_type": LimiterType.FULL},
     ),
+    "burgers-box": StudyProfile(
+        scheme_class=BoxBurgers,
+    ),
+    "burgers-highres-none": StudyProfile(
+        scheme_class=HighResImplicit,
+        reconst_kwargs={"limiter_type": LimiterType.NONE},
+    ),
 }
