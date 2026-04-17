@@ -22,18 +22,16 @@ def run_experiment(name: str, dt_dx_override: float = None, t_final: float = 0.2
     experiment = STUDY_REGISTRY[name]
     dt_dx_target = dt_dx_override if dt_dx_override is not None else experiment.default_dt_dx
 
-    x_min = 0.0
-    x_max = 1.0
     resolutions = [50 * 2**n for n in range(4)]
+
+    prob = BurgersSmooth()
+    print(f"Shock formation time: {prob.t_shock:.4f}")
 
     # Calculate synchronized refinement parameters
     ncells_base = resolutions[0]
-    dx_base = (x_max - x_min) / ncells_base
+    dx_base = (prob.x_max - prob.x_min) / ncells_base
     dt_base = dt_dx_target * dx_base
     nsteps_base = int(np.round(t_final / dt_base))
-
-    prob = BurgersSmooth(x_min=x_min, x_max=x_max)
-    print(f"Shock formation time: {prob.t_shock:.4f}")
 
     results = []
 
@@ -45,7 +43,7 @@ def run_experiment(name: str, dt_dx_override: float = None, t_final: float = 0.2
         nsteps = nsteps_base * refine_factor
 
         # Define mesh
-        mesh_cfg = MeshConfig(x_min=x_min, x_max=x_max, ncells=ncells)
+        mesh_cfg = MeshConfig.from_problem(prob, ncells=ncells)
         mesh = mesh_cfg.create_mesh()
         dx = mesh.dx[0]
 

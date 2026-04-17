@@ -6,6 +6,7 @@ from geometric_fv.equations import Equation, LinearAdvection
 
 if TYPE_CHECKING:
     from geometric_fv.mesh import Mesh1D
+    from geometric_fv.problems import Problem
 
 
 # MeshConfig {{{1
@@ -34,6 +35,11 @@ class MeshConfig:
             raise ValueError("x_max must be greater than x_min")
         if self.ncells <= 0:
             raise ValueError("ncells must be greater than 0")
+
+    @classmethod
+    def from_problem(cls, prob: "Problem", ncells: int) -> "MeshConfig":
+        """Creates a mesh configuration matched to a physical problem."""
+        return cls(x_min=prob.x_min, x_max=prob.x_max, ncells=ncells)
 
     def create_mesh(self) -> Mesh1D:
         from geometric_fv.mesh import Mesh1D
