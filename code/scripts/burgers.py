@@ -12,7 +12,6 @@ from geometric_fv.enums import (
     AvgSpeedType,
     BCType,
     FluxCorrType,
-    GuessType,
     LimiterType,
     SlopeType,
 )

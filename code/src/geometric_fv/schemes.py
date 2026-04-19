@@ -143,7 +143,6 @@ class HighResImplicit(Scheme):
     # _compute_num_flux() {{{2
     def _compute_num_flux(self, u_curr: float, state: SolverState, i: int) -> float:
         u_old = state.u_old
-        u_new = state.u_new
 
         eq = self.config.equation
         dt_dx = self.config.dt_dx
@@ -175,11 +174,8 @@ class HighResImplicit(Scheme):
             u_next.
         """
         u_old = state.u_old
-        u_new = state.u_new
 
-        eq = self.config.equation
         dt_dx = self.config.dt_dx
-        tol = self.config.iteration.tol
 
         flux_in = state.flux[i - 1]
         flux_out = self._compute_num_flux(u_curr, state, i)
@@ -287,9 +283,7 @@ class BoxBurgers(Scheme):
     # _update_cell() {{{2
     def _update_cell(self, state: SolverState, i: int, direction: str) -> float:
         u_old = state.u_old
-        u_new = state.u_new
         dt_dx = self.config.dt_dx
-        eq = self.config.equation
 
         u_pos = (u_old[i] + 2 * dt_dx * self._flux_pos(state, i - 1)) / (
             1 + dt_dx * u_old[i]

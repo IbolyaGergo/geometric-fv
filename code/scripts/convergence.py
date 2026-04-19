@@ -3,7 +3,6 @@ import argparse
 import numpy as np
 import pandas as pd
 
-from geometric_fv import schemes
 from geometric_fv.config import (
     BoundaryConfig,
     IterationConfig,
@@ -11,7 +10,7 @@ from geometric_fv.config import (
     ReconstConfig,
     SolverConfig,
 )
-from geometric_fv.enums import BCType, LimiterType, SlopeType
+from geometric_fv.enums import BCType
 from geometric_fv.experiments import STUDY_REGISTRY
 from geometric_fv.problems import BurgersSmooth
 from geometric_fv.utils import calculate_norms

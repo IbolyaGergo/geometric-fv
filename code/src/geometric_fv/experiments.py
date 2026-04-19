@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Type
 
-from geometric_fv.enums import AvgSpeedType, LimiterType, SlopeType
+from geometric_fv.enums import LimiterType
 from geometric_fv.schemes import (
     BoxBurgers,
     HighResImplicit,

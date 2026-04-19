@@ -7,15 +7,23 @@ from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays as hnp
 
 from geometric_fv.config import (
-    BoundaryConfig, IterationConfig, MeshConfig, ReconstConfig, SolverConfig
+    BoundaryConfig,
+    IterationConfig,
+    MeshConfig,
+    ReconstConfig,
+    SolverConfig,
 )
 from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
 from geometric_fv.equations import Burgers
 from geometric_fv.problems import BurgersSmooth
 from geometric_fv.schemes import (
-    BoxBurgers, HighResImplicit, Lozano, Scheme, SecondOrderImplicit
+    BoxBurgers,
+    HighResImplicit,
+    Lozano,
+    Scheme,
+    SecondOrderImplicit,
 )
-from geometric_fv.solver import SolverState, solve_for_u
+from geometric_fv.solver import SolverState
 
 
 # SETUP {{{1
@@ -31,6 +39,7 @@ class ImplicitUpwind(Scheme):
 
     def sweep(self, state: SolverState):
         eq = self.config.equation
+        tol = self.config.iteration.tol
 
         u_old = state.u_old
         u_new = state.u_new
@@ -39,7 +48,8 @@ class ImplicitUpwind(Scheme):
         for i in self.cell_indices(state):
             # For positive dt_dx: u_i + dt_dx*f(u_i) = u_old_i + dt_dx*f(u_im1)
             rhs = u_old[i] + dt_dx * eq.flux(u_new[i - 1])
-            u_new[i] = solve_for_u(eq, rhs, dt_dx)
+            res = eq.invert_implicit(rhs, dt_dx, tol)
+            u_new[i] = res.u
 
 
 # Box(Scheme) {{{2
