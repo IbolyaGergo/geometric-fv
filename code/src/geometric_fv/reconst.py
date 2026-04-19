@@ -1,7 +1,13 @@
 import numpy as np
 
 from geometric_fv.config import SolverConfig
-from geometric_fv.enums import AvgSpeedType, GuessType, LimiterType, SlopeType
+from geometric_fv.enums import (
+    AvgSpeedType,
+    FluxCorrType,
+    GuessType,
+    LimiterType,
+    SlopeType,
+)
 from geometric_fv.equations import Equation
 from geometric_fv.solver import SolverState
 
@@ -223,8 +229,10 @@ _limit_flux_corr_types = {
 
 
 # FLUX {{{1
-# compute_flux_corr() {{{2
-def compute_flux_corr(state: SolverState, i: int, u_new_i: float, config: SolverConfig):
+# _compute_flux_corr_geom() {{{2
+def _compute_flux_corr_geom(
+    state: SolverState, i: int, u_new_i: float, config: SolverConfig
+) -> float:
     dt_dx = config.dt_dx
     eq = config.equation
 
@@ -252,11 +260,32 @@ def compute_flux_corr(state: SolverState, i: int, u_new_i: float, config: Solver
         avg_speed_i * slope_i * (1 + (2 * char_speed_i - avg_speed_i) * dt_dx) * 0.5
     )
 
+    return flux_corr
+
+# _flux_corr_types {{{2
+_flux_corr_types = {
+    FluxCorrType.GEOMETRIC: _compute_flux_corr_geom,
+}
+
+
+# compute_flux_corr() {{{2
+def compute_flux_corr(state: SolverState, i: int, u_new_i: float, config: SolverConfig):
+    flux_corr_type = config.reconst.flux_corr_type
+    compute_flux_corr_func = _flux_corr_types.get(flux_corr_type)
+    if compute_flux_corr_func is None:
+        raise ValueError(f"Unsupported flux correction type: {flux_corr_type}")
+
+    # Raw flux correction
+    flux_corr = compute_flux_corr_func(state, i, u_new_i, config)
+
+    # Limit
     limiter_type = config.reconst.limiter_type
     limit_flux_corr_func = _limit_flux_corr_types.get(limiter_type)
     if limit_flux_corr_func is None:
         raise ValueError(f"Unsupported limiter type: {limiter_type}")
 
+    dt_dx = config.dt_dx
+    eq = config.equation
     return limit_flux_corr_func(state, i, u_new_i, flux_corr, dt_dx, eq)
 
 

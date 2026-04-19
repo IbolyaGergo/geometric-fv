@@ -1,7 +1,14 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from geometric_fv.enums import AvgSpeedType, BCType, GuessType, LimiterType, SlopeType
+from geometric_fv.enums import (
+    AvgSpeedType,
+    BCType,
+    FluxCorrType,
+    GuessType,
+    LimiterType,
+    SlopeType,
+)
 from geometric_fv.equations import Equation, LinearAdvection
 
 if TYPE_CHECKING:
@@ -54,6 +61,7 @@ class ReconstConfig:
     limiter_type: LimiterType = LimiterType.NONE
     guess_type: GuessType = GuessType.BOX
     avg_speed_type: AvgSpeedType = AvgSpeedType.IMPLICIT_UPWIND
+    flux_corr_type: FluxCorrType = FluxCorrType.GEOMETRIC
 
 
 # BoundaryConfig {{{1

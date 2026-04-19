@@ -24,3 +24,6 @@ class GuessType(Enum):
 
 class AvgSpeedType(Enum):
     IMPLICIT_UPWIND = 0
+
+class FluxCorrType(Enum):
+    GEOMETRIC = 0
