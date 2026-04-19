@@ -1,7 +1,7 @@
 import argparse
 
 import numpy as np
-import pandas as pd # type: ignore
+import pandas as pd  # type: ignore
 
 from geometric_fv.config import (
     BoundaryConfig,

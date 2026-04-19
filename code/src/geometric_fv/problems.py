@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 import numpy as np
-from scipy.optimize import fsolve # type: ignore
+from scipy.optimize import fsolve  # type: ignore
 
 from geometric_fv.equations import Burgers, Equation
 
