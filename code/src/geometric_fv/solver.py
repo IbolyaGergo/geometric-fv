@@ -12,9 +12,9 @@ class SolverState:
     u_old: np.ndarray
     u_new: np.ndarray
     slope: np.ndarray
-    niter: np.ndarray | None = None
-    speed: np.ndarray | None = None
-    flux: np.ndarray | None = None
+    niter: np.ndarray
+    speed: np.ndarray
+    flux: np.ndarray
 
 
 def _solve_linear_advection(
@@ -40,5 +40,5 @@ _solvers = {
 def solve_for_u(eq, rhs, dt_dx, direction: str = "pos"):
     if abs(dt_dx) < 1e-14:
         return rhs
-    solver = _solvers.get(type(eq))
+    solver = _solvers.get(type(eq)) # type: ignore
     return solver(eq, rhs, dt_dx, direction)

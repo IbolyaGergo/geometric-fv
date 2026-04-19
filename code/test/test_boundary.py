@@ -23,8 +23,12 @@ def create_solver_state(u0, nghost, dt_dx=0.0):
     u_old = np.pad(u0, (nghost, nghost), "constant", constant_values=0.0)
     u_new = np.copy(u_old)
     slope = np.zeros_like(u_old)
+    speed=np.zeros_like(u_old),
+    flux=np.zeros_like(u_old),
+    niter=np.zeros_like(u_old, dtype=int),
 
-    return SolverState(u_old=u_old, u_new=u_new, slope=slope)
+    return SolverState(u_old=u_old, u_new=u_new, slope=slope, speed=speed,
+                       flux=flux, niter=niter)
 
 
 # TESTs {{{1

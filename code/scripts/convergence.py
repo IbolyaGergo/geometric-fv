@@ -1,7 +1,7 @@
 import argparse
 
 import numpy as np
-import pandas as pd
+import pandas as pd # type: ignore
 
 from geometric_fv.config import (
     BoundaryConfig,
@@ -16,7 +16,7 @@ from geometric_fv.problems import BurgersSmooth
 from geometric_fv.utils import calculate_norms
 
 
-def run_experiment(name: str, dt_dx_override: float = None, t_final: float = 0.2):
+def run_experiment(name: str, dt_dx_override: float, t_final: float = 0.2):
     """Executes the full convergence study for a single named experiment."""
     experiment = STUDY_REGISTRY[name]
     dt_dx_target = (

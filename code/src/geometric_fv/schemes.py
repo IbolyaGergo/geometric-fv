@@ -15,6 +15,9 @@ class Scheme(ABC):
     nghost: int
     config: SolverConfig
 
+    def __init__(self, config: SolverConfig):
+        self.config = config
+
     # allocate_state() {{{2
     def allocate_state(self, u0: np.ndarray) -> SolverState:
         """Creates a SolverState from an existing array."""
