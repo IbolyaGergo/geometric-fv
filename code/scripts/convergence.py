@@ -19,7 +19,9 @@ from geometric_fv.utils import calculate_norms
 def run_experiment(name: str, dt_dx_override: float = None, t_final: float = 0.2):
     """Executes the full convergence study for a single named experiment."""
     experiment = STUDY_REGISTRY[name]
-    dt_dx_target = dt_dx_override if dt_dx_override is not None else experiment.default_dt_dx
+    dt_dx_target = (
+        dt_dx_override if dt_dx_override is not None else experiment.default_dt_dx
+    )
 
     resolutions = [50 * 2**n for n in range(4)]
 
@@ -114,7 +116,9 @@ def run_study():
         choices=list(STUDY_REGISTRY.keys()) + ["all"],
         help="Experiment name(s) from STUDY_REGISTRY or 'all'",
     )
-    parser.add_argument("--dt_dx", type=float, default=None, help="Override dt/dx ratio")
+    parser.add_argument(
+        "--dt_dx", type=float, default=None, help="Override dt/dx ratio"
+    )
     parser.add_argument(
         "--t_final", type=float, default=0.2, help="Final simulation time"
     )
@@ -126,6 +130,7 @@ def run_study():
 
     for name in names:
         run_experiment(name, args.dt_dx, args.t_final)
+
 
 if __name__ == "__main__":
     run_study()

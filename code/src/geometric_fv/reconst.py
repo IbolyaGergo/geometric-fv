@@ -154,8 +154,9 @@ def compute_slope(
 
 # AVG SPEED {{{1
 # _compute_avg_speed_impl_upwind() {{{2
-def _compute_avg_speed_impl_upwind(state: SolverState, i: int, u_new_i: float,
-                                   eq: Equation):
+def _compute_avg_speed_impl_upwind(
+    state: SolverState, i: int, u_new_i: float, eq: Equation
+):
     return eq.dfdu(u_new_i)
 
 
@@ -163,6 +164,8 @@ def _compute_avg_speed_impl_upwind(state: SolverState, i: int, u_new_i: float,
 _avg_speed_types = {
     AvgSpeedType.IMPLICIT_UPWIND: _compute_avg_speed_impl_upwind,
 }
+
+
 # FLUX LIMITER {{{1
 # _limit_flux_corr_full() {{{2
 def _limit_flux_corr_full(
@@ -261,6 +264,7 @@ def _compute_flux_corr_geom(
     )
 
     return flux_corr
+
 
 # _flux_corr_types {{{2
 _flux_corr_types = {
