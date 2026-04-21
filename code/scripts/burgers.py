@@ -16,7 +16,7 @@ from geometric_fv.enums import (
     SlopeType,
 )
 from geometric_fv.equations import Burgers
-from geometric_fv.schemes import HighResImplicit
+from geometric_fv.schemes import HighResImplicit, Lozano
 
 config = SolverConfig(
     mesh=MeshConfig(x_min=0.0, x_max=1.0, ncells=100),
@@ -32,7 +32,7 @@ config = SolverConfig(
     dt_dx=1.8,
 )
 
-scheme = HighResImplicit(config=config)
+scheme = Lozano(config=config)
 nghost = scheme.nghost
 
 mesh = config.mesh.create_mesh()

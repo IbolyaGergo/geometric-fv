@@ -224,19 +224,12 @@ class Lozano(Scheme):
     nghost: int = 2
     config: SolverConfig = SolverConfig()
 
-    # _flux_pos() {{{2
-    def _flux_pos(self, u: float) -> float:
+    # _compute_num_flux() {{{2
+    def _compute_num_flux(self, u: float, sweep_sign: int) -> float:
         eq = self.config.equation
-        if u > 0.0:
+        if (sweep_sign == 1 and u > 0.0) or (sweep_sign == -1 and u < 0.0):
             return eq.flux(u)
         return 0.0
-
-    # _flux_neg() {{{2
-    def _flux_neg(self, u: float) -> float:
-        eq = self.config.equation
-        if u > 0.0:
-            return 0.0
-        return eq.flux(u)
 
     # _update_cell() {{{2
     def _update_cell(self, state: SolverState, i: int, sweep_sign: int) -> float:
@@ -245,18 +238,13 @@ class Lozano(Scheme):
         dt_dx = self.config.dt_dx
         eq = self.config.equation
 
-        if sweep_sign == 1:
-            rhs = u_old[i] + (sweep_sign) * dt_dx * self._flux_pos(u_new[i - sweep_sign])
-            if rhs > 0.0:
-                return solve_for_u(eq, rhs, dt_dx, sweep_sign=sweep_sign)
-            else:
-                return rhs
+        u_base = u_old[i] if sweep_sign == 1 else u_new[i]
+        rhs = u_base + (sweep_sign) * dt_dx *\
+                self._compute_num_flux(u_new[i - sweep_sign], sweep_sign)
 
-        rhs = u_new[i] + (sweep_sign) * dt_dx * self._flux_neg(u_new[i - sweep_sign])
-        if rhs > 0.0:
-            return rhs
-        else:
+        if sweep_sign * rhs > 0.0:
             return solve_for_u(eq, rhs, dt_dx, sweep_sign=sweep_sign)
+        return rhs
 
     # sweep() {{{2
     def sweep(self, state: SolverState):
