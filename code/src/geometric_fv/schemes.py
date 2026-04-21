@@ -239,31 +239,31 @@ class Lozano(Scheme):
         return eq.flux(u)
 
     # _update_cell() {{{2
-    def _update_cell(self, state: SolverState, i: int, direction: str) -> float:
+    def _update_cell(self, state: SolverState, i: int, sweep_sign: int) -> float:
         u_old = state.u_old
         u_new = state.u_new
         dt_dx = self.config.dt_dx
         eq = self.config.equation
 
-        if direction == "pos":
-            rhs = u_old[i] + dt_dx * self._flux_pos(u_new[i - 1])
+        if sweep_sign == 1:
+            rhs = u_old[i] + (sweep_sign) * dt_dx * self._flux_pos(u_new[i - sweep_sign])
             if rhs > 0.0:
-                return solve_for_u(eq, rhs, dt_dx, direction=direction)
+                return solve_for_u(eq, rhs, dt_dx, sweep_sign=sweep_sign)
             else:
                 return rhs
 
-        rhs = u_new[i] - dt_dx * self._flux_neg(u_new[i + 1])
+        rhs = u_new[i] + (sweep_sign) * dt_dx * self._flux_neg(u_new[i - sweep_sign])
         if rhs > 0.0:
             return rhs
         else:
-            return solve_for_u(eq, rhs, dt_dx, direction=direction)
+            return solve_for_u(eq, rhs, dt_dx, sweep_sign=sweep_sign)
 
     # sweep() {{{2
     def sweep(self, state: SolverState):
         for i in self.cell_indices(state):
-            state.u_new[i] = self._update_cell(state, i, direction="pos")
+            state.u_new[i] = self._update_cell(state, i, sweep_sign=1)
         for i in reversed(self.cell_indices(state)):
-            state.u_new[i] = self._update_cell(state, i, direction="neg")
+            state.u_new[i] = self._update_cell(state, i, sweep_sign=-1)
 
 
 # BoxBurgers() {{{1
@@ -284,7 +284,7 @@ class BoxBurgers(Scheme):
             return 0.0
 
     # _update_cell() {{{2
-    def _update_cell(self, state: SolverState, i: int, direction: str) -> float:
+    def _update_cell(self, state: SolverState, i: int, sweep_sign: str) -> float:
         u_old = state.u_old
         dt_dx = self.config.dt_dx
 
@@ -299,4 +299,4 @@ class BoxBurgers(Scheme):
     # sweep() {{{2
     def sweep(self, state: SolverState):
         for i in self.cell_indices(state):
-            state.u_new[i] = self._update_cell(state, i, direction="pos")
+            state.u_new[i] = self._update_cell(state, i, sweep_sign="pos")

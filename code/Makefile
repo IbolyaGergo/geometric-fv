@@ -99,7 +99,7 @@ tags:
 RESULTS_DIR := results
 
 # Default parameters
-EXPERIMENT ?= burgers-box burgers-highres-none
+EXPERIMENT ?= burgers-box burgers-highres-full
 CFL ?= 0.8
 T ?= 0.2
 
