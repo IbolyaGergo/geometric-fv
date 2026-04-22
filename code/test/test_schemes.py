@@ -45,7 +45,7 @@ class ImplicitUpwind(Scheme):
         u_new = state.u_new
         dt_dx = self.config.dt_dx
 
-        for i in self.cell_indices(state):
+        for i in self.cell_indices(state, sweep_sign=1):
             # For positive dt_dx: u_i + dt_dx*f(u_i) = u_old_i + dt_dx*f(u_im1)
             rhs = u_old[i] + dt_dx * eq.flux(u_new[i - 1])
             res = eq.invert_implicit(rhs, dt_dx, tol)
@@ -227,7 +227,7 @@ def test_cell_indices():
 
     assert len(state.u_old) == 24
 
-    indices = list(scheme.cell_indices(state))
+    indices = list(scheme.cell_indices(state, sweep_sign=1))
     expected_forward = list(range(nghost, len(state.u_old) - nghost))
 
     assert indices == expected_forward, f"Expected {expected_forward}, got {indices}"
@@ -236,7 +236,7 @@ def test_cell_indices():
     scheme = SecondOrderImplicit(nghost=nghost, config=SolverConfig(dt_dx=-1.0))
     state_neg = scheme.allocate_state(u0)
 
-    rev_indices = list(scheme.cell_indices(state_neg))
+    rev_indices = list(scheme.cell_indices(state_neg, sweep_sign=-1))
     expected_reverse = list(reversed(expected_forward))
 
     assert rev_indices == expected_reverse, (

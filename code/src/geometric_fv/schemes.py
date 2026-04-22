@@ -54,13 +54,14 @@ class Scheme(ABC):
         )
 
     # cell_indices() {{{2
-    def cell_indices(self, state: SolverState) -> range | reversed[int]:
+    def cell_indices(self, state: SolverState, sweep_sign: int) -> range | reversed[int]:
         """
         Returns an iterator over the internal cell indices.
 
         Args:
             state: The current state to get the total length.
-            reverse: If True, sweeps from right-to-left.
+            sweep_sign: 1 for left-to-right (positive), -1 for right-to-left
+            (negative).
         """
         ntotal = len(state.u_old)
         nghost = self.nghost
@@ -68,7 +69,7 @@ class Scheme(ABC):
         # Define the range of physical (non-ghost) cells
         idx_range = range(nghost, ntotal - nghost)
 
-        if self.config.dt_dx < 0:
+        if sweep_sign == -1:
             return reversed(idx_range)
         return idx_range
 
@@ -114,7 +115,8 @@ class SecondOrderImplicit(Scheme):
         if state.niter is None:
             state.niter = np.zeros_like(state.u_old, dtype=int)
 
-        for i in self.cell_indices(state):
+        sweep_sign = 1 if self.config.dt_dx > 0 else -1
+        for i in self.cell_indices(state, sweep_sign):
             u_new_i_guess = compute_guess(state, i=i, config=self.config)
 
             result = simple_fixed_point(
@@ -191,7 +193,7 @@ class HighResImplicit(Scheme):
         state.flux[self.nghost - 1] = self.config.equation.flux(
             state.u_new[self.nghost - 1]
         )
-        for i in self.cell_indices(state):
+        for i in self.cell_indices(state, sweep_sign=1):
             u_new_i_guess = state.u_new[i - 1]
 
             result = simple_fixed_point(
@@ -249,10 +251,9 @@ class Lozano(Scheme):
 
     # sweep() {{{2
     def sweep(self, state: SolverState):
-        for i in self.cell_indices(state):
-            state.u_new[i] = self._update_cell(state, i, sweep_sign=1)
-        for i in reversed(self.cell_indices(state)):
-            state.u_new[i] = self._update_cell(state, i, sweep_sign=-1)
+        for sign in [1, -1]:
+            for i in self.cell_indices(state, sweep_sign=sign):
+                state.u_new[i] = self._update_cell(state, i, sweep_sign=sign)
 
 
 # BoxBurgers() {{{1
@@ -287,5 +288,5 @@ class BoxBurgers(Scheme):
 
     # sweep() {{{2
     def sweep(self, state: SolverState):
-        for i in self.cell_indices(state):
+        for i in self.cell_indices(state, sweep_sign=1):
             state.u_new[i] = self._update_cell(state, i, sweep_sign="pos")
