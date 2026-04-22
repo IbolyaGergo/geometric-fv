@@ -6,7 +6,7 @@ import numpy as np
 
 from geometric_fv.config import SolverConfig
 from geometric_fv.reconst import compute_flux_corr, compute_guess, compute_slope
-from geometric_fv.solver import SolverState, solve_for_u
+from geometric_fv.solver import SolverState
 from geometric_fv.utils import simple_fixed_point
 
 
@@ -237,13 +237,15 @@ class Lozano(Scheme):
         u_new = state.u_new
         dt_dx = self.config.dt_dx
         eq = self.config.equation
+        tol = self.config.iteration.tol
 
         u_base = u_old[i] if sweep_sign == 1 else u_new[i]
         rhs = u_base + (sweep_sign) * dt_dx *\
                 self._compute_num_flux(u_new[i - sweep_sign], sweep_sign)
 
         if sweep_sign * rhs > 0.0:
-            return solve_for_u(eq, rhs, dt_dx, sweep_sign=sweep_sign)
+            res = eq.invert_implicit(rhs, dt_dx, tol, sweep_sign)
+            return res.u
         return rhs
 
     # sweep() {{{2
