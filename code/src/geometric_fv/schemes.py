@@ -152,7 +152,6 @@ class HighResImplicit(Scheme):
         tol = self.config.iteration.tol
 
         flux_out_corr = compute_flux_corr(state, i, u_curr, self.config)
-        # flux_out_corr = self._compute_flux_corr(u_curr, state, i)
         flux_in = state.flux[i - 1]
 
         rhs = u_old[i] + dt_dx * (flux_in - flux_out_corr)

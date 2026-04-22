@@ -53,7 +53,7 @@ class Burgers(Equation):
             return InversionResult(rhs, is_invertible=True)
 
         # Solve quadratic:
-        # u + dt/dx * (u^2)/2 = rhs
+        # u + s * dt/dx * (u^2)/2 = rhs, where s is the sweep_sign
         discriminant = 1 + sweep_sign * 2 * dt_dx * rhs
         if discriminant > 1.0 + tol:
             u = sweep_sign * (-1.0 + np.sqrt(discriminant)) / dt_dx
@@ -79,6 +79,6 @@ class LinearAdvection(Equation):
 
     def invert_implicit(self, rhs: float, dt_dx: float, tol: float,
                         sweep_sign: int = 1) -> InversionResult:
-        # u + dt/dx * a * u = rhs
-        u = rhs / (1.0 + abs(self.a) * dt_dx)
+        # u + s * dt/dx * a * u = rhs, where s is the sweep_sign
+        u = rhs / (1.0 + sweep_sign * self.a * dt_dx)
         return InversionResult(u, is_invertible=True)

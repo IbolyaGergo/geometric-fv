@@ -88,3 +88,12 @@ def test_burgers_invert_implicit_zero_dt_dx():
 
     u_sol = res.u
     assert u_sol == pytest.approx(rhs)
+
+# test_burgers_invert_implicit_negative_sweep() {{{2
+@pytest.mark.parametrize("rhs", [-0.1, -1.0])
+def test_burgers_invert_implicit_negative_sweep(rhs):
+    dt_dx = 1.8
+    eq = Burgers()
+    res = eq.invert_implicit(rhs, dt_dx, tol=1e-9, sweep_sign=-1)
+    u_sol = res.u
+    assert u_sol - dt_dx * eq.flux(u_sol) == pytest.approx(rhs)
