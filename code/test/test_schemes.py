@@ -14,7 +14,7 @@ from geometric_fv.config import (
     SolverConfig,
 )
 from geometric_fv.enums import BCType, GuessType, LimiterType, SlopeType
-from geometric_fv.equations import Burgers
+from geometric_fv.equations import Burgers, LinearAdvection
 from geometric_fv.problems import BurgersSmooth
 from geometric_fv.schemes import (
     BoxBurgers,
@@ -176,12 +176,12 @@ def test_HighResImplicit_equals_other_scheme_for_given_limiter(
 
 
 # test_iteration_count_for_exact_guess() {{{2
-@pytest.mark.parametrize("dt_dx", [1.2, -1.2])
+@pytest.mark.parametrize("a", [1.0, -1.0])
 @pytest.mark.parametrize(
     ("limiter_type", "guess_type"),
     [(LimiterType.NONE, GuessType.BOX), (LimiterType.FULL, GuessType.IMPLICIT_UPWIND)],
 )
-def test_iteration_count_for_exact_guess(limiter_type, guess_type, dt_dx):
+def test_iteration_count_for_exact_guess(limiter_type, guess_type, a):
     """
     For SlopeType.BOX and LimiterType.NONE, the initial guess corresponds to the
     solution of the BOX scheme, thus should converge in exactly 1 iteration.
@@ -194,7 +194,8 @@ def test_iteration_count_for_exact_guess(limiter_type, guess_type, dt_dx):
             guess_type=guess_type,
         ),
         boundary=BoundaryConfig(bc_type=BCType.QUASI_PERIODIC),
-        dt_dx=dt_dx,
+        dt_dx=1.2,
+        equation=LinearAdvection(a=a),
     )
     scheme = SecondOrderImplicit(config=config)
 
@@ -272,6 +273,7 @@ def test_mirroring(limiter_type, guess_type):
         ),
         boundary=BoundaryConfig(bc_type=BCType.QUASI_PERIODIC),
         dt_dx=dt_dx,
+        equation=LinearAdvection(a=1.0),
     )
 
     # Positive dt_dx
@@ -290,7 +292,8 @@ def test_mirroring(limiter_type, guess_type):
             guess_type=guess_type,
         ),
         boundary=BoundaryConfig(bc_type=BCType.QUASI_PERIODIC),
-        dt_dx=-dt_dx,
+        dt_dx=dt_dx,
+        equation=LinearAdvection(a=-1.0),
     )
     scheme_neg = SecondOrderImplicit(config=config_neg)
     state_neg = scheme_neg.init_state(sine_wave)

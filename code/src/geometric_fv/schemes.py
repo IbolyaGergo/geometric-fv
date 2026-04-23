@@ -5,6 +5,7 @@ from typing import Callable
 import numpy as np
 
 from geometric_fv.config import SolverConfig
+from geometric_fv.equations import LinearAdvection
 from geometric_fv.reconst import compute_flux_corr, compute_guess, compute_slope
 from geometric_fv.solver import SolverState
 from geometric_fv.utils import simple_fixed_point
@@ -83,7 +84,7 @@ class Scheme(ABC):
 @dataclass(frozen=True)
 class SecondOrderImplicit(Scheme):
     nghost: int = 2
-    config: SolverConfig = SolverConfig()
+    config: SolverConfig = SolverConfig(equation=LinearAdvection())
 
     # _update_cell_iter() {{{2
     def _update_cell_iter(
@@ -97,16 +98,18 @@ class SecondOrderImplicit(Scheme):
         slope = state.slope
 
         dt_dx = self.config.dt_dx
+        eq = self.config.equation
 
         slope_i_current = compute_slope(
             state, i=i, u_new_i=u_new_i_current, config=self.config
         )
 
         # fmt: off
-        i_upw = i-1 if dt_dx > 0 else i+1
+        cfl = eq.a * dt_dx
+        i_upw = i-1 if cfl > 0 else i+1
         u_new_i_next = \
-                (u_old[i] + abs(dt_dx) * u_new[i_upw]) / (1.0 + abs(dt_dx)) \
-                - 0.5 * dt_dx * (slope_i_current - slope[i_upw])
+                (u_old[i] + abs(cfl) * u_new[i_upw]) / (1.0 + abs(cfl)) \
+                - 0.5 * cfl * (slope_i_current - slope[i_upw])
         # fmt: on
         return u_new_i_next
 
@@ -115,7 +118,8 @@ class SecondOrderImplicit(Scheme):
         if state.niter is None:
             state.niter = np.zeros_like(state.u_old, dtype=int)
 
-        sweep_sign = 1 if self.config.dt_dx > 0 else -1
+        eq = self.config.equation
+        sweep_sign = 1 if eq.a > 0 else -1
         for i in self.cell_indices(state, sweep_sign):
             u_new_i_guess = compute_guess(state, i=i, config=self.config)
 

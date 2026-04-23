@@ -90,7 +90,7 @@ def apply_bc(
     # first/last idx of the physical domain
     first = nghost
     last = -nghost - 1
-    if dt_dx > 0.0:
+    if eq.dfdu(u_new[first]) > 0.0:
         i = first - 1
     else:
         i = last + 1
