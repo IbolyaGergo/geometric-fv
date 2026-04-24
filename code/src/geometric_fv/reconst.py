@@ -50,10 +50,10 @@ def _limit_slope_tvd(
     u_new = state.u_new
     slope = state.slope
 
-    i_upw = i - 1 if eq.a > 0 else i + 1
-    i_dwn = i + 1 if eq.a > 0 else i - 1
+    cfl = eq.dfdu(u_new_i) * dt_dx
+    i_upw = i - 1 if cfl > 0 else i + 1
+    i_dwn = i + 1 if cfl > 0 else i - 1
 
-    cfl = eq.a * dt_dx
     slope_i_1 = np.median(
         [
             slope[i_upw]
@@ -87,10 +87,10 @@ def _limit_slope_tvd_suff(
     u_old = state.u_old
     u_new = state.u_new
 
-    i_upw = i - 1 if eq.dfdu(u_new_i) > 0 else i + 1
-    i_dwn = i + 1 if eq.dfdu(u_new_i) > 0 else i - 1
+    cfl = eq.dfdu(u_new_i) * dt_dx
+    i_upw = i - 1 if cfl > 0 else i + 1
+    i_dwn = i + 1 if cfl > 0 else i - 1
 
-    cfl = eq.a * dt_dx
     slope_i_1 = np.median(
         [
             0.0,
@@ -305,7 +305,7 @@ def _compute_guess_box(state: SolverState, i: int, dt_dx: float, eq: Equation) -
     u_old = state.u_old
     u_new = state.u_new
 
-    cfl = eq.a * dt_dx
+    cfl = eq.dfdu(u_old[i]) * dt_dx
     coeff = (1 - abs(cfl)) / (1 + abs(cfl))
     i_upw = i - 1 if cfl > 0 else i + 1
     u_new_i_guess = coeff * u_old[i] + u_old[i_upw] - coeff * u_new[i_upw]
@@ -319,7 +319,7 @@ def _compute_guess_implicit_upwind(state: SolverState, i: int, dt_dx: float,
     u_old = state.u_old
     u_new = state.u_new
 
-    cfl = eq.a * dt_dx
+    cfl = eq.dfdu(u_old[i]) * dt_dx
     i_upw = i - 1 if cfl > 0 else i + 1
     u_new_i_guess = (u_old[i] + abs(cfl) * u_new[i_upw]) / (1.0 + abs(cfl))
 
@@ -344,8 +344,9 @@ def compute_guess(state: SolverState, i: int, config: SolverConfig) -> float:
     eq = config.equation
     u_guess = compute_guess_func(state, i, dt_dx, eq)
 
+    cfl = eq.dfdu(u_guess) * dt_dx
     if config.reconst.limiter_type != LimiterType.NONE:
-        i_upw = i - 1 if eq.a > 0 else i + 1
+        i_upw = i - 1 if cfl > 0 else i + 1
         u_guess = np.median([u_guess, state.u_old[i], state.u_new[i_upw]])
 
     return u_guess

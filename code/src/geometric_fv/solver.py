@@ -4,8 +4,6 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from geometric_fv.equations import Burgers, Equation, LinearAdvection
-
 
 @dataclass
 class SolverState:

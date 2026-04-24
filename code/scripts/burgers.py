@@ -16,7 +16,7 @@ from geometric_fv.enums import (
     SlopeType,
 )
 from geometric_fv.equations import Burgers
-from geometric_fv.schemes import HighResImplicit, Lozano
+from geometric_fv.schemes import Lozano
 
 config = SolverConfig(
     mesh=MeshConfig(x_min=0.0, x_max=1.0, ncells=100),
@@ -40,7 +40,7 @@ x_c = mesh.centers
 ncells = mesh.ncells
 
 # u0 = 0.5 * np.tanh((x_c-0.5)*20)+0.5
-# u0 = np.sin(2 * np.pi * x_c)
+u0 = np.sin(2 * np.pi * x_c)
 # u0 = (np.sin(2 * np.pi * x_c) + 1.1) / 2.1
 # u0 = np.piecewise(
 #     x_c,
@@ -52,7 +52,7 @@ ncells = mesh.ncells
 # )
 # u0 = np.piecewise(x_c, [x_c < 0.5, x_c >= 0.5], [1, 0])
 # u0 = np.piecewise(x_c, [x_c < 0.5, x_c >= 0.5], [0, 1.0])
-u0 = 0.05 + 0.95 * np.e ** (-50 * (x_c - 0.5) ** 2)
+# u0 = 0.05 + 0.95 * np.e ** (-50 * (x_c - 0.5) ** 2)
 
 state = scheme.allocate_state(u0)
 

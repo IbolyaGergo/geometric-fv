@@ -105,7 +105,7 @@ class SecondOrderImplicit(Scheme):
         )
 
         # fmt: off
-        cfl = eq.a * dt_dx
+        cfl = eq.dfdu(u_new_i_current) * dt_dx
         i_upw = i-1 if cfl > 0 else i+1
         u_new_i_next = \
                 (u_old[i] + abs(cfl) * u_new[i_upw]) / (1.0 + abs(cfl)) \
@@ -119,7 +119,8 @@ class SecondOrderImplicit(Scheme):
             state.niter = np.zeros_like(state.u_old, dtype=int)
 
         eq = self.config.equation
-        sweep_sign = 1 if eq.a > 0 else -1
+        cfl = eq.dfdu(state.u_old[0]) * self.config.dt_dx
+        sweep_sign = 1 if cfl > 0 else -1
         for i in self.cell_indices(state, sweep_sign):
             u_new_i_guess = compute_guess(state, i=i, config=self.config)
 
