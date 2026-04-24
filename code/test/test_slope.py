@@ -18,9 +18,9 @@ def test_compute_slope_Box():
     u_old = np.array([4])
     u_new = np.array([1])
     slope = np.zeros(len(u_old))
-    speed=np.zeros_like(u_old),
-    flux=np.zeros_like(u_old),
-    niter=np.zeros_like(u_old, dtype=int),
+    speed = (np.zeros_like(u_old),)
+    flux = (np.zeros_like(u_old),)
+    niter = (np.zeros_like(u_old, dtype=int),)
 
     dt_dx = 1.5
     i = 0
@@ -30,8 +30,9 @@ def test_compute_slope_Box():
     reconst_config = ReconstConfig(slope_type=slope_type, limiter_type=limiter_type)
     config = SolverConfig(reconst=reconst_config, dt_dx=dt_dx)
 
-    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, speed=speed,
-                       flux=flux, niter=niter)
+    state = SolverState(
+        u_old=u_old, u_new=u_new, slope=slope, speed=speed, flux=flux, niter=niter
+    )
 
     slope_i = compute_slope(state, i, u_new_i=u_new[i], config=config)
     assert pytest.approx(slope_i) == 2.0
@@ -46,9 +47,9 @@ def test_compute_slope_Box_indexing():
     ncells = 20
     u_old = np.zeros(ncells)
     u_new = np.zeros(ncells)
-    speed=np.zeros_like(u_old),
-    flux=np.zeros_like(u_old),
-    niter=np.zeros_like(u_old, dtype=int),
+    speed = (np.zeros_like(u_old),)
+    flux = (np.zeros_like(u_old),)
+    niter = (np.zeros_like(u_old, dtype=int),)
 
     i = 5
     u_old[i] = 9.6
@@ -62,8 +63,9 @@ def test_compute_slope_Box_indexing():
     reconst_config = ReconstConfig(slope_type=slope_type, limiter_type=limiter_type)
     config = SolverConfig(reconst=reconst_config, dt_dx=dt_dx)
 
-    state = SolverState(u_old=u_old, u_new=u_new, slope=slope, speed=speed,
-                       flux=flux, niter=niter)
+    state = SolverState(
+        u_old=u_old, u_new=u_new, slope=slope, speed=speed, flux=flux, niter=niter
+    )
 
     slope_i = compute_slope(state, i, u_new_i=u_new[i], config=config)
 
@@ -86,8 +88,14 @@ def test_limit_slope_tvd_suff_properties_hypothesis(u_old, u_new, dt_dx):
         slope_type=SlopeType.BOX, limiter_type=LimiterType.TVD_SUFF
     )
     config = SolverConfig(reconst=reconst_config, dt_dx=dt_dx)
-    state = SolverState(u_old=u_old, u_new=u_new, slope=np.zeros(3),
-                        speed=np.zeros(3), flux=np.zeros(3), niter=np.zeros(3))
+    state = SolverState(
+        u_old=u_old,
+        u_new=u_new,
+        slope=np.zeros(3),
+        speed=np.zeros(3),
+        flux=np.zeros(3),
+        niter=np.zeros(3),
+    )
 
     # Calculate theoretical bounds (The "Oracle")
     i = 1
@@ -131,10 +139,12 @@ def test_limit_slope_tvd_necessary_properties_hypothesis(u_old, u_new, slope, dt
     config_suff = SolverConfig(reconst=reconst_config_suff, dt_dx=dt_dx)
 
     state = SolverState(
-        u_old=u_old, u_new=u_new, slope=slope,
+        u_old=u_old,
+        u_new=u_new,
+        slope=slope,
         speed=np.zeros_like(u_old),
         flux=np.zeros_like(u_old),
-        niter=np.zeros_like(u_old)
+        niter=np.zeros_like(u_old),
     )
 
     # Make sure slope[i-1] is properly bounded

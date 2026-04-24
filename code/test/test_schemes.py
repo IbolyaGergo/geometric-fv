@@ -77,8 +77,10 @@ class Box(Scheme):
 def sine_wave(x):
     return np.sin(2 * np.pi * x)
 
+
 def gauss_pos(x):
     return 0.05 + 0.95 * np.e ** (-50 * (x - 0.25) ** 2)
+
 
 # TESTs {{{1
 # test_constant_solution() {{{2
@@ -338,6 +340,7 @@ def test_Lozano_boundedness(u0, dt_dx):
     for i in range(1, ncells):
         assert min(u_new[i - 1], u_old[i]) - 1e-12 <= u_new[i]
         assert u_new[i] <= max(u_new[i - 1], u_old[i]) + 1e12
+
 
 # test_Lozano_mirroring() {{{2
 def test_Lozano_mirroring():

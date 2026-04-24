@@ -34,7 +34,9 @@ class Equation(ABC):
 
     # invert_implicit() {{{2
     @abstractmethod
-    def invert_implicit(self, rhs: float, dt_dx: float, tol: float, sweep_sign: int = 1) -> InversionResult:
+    def invert_implicit(
+        self, rhs: float, dt_dx: float, tol: float, sweep_sign: int = 1
+    ) -> InversionResult:
         """Solves u + dt/dx * f(u) = rhs. Returns (u, success)."""
         pass
 
@@ -47,8 +49,9 @@ class Burgers(Equation):
     def dfdu(self, u: float) -> float:
         return u
 
-    def invert_implicit(self, rhs: float, dt_dx: float, tol: float,
-                        sweep_sign: int = 1) -> InversionResult:
+    def invert_implicit(
+        self, rhs: float, dt_dx: float, tol: float, sweep_sign: int = 1
+    ) -> InversionResult:
         if abs(dt_dx) < tol:
             return InversionResult(rhs, is_invertible=True)
 
@@ -77,8 +80,9 @@ class LinearAdvection(Equation):
     def dfdu(self, u: float) -> float:
         return self.a
 
-    def invert_implicit(self, rhs: float, dt_dx: float, tol: float,
-                        sweep_sign: int = 1) -> InversionResult:
+    def invert_implicit(
+        self, rhs: float, dt_dx: float, tol: float, sweep_sign: int = 1
+    ) -> InversionResult:
         # u + s * dt/dx * a * u = rhs, where s is the sweep_sign
         u = rhs / (1.0 + sweep_sign * self.a * dt_dx)
         return InversionResult(u, is_invertible=True)

@@ -55,7 +55,9 @@ class Scheme(ABC):
         )
 
     # cell_indices() {{{2
-    def cell_indices(self, state: SolverState, sweep_sign: int) -> range | reversed[int]:
+    def cell_indices(
+        self, state: SolverState, sweep_sign: int
+    ) -> range | reversed[int]:
         """
         Returns an iterator over the internal cell indices.
 
@@ -246,8 +248,9 @@ class Lozano(Scheme):
         tol = self.config.iteration.tol
 
         u_base = u_old[i] if sweep_sign == 1 else u_new[i]
-        rhs = u_base + (sweep_sign) * dt_dx *\
-                self._compute_num_flux(u_new[i - sweep_sign], sweep_sign)
+        rhs = u_base + (sweep_sign) * dt_dx * self._compute_num_flux(
+            u_new[i - sweep_sign], sweep_sign
+        )
 
         if sweep_sign * rhs > 0.0:
             res = eq.invert_implicit(rhs, dt_dx, tol, sweep_sign)

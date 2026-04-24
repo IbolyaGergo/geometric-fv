@@ -58,8 +58,7 @@ def _limit_slope_tvd(
         [
             slope[i_upw]
             - np.sign(cfl) * 2.0 * (u_old[i] - u_new[i_upw]) / (1.0 + abs(cfl)),
-            slope[i_upw]
-            + 2.0 * (u_old[i] - u_new[i_upw]) / (cfl * (1.0 + abs(cfl))),
+            slope[i_upw] + 2.0 * (u_old[i] - u_new[i_upw]) / (cfl * (1.0 + abs(cfl))),
             slope_i,
         ]
     )
@@ -314,8 +313,9 @@ def _compute_guess_box(state: SolverState, i: int, dt_dx: float, eq: Equation) -
 
 
 # _compute_guess_implicit_upwind() {{{2
-def _compute_guess_implicit_upwind(state: SolverState, i: int, dt_dx: float,
-                                   eq: Equation) -> float:
+def _compute_guess_implicit_upwind(
+    state: SolverState, i: int, dt_dx: float, eq: Equation
+) -> float:
     u_old = state.u_old
     u_new = state.u_new
 
