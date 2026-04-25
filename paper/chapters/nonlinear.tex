@@ -1,0 +1,129 @@
+%! TeX root: ../main.tex
+\chapter{Nonlinear Conservation Laws in the Geometric Framework}
+\label{sec:nonlinear-conservation-laws}
+
+The previous chapters established a robust geometric framework for linear advection.
+We derived high-resolution implicit schemes via the Implicit Upwind Range Condition (IURC).
+However, many physical phenomena are governed by nonlinear conservation laws where the speed of information propagation depends on the solution itself.
+In this chapter, we extend the implicit geometric framework to scalar nonlinear conservation laws of the form \(u_t + f(u)_x = 0\).
+The transition from linear to nonlinear equations introduces new phenomena: characteristics are no longer parallel, shocks and expansion waves can form.
+The numerical solution can converge to more than one solution: our scheme should choose the physically "right" one, e.g., one that satisfy a numerical entropy condition.
+
+We begin by examining the nonlinear analogue of the first-order implicit upwind scheme, particularly the formulation proposed by Lozano and Aslam \cite{lozano2020implicit}.
+Building on this, we derive second-order extensions using geometric arguments.
+To stabilize the resulting schemes, we extend IURC to ensure monotonicity and stability in the presence of shocks and rarefactions, using Burgers' equation as our primary laboratory.
+Finally, we discuss the numerical implementation via sweeping algorithms.
+
+\section{Nonlinear Fluxes}
+\label{sec:nonlinear_fluxes}
+
+The linear advection equation
+\begin{equation}
+    u_t + a u_x = 0
+\end{equation}
+assumes a constant wave speed \(a\).
+For a general nonlinear conservation law,
+\begin{equation}
+    \label{eq:nonlinear_cons}
+    u_t + f(u)_x = 0,
+\end{equation}
+rewritten in quasi-linear form as
+\begin{equation}
+    \label{eq:claw_quasi_lin}
+    u_t + f'(u)\,u_x = 0,
+\end{equation}
+the local wave speed is given by the derivative of the flux function, \(a(u) = f'(u)\).
+This nonlinearity implies that different parts of the solution travel at different speeds, leading to the formation of shocks (where characteristics converge) and rarefactions (where characteristics diverge).
+
+To explore our ideas, we will primarily focus on the inviscid Burgers' equation,
+\begin{equation}
+    \label{eq:burgers}
+    u_t + \left( \frac{u^2}{2} \right)_x = 0,
+\end{equation}
+with flux \( f(u) = \frac{u^2}{2} \) and wave speed \(f'(u) = a(u) = u\).
+This equation serves as the simplest model that captures the essential features of nonlinear transport and shock formation.
+
+\section{Geometric Formulation of Implicit Nonlinear Fluxes}%
+\label{sec:geometric-implicit-nonlinear}
+
+In this section, we extend our implicit geometric framework to nonlinear implicit schemes, following the logic of Goodman and Leveque \cite{goodman1988geometric}.
+
+% TODO: fig of linear reconstruction u(x), don't forget u_i^+
+% TODO: fig of flux approximation f(u)
+
+Our goal is to approximate the time-averaged flux at the interface: 
+\begin{equation}
+    F_{i+1/2} = \frac{1}{\Delta t} \int\limits_{t^{n}}^{t^{n+1}} f(u(x_{i+1/2},t)) \,\mathrm{d}t.
+\end{equation}
+
+Assume \(f(u)\) is a nonlinear, convex flux such that \(f''(u) \geq 0\).
+For the following derivation, we assume that the wave speed, thus in our case both \(f'(u_{i}^{n+1})\) and \(a_i\) are positive, where the information propagates from left to right.
+To make the integration tractable, we approximate the flux function in the vicinity of the \(i\)-th cell with a straight line:
+\begin{equation}
+    \label{eq:flux_approx}
+    f(u) \approx g_i(u) = f(u_{i}^{n+1}) + a_i \left( u - u_{i}^{n+1} \right),
+\end{equation}
+where \(a_i\) is an average slope of the flux \(g_i' = a_i\).
+
+Next, we consider a piecewise linear reconstruction of the solution at time \(t^n\) as before:
+\begin{equation}
+    \tilde{u}(x, t^n) = u_i^{n+1} + \sigma_i(x - (x_i - a\Delta t)),
+\end{equation}
+where \(\sigma_i\) is the slope in cell \(i\).
+For the interface \(x_{i+1/2}\) at any time \(t \in [t^{n}, t^{n+1}]\), the value is obtained by tracing along a characteristic.
+Assuming the wave travels locally at a constant speed \(a_i\), the value is given by:
+\begin{equation}
+    \label{eq:interface_val_approx}
+    u(x_{i+1/2}, t) = u_i^+ - \sigma_i a_i \left( t - t^n \right),
+\end{equation}
+where \(u_i^+ = u_{i}^{n+1} + \sigma_i \left( f'(u_{i}^{n+1})\Delta t + \frac{\Delta x}{2} \right)\) represents the value at the right interface \(x_{i+1/2}\) at time \(t^n\).
+Notice that here we assume that the characteristic speed in cell \(i\) at time \(t^{n+1}\) is \(f'(u_{i}^{n+1})\), more on that later.
+
+By substituting (\ref{eq:interface_val_approx}) into the linearized flux (\ref{eq:flux_approx}), we obtain the integrand for the numerical flux:
+\begin{equation}
+    \begin{split}
+        f(u(x_{i+1/2},t)) \approx g_i \left( u(x_{i+1/2}, t) \right)
+        &= f(u_{i}^{n+1}) + a_i \left( u(x_{i+1/2}, t) - u_{i}^{n+1} \right) \\
+        &= f(u_{i}^{n+1}) + a_i \left( u_i^+ - \sigma_i a_i \left( t - t^n \right) - u_{i}^{n+1} \right) \\
+        &= f(u_{i}^{n+1}) + a_i \left( u_i^+ - u_{i}^{n+1} - \sigma_i a_i \left( t - t^n \right) \right).
+    \end{split}
+\end{equation}
+Integrating the above expression over the time step \([t^{n}, t^{n+1}]\) yields the average flux:
+\begin{equation}
+    \begin{split}
+        F_{i+1/2} &= \frac{1}{\Delta t} \int\limits_{t^{n}}^{t^{n+1}} f(u(x_{i+1/2},t)) \,\mathrm{d}t \\
+                  &\approx \frac{1}{\Delta t} \int\limits_{t^{n}}^{t^{n+1}} g(u(x_{i+1/2},t)) \,\mathrm{d}t \\
+                  &= \frac{1}{\Delta t} \int\limits_{t^{n}}^{t^{n+1}}
+                  f(u_{i}^{n+1}) + a_i \left( u_i^+ - u_{i}^{n+1} - \sigma_i a_i \left( t - t^n \right) \right)
+                  \,\mathrm{d}t \\
+                  &= f(u_{i}^{n+1}) + a_i \left( u_i^+ - u_{i}^{n+1} \right) - \sigma_i a_i^2 \frac{\Delta t}{2}
+    \end{split}
+\end{equation}
+Introducing the ratio \(\lambda = \frac{\Delta t}{\Delta x}\) and substituting the expression for \(u_i^+\), we arrive at the final second-order implicit nonlinear flux:
+\begin{equation}
+    \label{eq:second_order_nonlinear_flux}
+    F_{i+1/2} \approx f(u_{i}^{n+1}) +
+    a_i \sigma_i \Delta x \frac{1}{2} \left(
+    1 + (2 f'(u_{i}^{n+1}) - a_i) \lambda
+\right).
+\end{equation}
+
+By defining the local Courant number \(\nu_i = (2 f'(u_{i}^{n+1}) - a_i) \lambda\), the resulting flux is the direct nonlinear analogue of the linear implicit case:
+\[
+    F_{i+1/2} \approx f(u_{i}^{n+1}) +
+    a_i \sigma_i \Delta x \frac{1}{2} \left(
+    1 + \nu_i \right).
+\]
+
+\subsection*{Remark: Wave Speeds}%
+\label{sub:wave_speeds}
+
+It is worth noting a subtle but important distinction in the wave speeds used in the derivation above.
+In the linear advection case, the speed \(a\) is a constant that simultaneously defines both the characteristic speed and the rate of flux change.
+In the nonlinear case, these roles are decoupled to provide some flexibility.
+
+Specifically, \(f'(u_{i}^{n+1})\) represents the \textit{characteristic speed} that determines how far the value \(u_{i}^{n+1}\) is shifted from \(u_{i}^{n}\).
+On the other hand, \(a_i\) represents the \textit{linearized speed} used to approximate the flux function \(f(u)\) around the cell average.
+
+While setting \(a_i = f'(u_{i}^{n+1})\) is the most direct approach, other choices are possible, as shown later.
+% TODO: fig showing the different wave speeds

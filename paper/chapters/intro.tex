@@ -52,4 +52,9 @@ This thesis is structured as follows.
 Chapter \ref{sec:The Explicit Geometric Framework} reviews the well-established explicit geometric framework for finite volume methods, known as the Reconstruct-Evolve-Average (REA) algorithm. We discuss first- and second-order schemes and the necessity of nonlinear limiters to ensure monotonicity.
 
 Chapter \ref{sec:The Implicit Geometric Framework} extends this framework to the implicit case.
-The central contribution of this thesis is the formulation of an \textit{Implicit Upwind Range Condition}, a novel geometric criterion for designing high-resolution implicit schemes. We show that this condition is the direct analogue of its explicit counterpart and allows for the construction of limiters in a clear and intuitive manner, bridging a gap between the algebraic and geometric approaches to monotonicity.
+The central contribution of this thesis is the formulation of an \textit{Implicit Upwind Range Condition}, a novel geometric criterion for designing high-resolution implicit schemes.
+We show that this condition is the direct analogue of its explicit counterpart and allows for the construction of limiters in a clear and intuitive manner, bridging a gap between the algebraic and geometric approaches to monotonicity.
+
+Chapter \ref{sec:nonlinear-conservation-laws} explores the extension of these geometric implicit methods to nonlinear scalar conservation laws.
+We analyze how the varying wave speeds of nonlinear equations, such as Burgers' equation, influence the geometric interpretation of implicit flux updates.
+This chapter introduces nonlinear implicit limiters and discusses the implementation via sweeping algorithms.
