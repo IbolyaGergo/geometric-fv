@@ -216,27 +216,61 @@ In case of the implicit upwind scheme, the reconstruction serves solely to defin
 
 To overcome these limitations, we must develop higher-order schemes based on more sophisticated, consistent reconstructions, which we explore in the next section.
 
-\section{Second-Order implicit schemes}%
+\section{Second-Order Implicit Schemes}%
 \label{sec:second_order_implicit}
 
 % TODO: Plot result second order vs implicit upwind.
 %"Caption: "Comparison of numerical solutions for the advection of a Gaussian pulse.
 % The first-order scheme exhibits significant numerical diffusion, while the second-order scheme remains much closer to the exact solution.
+In this section, we derive a general formulation for second-order implicit finite volume schemes.
+Following the geometric arguments from the explicit case, we seek a numerical flux derived using a linear reconstruction incorporating both known averages from the old time \(t^n\) and unknown values from \(t^{n+1}\).
+All the schemes derived in this work can be viewed as special cases of a single general numerical flux, distinguished only by their definition of the slope \(\sigma_i\).
+
+\subsection{Derivation of the General Implicit Flux}%
+\label{sub:derivation_general_flux}
+
 To construct a second-order scheme, we replace the piecewise-constant profile with a piecewise-linear one.
-A key challenge is defining an appropriate slope, \(\sigma_i\), for each cell.
-To construct an implicit scheme, we can use the yet-unknown value \(u_i^{n+1}\) to define the slope.
-We define the slope such that the linear profile at time \(t^n\), when evaluated at \(x_i\), is equal to the old value \(u_{i}^{n}\), and when it is evaluated at the back-traced position \(x_i - a\Delta t\), is equal to the new cell average \(u_i^{n+1}\).
-This yields a reconstruction:
-\[
-    \tilde{u}(x, t^n) = u_i^n + \sigma_i (x - x_i).
-\]
-For this to hold, we require \(\tilde{u}(x_i - a\Delta t, t^n) = u_i^{n+1}\), which gives:
-\[
-    u_i^n + \sigma_i (x_i - a\Delta t - x_i) = u_i^{n+1} \implies \sigma_i = \frac{ u_{i}^{n}-u_{i}^{n+1} }{a\Delta t}.
-\]
-This choice of slope provides a direct physical link between the spatial variation within the cell and the temporal change of its average value.
-Crucially, since the reconstruction has a value of \(u_i^n\) at the cell's midpoint, it satisfies the integral average constraint, resolving the inconsistency of the first-order scheme.
-This reconstruction is illustrated in Figure~\ref{fig:box_reconstruct}. 
+In the implicit case, we define a reconstruction at time level \(t^n\) that utilizes the yet unknown value \(u_{i}^{n+1}\).
+Specifically, we define the linear profile such that it passes through the new average \(u_{i}^{n+1}\) at the position \(x_i - a\Delta t\):
+\begin{equation}
+    \label{eq:general_reconst_implicit}
+    \tilde{u}(x, t^n) = u_i^{n+1} + \sigma_i (x - (x_i - a\Delta t)),
+\end{equation}
+where \(\sigma_i\) is a slope.
+
+The numerical flux \(F_{i+1/2}\) is the time-average of the flux at the interface \(x_{i+1/2}\).
+Assuming a positive constant velocity \(a > 0\), the value at the interface \(u(x_{i+1/2}, t)\) for \(t \in [t^n, t^{n+1}]\) is found by:
+\begin{equation}
+    u(x_{i+1/2}, t) = \tilde{u}(x_{i+1/2} - a(t - t^n), t^n).
+\end{equation}
+Substituting the reconstruction formula \eqref{eq:general_reconst_implicit} yields:
+\begin{equation}
+    \begin{split}
+    u(x_{i+1/2}, t) &= u_i^{n+1} + \sigma_i \left[ (x_{i+1/2} - a(t - t^n)) - (x_i - a \Delta t) \right] \\
+                    &= u_i^{n+1} + \sigma_i \left[ \frac{\Delta x}{2} + a(t^{n+1} - t) \right]. 
+    \end{split}
+\end{equation}
+Integrating this value over the time step $[t^n, t^{n+1}]$ and multiplying by $a$ gives the average flux:
+\begin{equation}
+    \begin{split}
+        F_{i+1/2} &= \frac{a}{\Delta t}
+        \int_{t^n}^{t^{n+1}} \left[
+    u_i^{n+1} + \sigma_i \left( \frac{\Delta x}{2} + a(t^{n+1} - t) \right)
+    \right] \diff t \\
+                  &= a u_i^{n+1} + \frac{a \sigma_i \Delta x}{2} + \frac{a^2 \sigma_i \Delta t}{2}.
+    \end{split}
+\end{equation}
+After factoring out terms, recognizing the Courant number \(\nu = a \Delta t / \Delta x\), we arrive at the general second-order implicit flux:
+\begin{equation}
+    \label{eq:general_implicit_flux}
+    F_{i+1/2} = a u_{i}^{n+1} + \frac{1}{2} a \sigma_i \Delta x (1 + \nu).
+\end{equation}
+This formula serves as the foundation for the high-order schemes discussed in the following subsections.
+We will show that the classical Box scheme and the IIOE scheme are simply different geometric choices for the slope \(\sigma_i\).
+
+\subsection{The Box Scheme}%
+\label{sub:box_scheme}
+
 \begin{figure}[htbp]
     \centering
 
@@ -246,7 +280,7 @@ This reconstruction is illustrated in Figure~\ref{fig:box_reconstruct}.
     \end{subfigure}
 
     \vspace{1cm}
-    
+
     \begin{subfigure}[b]{\textwidth}
         \centering
         \includestandalone[mode=buildnew]{fig/box-flux}
@@ -281,7 +315,7 @@ Substituting these fluxes into the general finite volume update formula, Equatio
                     a u_{i-1}^{n} + \frac{1}{2} a \frac{1-\nu}{\nu}  \left( u_{i-1}^{n}-u_{i-1}^{n+1} \right)
                 \right)
                 \right] \\
-                    &= u_{i}^{n} - \nu \left( 
+                    &= u_{i}^{n} - \nu \left(
                         u_{i}^{n} - u_{i-1}^{n}
                     \right) - \frac{1-\nu}{2} \left( u_{i}^{n}-u_{i}^{n+1} - u_{i-1}^{n} + u_{i-1}^{n+1} \right).
     \end{split}
